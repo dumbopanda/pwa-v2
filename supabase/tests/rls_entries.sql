@@ -34,13 +34,12 @@ select throws_ok(
   'user A cannot insert as user B'
 );
 
--- 3. No DELETE policy exists anywhere. Unlike INSERT/UPDATE (WITH CHECK,
--- which raises), SELECT/DELETE use USING, which silently filters to zero
--- matching rows rather than raising an error -- confirmed by hand in A6.
-delete from public.entries where id = 'e0000000-0000-0000-0000-000000000001';
-select ok(
-  (select count(*) from public.entries where id = 'e0000000-0000-0000-0000-000000000001') = 1,
-  'no DELETE policy exists for anyone -- the row survives a client-attempted delete'
+-- 3. No hard delete. 0014 grants no DELETE on entries, so the attempt is
+-- refused outright (42501) rather than silently matching zero rows.
+select throws_ok(
+  $$ delete from public.entries where id = 'e0000000-0000-0000-0000-000000000001' $$,
+  '42501', null,
+  'no client can hard-delete an entry'
 );
 
 -- 4. Transfer cascade: deleting one leg deletes its sibling.
