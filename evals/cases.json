@@ -1,0 +1,470 @@
+{
+ "context": {
+  "today": "2026-11-03",
+  "accounts": [
+   "UPI bank",
+   "Cash",
+   "Credit card",
+   "Salary account",
+   "US account"
+  ],
+  "categories": [
+   "Food & dining",
+   "Groceries",
+   "Transport",
+   "Fuel",
+   "Shopping",
+   "Bills & utilities",
+   "Rent",
+   "Health",
+   "Education",
+   "Entertainment",
+   "Travel",
+   "Personal care",
+   "Subscriptions",
+   "Family",
+   "Gifts & donations",
+   "Salary",
+   "Refund",
+   "Other income",
+   "Other"
+  ]
+ },
+ "cases": [
+  {
+   "tag": "english",
+   "text": "swiggy 340 upi",
+   "expect": {
+    "amount_minor": 34000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "chai 20 cash",
+   "expect": {
+    "amount_minor": 2000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining",
+    "account": "Cash"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "uber 249 card",
+   "expect": {
+    "amount_minor": 24900,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Transport",
+    "account": "Credit card"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "salary 65000 credited",
+   "expect": {
+    "amount_minor": 6500000,
+    "direction": "received",
+    "date": "2026-11-03",
+    "category": "Salary"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "petrol 500 cash",
+   "expect": {
+    "amount_minor": 50000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Fuel",
+    "account": "Cash"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "groceries 1.2k upi",
+   "expect": {
+    "amount_minor": 120000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Groceries",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "bigbasket 2400 credit card",
+   "expect": {
+    "amount_minor": 240000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Groceries",
+    "account": "Credit card"
+   }
+  },
+  {
+   "tag": "refund",
+   "text": "amazon refund 799",
+   "expect": {
+    "amount_minor": 79900,
+    "direction": "received",
+    "date": "2026-11-03",
+    "category": "Refund"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "electricity bill 1850 upi",
+   "expect": {
+    "amount_minor": 185000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Bills & utilities",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "netflix 649 card",
+   "expect": {
+    "amount_minor": 64900,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Subscriptions",
+    "account": "Credit card"
+   }
+  },
+  {
+   "tag": "hinglish",
+   "text": "paanch sau rupaye auto ka",
+   "expect": {
+    "amount_minor": 50000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Transport"
+   }
+  },
+  {
+   "tag": "hinglish",
+   "text": "dedh sau chai samosa cash",
+   "expect": {
+    "amount_minor": 15000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining",
+    "account": "Cash"
+   }
+  },
+  {
+   "tag": "hinglish",
+   "text": "doodh 60 rupay",
+   "expect": {
+    "amount_minor": 6000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Groceries",
+    "account": null
+   }
+  },
+  {
+   "tag": "date",
+   "text": "kal dinner 1800 card",
+   "expect": {
+    "amount_minor": 180000,
+    "direction": "spent",
+    "date": "2026-11-02",
+    "category": "Food & dining",
+    "account": "Credit card"
+   }
+  },
+  {
+   "tag": "date",
+   "text": "yesterday lunch 250 upi",
+   "expect": {
+    "amount_minor": 25000,
+    "direction": "spent",
+    "date": "2026-11-02",
+    "category": "Food & dining",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "date",
+   "text": "parso movie 600",
+   "expect": {
+    "amount_minor": 60000,
+    "direction": "spent",
+    "date": "2026-11-01",
+    "category": "Entertainment"
+   }
+  },
+  {
+   "tag": "date",
+   "text": "last friday haircut 300 cash",
+   "expect": {
+    "amount_minor": 30000,
+    "direction": "spent",
+    "date": "2026-10-30",
+    "category": "Personal care",
+    "account": "Cash"
+   }
+  },
+  {
+   "tag": "date",
+   "text": "2 nov medicines 420 upi",
+   "expect": {
+    "amount_minor": 42000,
+    "direction": "spent",
+    "date": "2026-11-02",
+    "category": "Health",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "rent 15000 upi",
+   "expect": {
+    "amount_minor": 1500000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Rent",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "refund",
+   "text": "got 500 cashback",
+   "expect": {
+    "amount_minor": 50000,
+    "direction": "received",
+    "date": "2026-11-03"
+   }
+  },
+  {
+   "tag": "hinglish",
+   "text": "ravi ne 2000 bheje upi",
+   "expect": {
+    "amount_minor": 200000,
+    "direction": "received",
+    "date": "2026-11-03",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "vague",
+   "text": "ola 180 around",
+   "expect": {
+    "amount_minor": 18000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Transport"
+   }
+  },
+  {
+   "tag": "vague",
+   "text": "approx 300 for snacks",
+   "expect": {
+    "amount_minor": 30000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining"
+   }
+  },
+  {
+   "tag": "vague",
+   "text": "~1000 shopping",
+   "expect": {
+    "amount_minor": 100000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Shopping"
+   }
+  },
+  {
+   "tag": "vague",
+   "text": "some money on chai",
+   "expect": {
+    "amount_minor": null,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining"
+   }
+  },
+  {
+   "tag": "currency",
+   "text": "uber 12 usd",
+   "expect": {
+    "amount_minor": 1200,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Transport",
+    "currency": "USD"
+   }
+  },
+  {
+   "tag": "currency",
+   "text": "amazon.com 49.99 dollars us account",
+   "expect": {
+    "amount_minor": 4999,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Shopping",
+    "account": "US account",
+    "currency": "USD"
+   }
+  },
+  {
+   "tag": "currency",
+   "text": "5 euro coffee",
+   "expect": {
+    "amount_minor": 500,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining",
+    "currency": "EUR"
+   }
+  },
+  {
+   "tag": "transfer",
+   "text": "moved 5000 from upi to cash",
+   "expect": {
+    "amount_minor": 500000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "account": "UPI bank",
+    "transfer_to": "Cash"
+   }
+  },
+  {
+   "tag": "transfer",
+   "text": "cash se 2000 upi mein daale",
+   "expect": {
+    "amount_minor": 200000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "account": "Cash",
+    "transfer_to": "UPI bank"
+   }
+  },
+  {
+   "tag": "transfer",
+   "text": "paid credit card bill 12000 from upi",
+   "expect": {
+    "amount_minor": 1200000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "account": "UPI bank",
+    "transfer_to": "Credit card"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "bought shoes 3499 on card",
+   "expect": {
+    "amount_minor": 349900,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Shopping",
+    "account": "Credit card"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "Rs 450 paid to Zomato",
+   "expect": {
+    "amount_minor": 45000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "recharge 299 jio upi",
+   "expect": {
+    "amount_minor": 29900,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Bills & utilities",
+    "account": "UPI bank"
+   }
+  },
+  {
+   "tag": "hinglish",
+   "text": "1.5 lakh bonus received",
+   "expect": {
+    "amount_minor": 15000000,
+    "direction": "received",
+    "date": "2026-11-03"
+   }
+  },
+  {
+   "tag": "refund",
+   "text": "refund from flipkart 1299 aaya",
+   "expect": {
+    "amount_minor": 129900,
+    "direction": "received",
+    "date": "2026-11-03",
+    "category": "Refund"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "dentist 2k cash",
+   "expect": {
+    "amount_minor": 200000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Health",
+    "account": "Cash"
+   }
+  },
+  {
+   "tag": "english",
+   "text": "lunch 120",
+   "expect": {
+    "amount_minor": 12000,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Food & dining",
+    "account": null
+   }
+  },
+  {
+   "tag": "sms",
+   "text": "Rs.1,250.00 debited from A/c XX1234 on 02-11-26 to VPA zomato@upi. Avl bal Rs 45,300.50",
+   "expect": {
+    "amount_minor": 125000,
+    "direction": "spent",
+    "date": "2026-11-02",
+    "category": "Food & dining"
+   }
+  },
+  {
+   "tag": "sms",
+   "text": "Your a/c XX1234 credited with Rs.65,000.00 on 01-11-26 by ACME LTD SALARY. Avl Bal Rs.70,412.10",
+   "expect": {
+    "amount_minor": 6500000,
+    "direction": "received",
+    "date": "2026-11-01",
+    "category": "Salary"
+   }
+  },
+  {
+   "tag": "sms",
+   "text": "INR 899.00 spent on HDFC Card XX9876 at AMAZON on 03-Nov",
+   "expect": {
+    "amount_minor": 89900,
+    "direction": "spent",
+    "date": "2026-11-03",
+    "category": "Shopping",
+    "account": "Credit card"
+   }
+  }
+ ]
+}

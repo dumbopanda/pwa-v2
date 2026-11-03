@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
-import { APP_NAME, THEME } from "./src/config";
+import { APP_NAME, THEME } from "./src/config.ts";
 
 export default defineConfig({
   plugins: [
