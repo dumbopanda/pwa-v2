@@ -73,3 +73,48 @@ label.lbl { display: block; font-size: var(--fs-xs); font-weight: var(--fw-mediu
 .steps span.on { background: var(--green); }
 .divider { display: flex; align-items: center; gap: var(--sp-3); color: var(--text-faint); font-size: var(--fs-xs); }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line-strong); }
+
+/* ---- app shell ---- */
+.app { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+.topbar { display: flex; align-items: center; justify-content: space-between; max-width: var(--maxw); margin: 0 auto; padding: var(--sp-4) var(--sp-4) 0; }
+.topbar h1 { font-size: var(--fs-xl); }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+.tabs nav { display: flex; width: 100%; max-width: var(--maxw); }
+.tab { flex: 1; height: 56px; border: 0; background: none; font-weight: var(--fw-bold); color: var(--text-muted); cursor: pointer; }
+.tab[aria-current="page"] { color: var(--green-ink); box-shadow: inset 0 3px 0 var(--green); }
+
+.scrim { position: fixed; inset: 0; background: rgba(18, 22, 20, .5); display: flex; align-items: flex-end; justify-content: center; z-index: 20; }
+.sheet { background: var(--canvas); width: 100%; max-width: var(--maxw); max-height: 92dvh; overflow: auto; border-radius: var(--r-card) var(--r-card) 0 0;
+  padding: var(--sp-4) var(--sp-4) calc(var(--sp-6) + env(safe-area-inset-bottom)); }
+.toast { position: fixed; left: var(--sp-4); right: var(--sp-4); bottom: calc(72px + env(safe-area-inset-bottom)); max-width: calc(var(--maxw) - 2 * var(--sp-4)); margin: 0 auto;
+  background: var(--ink); color: var(--on-ink); border-radius: var(--r-panel); padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4); display: flex; align-items: center; z-index: 30; }
+.toast .btn.quiet { color: var(--lime); }
+
+.bar { height: 8px; border-radius: var(--r-pill); background: var(--track); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--green); border-radius: var(--r-pill); }
+.bar span.over { background: var(--red); }
+
+.list { display: flex; flex-direction: column; }
+.item { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; padding: var(--sp-2) 0; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; width: 100%; cursor: pointer; }
+.item:last-child { border-bottom: 0; }
+.item .amt { font-weight: var(--fw-bold); white-space: nowrap; }
+.amt.out { color: var(--text); } .amt.in { color: var(--green-ink); }
+.dayhead { display: flex; justify-content: space-between; align-items: baseline; margin: var(--sp-2) 0 var(--sp-1); }
+.pill { display: inline-block; font-size: var(--fs-xs); font-weight: var(--fw-bold); padding: 2px var(--sp-2); border-radius: var(--r-pill); background: var(--track); color: var(--text-2); }
+.pill.green { background: var(--mint); color: var(--green-ink); } .pill.amber { background: var(--amber-soft); color: var(--amber-ink); }
+
+.composer { display: flex; gap: var(--sp-2); }
+.composer .field { font-size: var(--fs-lg); }
+.big { font-size: var(--fs-3xl); font-weight: var(--fw-heavy); letter-spacing: var(--ls-title); line-height: 1.1; }
+.seg { display: flex; background: var(--track); border-radius: var(--r-input); padding: 3px; gap: 3px; }
+.seg button { flex: 1; height: var(--h-sm); border: 0; border-radius: var(--r-ctl); background: transparent; font-weight: var(--fw-bold); color: var(--text-muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.stat { background: var(--surface); border-radius: var(--r-panel); padding: var(--sp-3); box-shadow: var(--shadow-1); }
+.stat b { display: block; font-size: var(--fs-lg); font-weight: var(--fw-heavy); margin-top: 2px; overflow-wrap: anywhere; }
+.chart { display: flex; align-items: flex-end; gap: 2px; height: 96px; }
+.chart span { flex: 1; background: var(--green-bar, #8CCBA9); border-radius: 3px 3px 0 0; min-height: 2px; }
+.chart span.today { background: var(--green); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.btn.quiet { white-space: nowrap; padding: 0 var(--sp-2); font-size: var(--fs-sm); }
