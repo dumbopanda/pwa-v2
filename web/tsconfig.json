@@ -15,5 +15,5 @@
     "noEmit": true,
     "types": ["vite/client", "vite-plugin-pwa/client", "node"]
   },
-  "include": ["src", "vite.config.ts", "../supabase/functions/_shared", "../evals"]
+  "include": ["src", "vite.config.ts", "../supabase/functions/_shared/money.ts", "../supabase/functions/_shared/parse.ts", "../supabase/functions/_shared/review.ts", "../evals"]
 }
