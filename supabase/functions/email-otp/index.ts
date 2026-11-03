@@ -23,19 +23,34 @@ const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// The public delete-account page (GitHub Pages) calls this from a browser, so it needs CORS.
-// Only that origin; the Android app sends no Origin header and isn't affected.
-const CORS = {
-  "Access-Control-Allow-Origin": "https://dumbopanda.github.io",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-  "Vary": "Origin",
-};
+// Browser origins allowed to call this (the web app). Comma-separated in the
+// ALLOWED_ORIGINS secret, e.g. "https://app.example.com,http://localhost:5173".
+const ALLOWED = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+// Product name for the email. Undecided, so it's a setting, never hard-coded.
+const APP_NAME = Deno.env.get("APP_NAME") || "Your expense tracker";
 
+function cors(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") ?? "";
+  return {
+    ...(ALLOWED.includes(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Vary": "Origin",
+  };
+}
 export default {
   async fetch(req: Request): Promise<Response> {
-    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
+    const res = await handle(req);
+    for (const [k, v] of Object.entries(cors(req))) res.headers.set(k, v);
+    return res;
+  },
+};
+
+async function handle(req: Request): Promise<Response> {
     if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+    // Without the pepper, codes can't be hashed safely: refuse rather than guess.
+    if (!Deno.env.get("OTP_PEPPER")) return json({ error: "email_unavailable" }, 503);
 
     let body: { action?: string; email?: string; code?: string };
     try {
@@ -50,8 +65,7 @@ export default {
     if (body.action === "send") return send(email, clientIp(req));
     if (body.action === "verify") return verify(email, (body.code ?? "").trim());
     return json({ error: "bad_request" }, 400);
-  },
-};
+}
 
 async function send(email: string, ip: string | null): Promise<Response> {
   const code = randomCode();
@@ -148,12 +162,12 @@ function clientIp(req: Request): string | null {
 async function sendEmail(to: string, code: string): Promise<void> {
   const user = Deno.env.get("GMAIL_USER");
   const pass = Deno.env.get("GMAIL_APP_PASSWORD");
-  const subject = `${code} is your Ledger sign-in code`;
-  const text = `Your Ledger sign-in code is ${code}.\n\nIt expires in 5 minutes and works once. ` +
+  const subject = `${code} is your ${APP_NAME} sign-in code`;
+  const text = `Your ${APP_NAME} sign-in code is ${code}.\n\nIt expires in 5 minutes and works once. ` +
     `If you didn't ask for it, ignore this email.`;
   const html = `<div style="font-family:system-ui,sans-serif;background:#F4F1EA;padding:32px">
 <div style="max-width:420px;margin:auto;background:#fff;border:1px solid #E5E3DB;border-radius:22px;padding:28px">
-<p style="margin:0 0 8px;color:#5F5C56;font-size:14px">Your Ledger sign-in code</p>
+<p style="margin:0 0 8px;color:#5F5C56;font-size:14px">Your ${APP_NAME} sign-in code</p>
 <p style="margin:0 0 20px;font-size:34px;font-weight:800;letter-spacing:8px;color:#181C1A">${code}</p>
 <p style="margin:0;color:#5F5C56;font-size:13px">Expires in 5 minutes and works once. If you didn't ask for it, ignore this email.</p>
 </div></div>`;
@@ -165,9 +179,9 @@ async function sendEmail(to: string, code: string): Promise<void> {
     port: 465,
     secure: true,
     auth: { user, pass },
-  }).sendMail({ from: `Ledger <${user}>`, to, subject, text, html });
+  }).sendMail({ from: `${APP_NAME} <${user}>`, to, subject, text, html });
 }
 
 function json(body: unknown, status = 200): Response {
-  return Response.json(body, { status, headers: CORS });
+  return Response.json(body, { status });
 }
