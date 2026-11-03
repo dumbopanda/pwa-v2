@@ -1,3 +1,4 @@
+import Icon from "../Icon";
 import { useEffect, useRef, useState } from "react";
 import { logEvent } from "../lib/actions";
 import { ToastHost } from "../components";
@@ -15,7 +16,7 @@ import Today from "./Today";
 
 type Tab = "today" | "history" | "stats" | "plan";
 type Overlay = { k: "settings" } | { k: "metrics" } | { k: "review"; ym: string } | null;
-const TABS: [Tab, string][] = [["today", "Today"], ["history", "History"], ["stats", "Stats"], ["plan", "Plan"]];
+const TABS: [Tab, string][] = [["today", "Today"], ["history", "History"], ["stats", "Stats"], ["plan", "Plan"]];  // the tab key is also its icon name
 
 export default function Shell({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("today");
@@ -57,7 +58,7 @@ export default function Shell({ userId }: { userId: string }) {
       {tab === "plan" && <Plan onReview={(ym) => setOverlay({ k: "review", ym })} />}
       <ToastHost />
       <div className="tabs"><nav aria-label={APP_NAME}>
-        {TABS.map(([k, label]) => <button key={k} className="tab" aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}>{label}</button>)}
+        {TABS.map(([k, label]) => <button key={k} className="tab" aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={22} /><span>{label}</span></button>)}
       </nav></div>
     </div>
   );

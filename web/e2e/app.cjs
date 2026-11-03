@@ -20,7 +20,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('no scolding words', !/(missed|failed|lazy|behind)/i.test(await p.locator('body').innerText()));
 
   // --- quick log through the AI, confirm card, one-tap confirm
-  await p.getByLabel('Say or type an entry').fill('swiggy 340 upi');
+  await p.getByLabel('Say or type what you spent').fill('swiggy 340 upi');
   await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
   check('confirm card shows amount', (await text('.card .big')).includes('₹340.00'));
@@ -37,7 +37,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('ai accepted + first-save time logged', db.events.some((e) => e.name === 'ai_result' && e.props.outcome === 'accepted') && db.events.some((e) => e.name === 'entry_saved' && typeof e.props.ms === 'number' && e.props.via === 'ai'), JSON.stringify(db.events));
 
   // --- edit from confirm card, then reject
-  await p.getByLabel('Say or type an entry').fill('chai 20 cash'); await p.getByRole('button', { name: 'Log', exact: true }).click();
+  await p.getByLabel('Say or type what you spent').fill('chai 20 cash'); await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
   check('assumed-account note when none named', await p.getByText(/No account was mentioned/).count() > 0 || true);
   await p.getByRole('button', { name: 'Discard' }).click();
@@ -45,7 +45,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
 
   // --- AI down / over the cap: manual add still opens
   db.aiMode = 'cap';
-  await p.getByLabel('Say or type an entry').fill('auto 120'); await p.getByRole('button', { name: 'Log', exact: true }).click();
+  await p.getByLabel('Say or type what you spent').fill('auto 120'); await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByRole('dialog', { name: 'Add entry' }).waitFor();
   check('cap -> manual form opens with the text', (await p.getByLabel('Name or place').inputValue()) === 'auto 120');
   await p.getByLabel(/^Amount/).fill('120'); await p.locator('.sheet').getByRole('button', { name: 'UPI bank', exact: true }).click();

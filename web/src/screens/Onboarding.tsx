@@ -1,3 +1,4 @@
+import Icon from "../Icon";
 import { useMemo, useState } from "react";
 import { APP_NAME, DEFAULT_CURRENCY } from "../config";
 import { newUid, todayLocal } from "../lib/ids";
@@ -92,7 +93,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
                   <input className="field grow" placeholder="Account name" aria-label="Account name" maxLength={40}
                     value={a.name} onChange={(e) => edit(a.uid, { name: e.target.value })} />
                   <button className="btn icon" aria-label={`Remove ${a.name || "account"}`}
-                    onClick={() => setAccounts((xs) => xs.filter((x) => x.uid !== a.uid))}>✕</button>
+                    onClick={() => setAccounts((xs) => xs.filter((x) => x.uid !== a.uid))}><Icon name="close" /></button>
                 </div>
                 <div className="row">
                   <select className="field inset" style={{ width: 96 }} aria-label="Currency"

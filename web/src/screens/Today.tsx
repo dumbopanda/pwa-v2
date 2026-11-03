@@ -1,3 +1,4 @@
+import Icon from "../Icon";
 import { useMemo, useRef, useState } from "react";
 import { failMessage, parseText, proposalToDraft } from "../lib/ai";
 import { firstSaveMs, logEvent, saveDraft, setNoSpend } from "../lib/actions";
@@ -88,19 +89,20 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
         <div><div className="caps">{dayLabel(today)}</div><h1>Today</h1></div>
         <div className="row">
           {run_ > 0 && <span className="pill green" aria-label={`${run_} day streak`}>{run_}-day streak</span>}
-          <button className="btn icon" aria-label="Settings" onClick={onSettings}>⚙</button>
+          <button className="btn icon" aria-label="Settings" onClick={onSettings}><Icon name="settings" /></button>
         </div>
       </div>
 
       {noAccounts ? <Empty>Add an account in Settings to start logging.</Empty> : (
         <form className="stack" onSubmit={(e) => { e.preventDefault(); void read(text, "ai"); }}>
+          <label className="lbl" htmlFor="quick">Say or type what you spent</label>
           <div className="composer">
-            <input className="field grow" aria-label="Say or type an entry" placeholder="swiggy 340 upi" value={text} maxLength={300} autoComplete="off"
+            <input id="quick" className="field grow" placeholder="swiggy 340 upi" value={text} maxLength={300} autoComplete="off"
               onChange={(e) => setText(e.target.value)} />
             <Mic onText={(t) => { setText(t); void read(t, "ai"); }} />
             <button className="btn primary" style={{ height: "var(--h-md)" }} disabled={busy || !text.trim()}>{busy ? "…" : "Log"}</button>
           </div>
-          <div className="row">
+          <div className="row links">
             <button type="button" className="btn quiet" onClick={() => by_hand()}>Add by hand</button>
             <button type="button" className="btn quiet" onClick={() => setSms("")}>Paste an SMS</button>
             <button type="button" className="btn quiet" onClick={() => by_hand({ transfer: true })}>Move money</button>
@@ -126,14 +128,14 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
           <div className="row">
             <button className="btn primary grow" onClick={confirm} disabled={busy || !cardOk?.ok}>Confirm</button>
             <button className="btn grow" style={{ height: "var(--h-lg)" }} onClick={() => { setForm({ draft: pending.draft, via: pending.via, original: pending.draft, hint: pending.hint }); setPending(null); }}>Edit</button>
-            <button className="btn icon" aria-label="Discard" onClick={reject}>✕</button>
+            <button className="btn icon" aria-label="Discard" onClick={reject}><Icon name="close" /></button>
           </div>
         </div>
       )}
 
       {review && L.entries.length > 0 && (
-        <button className="card item" style={{ border: 0 }} onClick={() => onReview(review)}>
-          <span className="grow"><b>Your {monthLabel(review)} review is ready</b><br /><span className="muted small">See where the money went and plan the next month.</span></span>›
+        <button className="card item banner" onClick={() => onReview(review)}>
+          <span className="grow"><b>Your {monthLabel(review)} review is ready</b><br /><span className="muted small">See where the money went and plan the next month.</span></span><Icon name="next" />
         </button>
       )}
 
@@ -203,6 +205,6 @@ function Mic({ onText }: { onText: (t: string) => void }) {
     r.onend = () => setOn(false); r.onerror = () => setOn(false);
     setOn(true); r.start();
   }
-  return <button type="button" className="btn" style={{ height: "var(--h-md)", width: "var(--h-md)", padding: 0 }} aria-pressed={on} aria-label={on ? "Stop listening" : "Speak an entry"} onClick={toggle}>{on ? "■" : "🎤"}</button>;
+  return <button type="button" className={`btn mic${on ? " on" : ""}`} aria-pressed={on} aria-label={on ? "Stop listening" : "Speak an entry"} onClick={toggle}><Icon name={on ? "stop" : "mic"} /></button>;
 }
 type SR = { lang: string; interimResults: boolean; maxAlternatives: number; onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void; onend: () => void; onerror: () => void; start(): void; stop(): void };

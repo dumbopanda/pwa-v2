@@ -1,3 +1,4 @@
+import Icon from "./Icon";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -9,7 +10,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   return (
     <div className="scrim" onClick={onClose}>
       <div className="sheet stack" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <div className="row"><h2 className="grow">{title}</h2><button className="btn icon" aria-label="Close" onClick={onClose}>✕</button></div>
+        <div className="row"><h2 className="grow">{title}</h2><button className="btn icon" aria-label="Close" onClick={onClose}><Icon name="close" /></button></div>
         {children}
       </div>
     </div>
@@ -38,9 +39,9 @@ export function ToastHost() {
 export function MonthNav({ ym, label, onChange, max }: { ym: string; label: string; onChange: (d: -1 | 1) => void; max: string }) {
   return (
     <div className="row" style={{ justifyContent: "space-between" }}>
-      <button className="btn icon" aria-label="Previous month" onClick={() => onChange(-1)}>‹</button>
+      <button className="btn icon" aria-label="Previous month" onClick={() => onChange(-1)}><Icon name="back" /></button>
       <strong>{label}</strong>
-      <button className="btn icon" aria-label="Next month" onClick={() => onChange(1)} disabled={ym >= max}>›</button>
+      <button className="btn icon" aria-label="Next month" onClick={() => onChange(1)} disabled={ym >= max}><Icon name="next" /></button>
     </div>
   );
 }
