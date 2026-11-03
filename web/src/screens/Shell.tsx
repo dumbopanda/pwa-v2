@@ -57,8 +57,8 @@ export default function Shell({ userId }: { userId: string }) {
       {tab === "stats" && <Stats />}
       {tab === "plan" && <Plan onReview={(ym) => setOverlay({ k: "review", ym })} />}
       <ToastHost />
-      <div className="tabs"><nav aria-label={APP_NAME}>
-        {TABS.map(([k, label]) => <button key={k} className="tab" aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={22} /><span>{label}</span></button>)}
+      <div className="navwrap"><nav className="navpill" aria-label={APP_NAME}>
+        {TABS.map(([k, label]) => <button key={k} className="tab" aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={20} /><span>{label}</span></button>)}
       </nav></div>
     </div>
   );

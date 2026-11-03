@@ -11,6 +11,15 @@ const P = {
   history: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   stats: "M3 3v18h18M7 16v-4M12 16V8M17 16v-7",
   plan: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
+  tag: "M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4ZM7.5 7.5h.01",
+  note: "M4 6h16M4 12h16M4 18h10",
+  calendar: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z",
+  grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
+  check: "M20 6 9 17l-5-5",
+  plus: "M12 5v14M5 12h14",
+  out: "M12 19V5M5 12l7-7 7 7",
+  in: "M12 5v14M19 12l-7 7-7-7",
+  move: "M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4",
 } as const;
 
 export type IconName = keyof typeof P;

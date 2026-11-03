@@ -18,7 +18,7 @@ export default function Metrics({ onBack }: { onBack: () => void }) {
 
   return (
     <main className="screen stack">
-      <div className="row"><button className="btn icon" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>Usage metrics</h1></div>
+      <div className="row"><button className="iconbtn" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>Usage metrics</h1></div>
       {err && <p className="error">Not available.</p>}
       {m && (
         <>

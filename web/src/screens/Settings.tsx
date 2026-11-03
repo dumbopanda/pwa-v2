@@ -32,7 +32,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
 
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
-      <div className="row"><button className="btn icon" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>Settings</h1></div>
+      <div className="row"><button className="iconbtn" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>Settings</h1></div>
       {error && <p className="error" role="alert">{error}</p>}
 
       <section className="card stack" aria-label="Accounts">

@@ -10,7 +10,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   return (
     <div className="scrim" onClick={onClose}>
       <div className="sheet stack" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <div className="row"><h2 className="grow">{title}</h2><button className="btn icon" aria-label="Close" onClick={onClose}><Icon name="close" /></button></div>
+        <span className="grabber" aria-hidden="true" />
+        <div className="row"><h2 className="grow">{title}</h2><button className="iconbtn" aria-label="Close" onClick={onClose}><Icon name="close" /></button></div>
         {children}
       </div>
     </div>
@@ -38,9 +39,9 @@ export function ToastHost() {
 
 export function MonthNav({ ym, label, onChange, max }: { ym: string; label: string; onChange: (d: -1 | 1) => void; max: string }) {
   return (
-    <div className="row" style={{ justifyContent: "space-between" }}>
+    <div className="monthnav">
       <button className="btn icon" aria-label="Previous month" onClick={() => onChange(-1)}><Icon name="back" /></button>
-      <strong>{label}</strong>
+      <h2 aria-live="polite">{label}</h2>
       <button className="btn icon" aria-label="Next month" onClick={() => onChange(1)} disabled={ym >= max}><Icon name="next" /></button>
     </div>
   );
@@ -64,4 +65,23 @@ export function useAction() {
     try { return await f(); } catch (e) { setError(e instanceof Error ? e.message : "Something went wrong."); } finally { setBusy(false); }
   }
   return { busy, error, run, setError };
+}
+
+/** "₹", "$", "JP¥" for a currency, from the platform's own data. */
+export const currencySymbol = (c: string) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: c }).formatToParts(0).find((p) => p.type === "currency")?.value ?? c;
+
+/** Account tiles: a coloured initial per account, a check on the picked one. Colours cycle by position. */
+export function AccountTiles({ accounts, value, onPick, label }: { accounts: { id: string; name: string }[]; value: string; onPick: (id: string) => void; label: string }) {
+  return (
+    <div className="tiles" role="group" aria-label={label}>
+      {accounts.map((a, i) => (
+        <button key={a.id} type="button" className="tile" aria-pressed={value === a.id} onClick={() => onPick(a.id)}>
+          <span className={`mono s${i % 4}`} aria-hidden="true">{a.name.trim().charAt(0).toUpperCase()}</span>
+          <span className="tname">{a.name}</span>
+          {value === a.id && <span className="tick" aria-hidden="true"><Icon name="check" size={14} /></span>}
+        </button>
+      ))}
+    </div>
+  );
 }

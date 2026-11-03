@@ -23,7 +23,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByLabel('Say or type what you spent').fill('swiggy 340 upi');
   await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
-  check('confirm card shows amount', (await text('.card .big')).includes('₹340.00'));
+  check('confirm card shows amount', (await text('[aria-label="Check this entry"] .big')).includes('₹340.00'));
   check('nothing saved before confirm', !db.entries.some((e) => e.expense_name === 'swiggy'));
   check('AI got only text + own names + date', JSON.stringify(Object.keys(db.parseCalls[0]).sort()) === '["accounts","categories","text","today"]'
     && !JSON.stringify(db.parseCalls[0]).match(/balance|5000000|amount/i), JSON.stringify(db.parseCalls[0]));
@@ -46,25 +46,24 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   // --- AI down / over the cap: manual add still opens
   db.aiMode = 'cap';
   await p.getByLabel('Say or type what you spent').fill('auto 120'); await p.getByRole('button', { name: 'Log', exact: true }).click();
-  await p.getByRole('dialog', { name: 'Add entry' }).waitFor();
+  await p.getByRole('dialog', { name: 'New entry' }).waitFor();
   check('cap -> manual form opens with the text', (await p.getByLabel('Name or place').inputValue()) === 'auto 120');
-  await p.getByLabel(/^Amount/).fill('120'); await p.locator('.sheet').getByRole('button', { name: 'UPI bank', exact: true }).click();
+  await p.getByLabel(/^Amount/).fill('120'); await p.locator('.sheet .tiles').getByRole('button', { name: 'UPI bank', exact: true }).click();
   await p.getByRole('button', { name: /^Save/ }).click(); await p.getByRole('dialog').waitFor({ state: 'detached' });
   check('manual entry saved', db.entries.some((e) => e.expense_name === 'auto 120' && e.amount_minor === 12000));
   db.aiMode = 'ok';
 
   // --- validation
   await p.getByRole('button', { name: 'Add by hand' }).click();
-  await p.getByLabel(/^Amount/).fill('1.234'); await p.locator('.sheet').getByRole('button', { name: 'Cash', exact: true }).click(); await p.getByLabel('Name or place').fill('x');
-  await p.getByRole('button', { name: /^Save/ }).click();
-  check('bad amount refused with a plain message', await p.getByText(/valid INR amount/).isVisible());
+  await p.getByLabel(/^Amount/).fill('1.234'); await p.locator('.sheet .tiles').getByRole('button', { name: 'Cash', exact: true }).click(); await p.getByLabel('Name or place').fill('x');
+  check('bad amount: Save stays disabled and the caption says why', await p.getByText(/valid INR amount/).isVisible() && await p.getByRole('button', { name: /^Save/ }).isDisabled());
   await p.keyboard.press('Escape');
 
   // --- transfer
   await p.getByRole('button', { name: 'Move money' }).click();
-  await p.getByLabel(/^Amount/).fill('500'); await p.locator('.sheet .chips').first().getByRole('button', { name: 'UPI bank', exact: true }).click();
+  await p.getByLabel(/^Amount/).fill('500'); await p.locator('.sheet .tiles').first().getByRole('button', { name: 'UPI bank', exact: true }).click();
   await p.getByRole('group', { name: 'Type' }).waitFor();
-  const toBtns = p.locator('.sheet .chips').nth(1); await toBtns.getByRole('button', { name: 'Cash' }).click();
+  const toBtns = p.locator('.sheet .tiles').nth(1); await toBtns.getByRole('button', { name: 'Cash' }).click();
   check('USD account not offered as a transfer target', (await toBtns.getByRole('button', { name: 'US account' }).count()) === 0);
   await p.getByRole('button', { name: /^Save/ }).click(); await p.getByRole('dialog').waitFor({ state: 'detached' });
   const legs = db.entries.filter((e) => e.transfer_group);

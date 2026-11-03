@@ -86,10 +86,10 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <div><div className="caps">{dayLabel(today)}</div><h1>Today</h1></div>
+        <div><h1>Today</h1><div className="muted">{dayLabel(today)}</div></div>
         <div className="row">
-          {run_ > 0 && <span className="pill green" aria-label={`${run_} day streak`}>{run_}-day streak</span>}
-          <button className="btn icon" aria-label="Settings" onClick={onSettings}><Icon name="settings" /></button>
+          {run_ > 0 && <span className="statuschip" aria-label={`${run_} day streak`}><span className="dot" aria-hidden="true" />{run_}-day streak</span>}
+          <button className="iconbtn" aria-label="Settings" onClick={onSettings}><Icon name="settings" /></button>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
       {error && !pending && <p className="error" role="alert">{error}</p>}
 
       {pending && (
-        <div className="card stack" role="group" aria-label="Check this entry">
+        <div className="hero confirm stack" role="group" aria-label="Check this entry">
           <div className="caps">Is this right?</div>
           <div className="big">{pending.draft.amount ? formatMoney(cardOk?.ok ? cardOk.minor : 0, acc(pending.draft.accountId)?.currency ?? "INR") : "No amount"}</div>
           <div>
@@ -122,13 +122,13 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
                 {pending.draft.categoryId && <> · {L.categoryById.get(pending.draft.categoryId)?.name}</>}</>}
             <span className="muted"> · {pending.draft.date === today ? "today" : dayLabel(pending.draft.date)}</span>
           </div>
-          {pending.assumed && <p className="muted small" style={{ margin: 0 }}>No account was mentioned, so this uses your last one.</p>}
+          {pending.assumed && <p className="small" style={{ margin: 0, color: "var(--on-ink-muted)" }}>No account was mentioned, so this uses your last one.</p>}
           {pending.hint && <p className="notice" style={{ margin: 0 }}>{pending.hint}</p>}
           {error && <p className="error" role="alert">{error}</p>}
           <div className="row">
-            <button className="btn primary grow" onClick={confirm} disabled={busy || !cardOk?.ok}>Confirm</button>
-            <button className="btn grow" style={{ height: "var(--h-lg)" }} onClick={() => { setForm({ draft: pending.draft, via: pending.via, original: pending.draft, hint: pending.hint }); setPending(null); }}>Edit</button>
-            <button className="btn icon" aria-label="Discard" onClick={reject}><Icon name="close" /></button>
+            <button className="btn lime grow" onClick={confirm} disabled={busy || !cardOk?.ok}><Icon name="check" size={18} />Confirm</button>
+            <button className="btn ghost grow" onClick={() => { setForm({ draft: pending.draft, via: pending.via, original: pending.draft, hint: pending.hint }); setPending(null); }}>Edit</button>
+            <button className="iconbtn dark" aria-label="Discard" onClick={reject}><Icon name="close" /></button>
           </div>
         </div>
       )}

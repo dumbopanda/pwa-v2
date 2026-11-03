@@ -44,7 +44,7 @@ export default function Review({ ym, onClose, onPlan }: { ym: string; onClose: (
   const over = plan.rows.filter((r) => r.over);
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
-      <div className="row"><button className="btn icon" aria-label="Back" onClick={onClose}><Icon name="back" /></button><div><div className="caps">Month-end review</div><h1>{monthLabel(ym)}</h1></div></div>
+      <div className="row"><button className="iconbtn" aria-label="Back" onClick={onClose}><Icon name="back" /></button><div><div className="caps">Month-end review</div><h1>{monthLabel(ym)}</h1></div></div>
 
       <div className="grid3">
         <div className="stat"><span className="caps">Spent</span><b>{facts.spent}</b></div>
