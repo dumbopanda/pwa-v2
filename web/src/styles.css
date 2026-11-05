@@ -157,7 +157,7 @@ select.field { padding-right: var(--sp-2); }
   background: var(--ink); border-radius: var(--r-pill); padding: 5px; box-shadow: 0 10px 28px -12px rgba(18, 22, 20, .55); }
 .navpill .tab { height: 48px; border-radius: var(--r-pill); color: var(--on-ink-muted); flex-direction: row; gap: 6px; font-size: var(--fs-sm); box-shadow: none; }
 .navpill .tab[aria-current="page"] { background: var(--lime); color: var(--ink); box-shadow: none; }
-@media (max-width: 360px) { .navpill .tab span { display: none; } }
+@media (max-width: 380px) { .navpill .tab:not([aria-current="page"]) span { display: none; } .navpill .tab[aria-current="page"] { flex: 2.2; } }
 .app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 
