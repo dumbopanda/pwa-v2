@@ -37,6 +37,7 @@ describe("balances and totals", () => {
     expect(b.get("bank")).toBe(1000000 + 6500000 - 34000 - 6000 - 200000 - 50000 - 777);
     expect(b.get("cash")).toBe(50000);
     expect(b.get("usd")).toBe(-1200);
+    expect(balances(data, "2026-11-01").get("bank")).toBe(1000000 + 6500000 - 200000 - 777);   // stops at the day
   });
   it("month totals skip transfers and opening balances, and never mix currencies", () => {
     const t = monthTotals(data, accounts, "2026-11");

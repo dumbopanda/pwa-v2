@@ -25,10 +25,10 @@ export function addMonths(ym: string, n: number): string {
 
 const sumBy = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((a, x) => a + f(x), 0);
 
-/** Balance of each account: credits minus debits of every live entry, transfers and opening balances included. */
-export function balances(entries: Entry[]): Map<string, number> {
+/** Balance of each account: credits minus debits of every live entry, transfers and opening balances included. `asOf` (YYYY-MM-DD) stops at that day. */
+export function balances(entries: Entry[], asOf?: string): Map<string, number> {
   const m = new Map<string, number>();
-  for (const e of entries) if (live(e)) m.set(e.account_id, (m.get(e.account_id) ?? 0) + (e.direction === "credit" ? e.amount_minor : -e.amount_minor));
+  for (const e of entries) if (live(e) && (!asOf || e.entry_date <= asOf)) m.set(e.account_id, (m.get(e.account_id) ?? 0) + (e.direction === "credit" ? e.amount_minor : -e.amount_minor));
   return m;
 }
 
@@ -95,3 +95,6 @@ export function missedDays(today: string, state: (d: string) => DayState, firstD
   return out;
 }
 export { sumBy };
+
+/** One colour family per account, by its place in your list, so an account looks the same on every screen. */
+export const toneOf = (accounts: { id: string }[], id: string) => Math.max(0, accounts.findIndex((a) => a.id === id)) % 4;

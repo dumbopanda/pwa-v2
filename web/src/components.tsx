@@ -1,4 +1,5 @@
 import Icon from "./Icon";
+import { toneOf } from "./lib/ledger";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -72,12 +73,12 @@ export const currencySymbol = (c: string) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: c }).formatToParts(0).find((p) => p.type === "currency")?.value ?? c;
 
 /** Account tiles: a coloured initial per account, a check on the picked one. Colours cycle by position. */
-export function AccountTiles({ accounts, value, onPick, label }: { accounts: { id: string; name: string }[]; value: string; onPick: (id: string) => void; label: string }) {
+export function AccountTiles({ accounts, value, onPick, label, order }: { accounts: { id: string; name: string }[]; value: string; onPick: (id: string) => void; label: string; order: { id: string }[] }) {
   return (
     <div className="tiles" role="group" aria-label={label}>
-      {accounts.map((a, i) => (
+      {accounts.map((a) => (
         <button key={a.id} type="button" className="tile" aria-pressed={value === a.id} onClick={() => onPick(a.id)}>
-          <span className={`mono s${i % 4}`} aria-hidden="true">{a.name.trim().charAt(0).toUpperCase()}</span>
+          <span className={`mono acc${toneOf(order, a.id)}`} aria-hidden="true">{a.name.trim().charAt(0).toUpperCase()}</span>
           <span className="tname">{a.name}</span>
           {value === a.id && <span className="tick" aria-hidden="true"><Icon name="check" size={14} /></span>}
         </button>

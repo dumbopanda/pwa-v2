@@ -40,7 +40,7 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
   const run_ = streak(today, state, first);
   const missed = useMemo(() => missedDays(today, state, first, 3), [today, L.loggedDates, L.noSpend, first]);  // eslint-disable-line react-hooks/exhaustive-deps
   const todays = L.entries.filter((e) => e.entry_date === today && isLogged(e));
-  const lines = buildLines(todays, L.accountById, L.categoryById);
+  const lines = buildLines(todays, L.accountById, L.categoryById, L.accounts);
   const review = reviewMonth(today);
 
   // Today's running spend, per currency, never mixed.
@@ -170,9 +170,12 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
         </section>
       )}
 
-      <section className="card">
-        {lines.length ? <Lines lines={lines} onOpen={setDetail} /> : <Empty>Nothing logged today.</Empty>}
-      </section>
+      {lines.length > 0 && (
+        <section className="daycard" aria-label="Today's entries">
+          <div className="dayhead2 today"><span className="dname"><b>Today</b></span><span className="dnet out">{[...spent].map(([c, m]) => `−${formatMoney(m, c)}`).join(" · ")}</span></div>
+          <Lines lines={lines} onOpen={setDetail} />
+        </section>
+      )}
 
       {sms !== null && (
         <Sheet title="Paste a bank or UPI SMS" onClose={() => setSms(null)}>

@@ -14,7 +14,7 @@ export const LAST_ACCOUNT = "lastAccount";
 export default function EntrySheet({ initial, existing, via, aiOriginal, source, hint, onClose }: {
   initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; source?: "rules" | "ai"; hint?: string; onClose: () => void;
 }) {
-  const { activeAccounts, activeCategories, accountById } = useLedger();
+  const { accounts, activeAccounts, activeCategories, accountById } = useLedger();
   const today = useToday();
   const [d, setD] = useState(initial);
   const { busy, error, run, setError } = useAction();
@@ -63,13 +63,13 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
 
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
         <span className="caps">{d.transfer ? "From" : "Account"}</span>
-        <AccountTiles label={d.transfer ? "From account" : "Account"} accounts={activeAccounts} value={d.accountId}
+        <AccountTiles order={accounts} label={d.transfer ? "From account" : "Account"} accounts={activeAccounts} value={d.accountId}
           onPick={(id) => set({ accountId: id, toAccountId: d.toAccountId === id ? "" : d.toAccountId })} />
       </div>
       {d.transfer && (
         <div className="stack" style={{ gap: "var(--sp-2)" }}>
           <span className="caps">To</span>
-          <AccountTiles label="To account" accounts={activeAccounts.filter((a) => a.id !== d.accountId && sameCurrency(a.id))} value={d.toAccountId} onPick={(id) => set({ toAccountId: id })} />
+          <AccountTiles order={accounts} label="To account" accounts={activeAccounts.filter((a) => a.id !== d.accountId && sameCurrency(a.id))} value={d.toAccountId} onPick={(id) => set({ toAccountId: id })} />
         </div>
       )}
 

@@ -103,11 +103,15 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
 
   // --- history
   await p.getByRole('button', { name: 'History' }).click();
-  await p.getByLabel('Search').fill('rent');
-  check('search filters', (await p.locator('.item').count()) === 1 && (await text('main')).includes('Rent'));
-  await p.getByLabel('Search').fill('');
+  await p.getByRole('button', { name: 'Search', exact: true }).click();
+  await p.getByLabel('Search all months').fill('rent');
+  check('search filters across months', (await p.locator('.txn').count()) === 1 && (await text('main')).includes('Rent') && await p.getByText(/1 entry matching/).isVisible());
+  await p.getByRole('button', { name: 'Clear search' }).click();
+  await p.getByRole('button', { name: 'Transfers', exact: true }).click();
+  check('type chip filters to transfers', (await p.locator('.txn').count()) === 1 && (await p.locator('.txn').first().innerText()).includes('Self transfer'));
+  await p.getByRole('button', { name: 'All', exact: true }).click();
   await p.getByLabel('Filter by account').selectOption({ label: 'Cash' });
-  const items = (await p.locator('.item').allInnerTexts()).join(' | ');
+  const items = (await p.locator('.txn').allInnerTexts()).join(' | ');
   check('account filter keeps Cash entries and the transfer into Cash, drops UPI-only rows', items.includes('Chai') && items.includes('Self transfer') && !items.includes('Rent') && !items.includes('swiggy'), items);
   await p.getByLabel('Filter by account').selectOption('');
   check('opening balance hidden from history', !(await text('main')).includes('Opening balance'));
@@ -115,11 +119,11 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
 
   // --- stats
   await p.getByRole('button', { name: 'Stats' }).click();
-  await p.getByText('By category').waitFor();
+  await p.getByText('Where it went').waitFor();
   await shot('5-stats');
   const ym = new Date().toISOString().slice(0, 7);
   const expected = db.entries.filter((e) => !e.deleted_at && e.direction === 'debit' && !e.transfer_group && e.txn_type !== 'Opening balance' && e.entry_date.startsWith(ym) && db.accounts.find((a) => a.id === e.account_id).currency === 'INR').reduce((a, e) => a + e.amount_minor, 0);
-  const shown = (await p.locator('.stat b').first().innerText()).replace(/[₹,]/g, '');
+  const shown = (await p.locator('.duo b').first().innerText()).replace(/[₹,]/g, '');
   check('stats Spent equals spend only (no transfers, no opening balance): ' + shown, Math.round(parseFloat(shown) * 100) === expected, shown + ' vs ' + expected);
 
   // --- plan

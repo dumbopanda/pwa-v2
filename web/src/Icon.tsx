@@ -20,6 +20,8 @@ const P = {
   out: "M12 19V5M5 12l7-7 7 7",
   in: "M12 5v14M19 12l-7 7-7-7",
   move: "M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM21 21l-4.3-4.3",
+  down: "m6 9 6 6 6-6",
 } as const;
 
 export type IconName = keyof typeof P;
