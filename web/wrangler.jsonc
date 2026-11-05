@@ -1,0 +1,10 @@
+{
+  // Cloudflare static hosting for the built app. The name must match the Cloudflare project name.
+  "name": "pwa-v2",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // Any path opens the app, so a reload on /history or a sign-in redirect still works.
+    "not_found_handling": "single-page-application"
+  }
+}
