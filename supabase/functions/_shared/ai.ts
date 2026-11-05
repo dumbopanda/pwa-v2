@@ -34,7 +34,8 @@ export async function callModel(messages: { role: string; content: string }[], s
   });
   try {
     let r = await send(true);
-    if (r.status === 400) r = await send(false);
+    // Models that don't do JSON schema refuse it with a 4xx (seen: 400, 403 code 5025). Retry in plain mode.
+    if (r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) r = await send(false);
     return r.ok ? await r.json() : null;
   } catch {
     return null;

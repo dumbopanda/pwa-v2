@@ -4,8 +4,8 @@
 // web app and the evals, so all three agree.
 import { currencyDigits, MAX_MINOR, parseAmount } from "./money.ts";
 
-/** Free Cloudflare Workers AI model. Overridable with the AI_MODEL secret; the evals pick the best one. */
-export const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
+/** Cloudflare Workers AI model (free daily allowance). Override with the AI_MODEL secret. See evals/RESULTS.md. */
+export const DEFAULT_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";   // best on the evals; "@cf/ibm-granite/granite-4.0-h-micro" is ~14x cheaper
 export const MAX_TEXT = 600;
 
 /** Only these ever leave the device: the text, your own account and category names, and today's date. */
@@ -138,11 +138,15 @@ export function normalizeProposal(raw: unknown, input: ParseInput): Proposal | n
 }
 
 /**
- * Pull the JSON object out of a Workers AI response body. JSON mode returns an
- * object; plain mode returns text, from which the first {...} block is taken.
+ * Pull the JSON object out of a Workers AI response body. Models answer in one
+ * of two shapes: { result: { response } } (object in JSON mode, text in plain
+ * mode) or the OpenAI shape { choices: [{ message: { content } }] }, at the top
+ * level or under result. From text, the first {...} block is taken.
  */
 export function extractJson(body: unknown): unknown {
-  const r = (body as { result?: { response?: unknown } })?.result?.response;
+  type B = { response?: unknown; choices?: { message?: { content?: unknown } }[] };
+  const b = body as (B & { result?: B }) | null;
+  const r = b?.result?.response ?? b?.result?.choices?.[0]?.message?.content ?? b?.choices?.[0]?.message?.content ?? b?.response;
   if (r && typeof r === "object") return r;
   if (typeof r !== "string") return null;
   const start = r.indexOf("{"), end = r.lastIndexOf("}");

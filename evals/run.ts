@@ -28,7 +28,7 @@ async function ai(input: ParseInput): Promise<Proposal | null> {
     body: JSON.stringify({ messages: buildMessages(input), max_tokens: 300, temperature: 0, ...(json ? { response_format: { type: "json_schema", json_schema: PROPOSAL_SCHEMA } } : {}) }) });
   for (let attempt = 0; attempt < 3; attempt++) {
     let r = await send(true);
-    if (r.status === 400) r = await send(false);
+    if (r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) r = await send(false);
     if (r.ok) return normalizeProposal(extractJson(await r.json()), input);
     if (r.status !== 429 && r.status < 500) { console.error(`HTTP ${r.status}: ${(await r.text()).slice(0, 200)}`); return null; }
     await new Promise((res) => setTimeout(res, 1000 * 2 ** attempt));

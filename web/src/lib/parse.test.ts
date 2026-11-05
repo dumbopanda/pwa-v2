@@ -48,6 +48,9 @@ describe("normalizeProposal", () => {
     expect(extractJson({ result: { response: "no json here" } })).toBeNull();
     expect(extractJson({ result: { response: "{broken" } })).toBeNull();
     expect(extractJson(null)).toBeNull();
+    expect(extractJson({ choices: [{ message: { content: '{"a": 3}' } }] })).toEqual({ a: 3 });
+    expect(extractJson({ result: { choices: [{ message: { content: '{"a": 4}' } }] } })).toEqual({ a: 4 });
+    expect(extractJson({ result: { choices: [{ message: { content: null } }] } })).toBeNull();   // a thinking model that ran out of tokens
   });
 });
 
