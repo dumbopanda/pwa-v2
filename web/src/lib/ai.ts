@@ -3,7 +3,8 @@ import type { Proposal } from "../../../supabase/functions/_shared/parse.ts";
 import type { ReviewFacts, ReviewText } from "../../../supabase/functions/_shared/review.ts";
 import { amountText, emptyDraft, type Draft } from "./entryRows";
 import { normName } from "./ledger";
-import type { Account, Category } from "./types";
+import type { Account, Category, Entry } from "./types";
+import { parseRules } from "../../../supabase/functions/_shared/rules.ts";
 
 export type AiFail = { reason: "daily_cap" | "minute_cap" | "unavailable"; retryAfter?: number };
 
@@ -59,4 +60,35 @@ export function proposalToDraft(p: Proposal, accounts: Account[], categories: Ca
     hint: hint ?? (p.confidence < 0.5 ? "Not sure about this one. Please check it." : undefined),
     assumedAccount: assumed,
   };
+}
+
+const STOP = new Set(["the", "and", "for", "with", "from", "via", "paid", "spent", "self", "transfer", "opening", "balance"]);
+
+/** Your own past entries as word -> category ("swiggy" -> "Food & dining"). Newest wins. Stays on the device. */
+export function historyMap(entries: Entry[], categories: Category[]): Map<string, string> {
+  const name = new Map(categories.filter((c) => !c.deleted_at && !c.archived_at).map((c) => [c.id, c.name]));
+  const m = new Map<string, string>();
+  for (const e of [...entries].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
+    if (e.deleted_at || e.transfer_group || !e.category_id) continue;
+    const c = name.get(e.category_id); if (!c) continue;
+    for (const w of e.expense_name.toLowerCase().split(/[^a-z0-9&]+/)) if (w.length >= 3 && !/^\d/.test(w) && !STOP.has(w)) m.set(w, c);
+  }
+  return m;
+}
+
+export type Read = { ok: true; proposal: Proposal; source: "rules" | "ai"; note?: string } | { ok: false; fail: AiFail };
+
+/**
+ * Read a quick-log message. Plain code first, on the phone (free, instant,
+ * nothing sent). Only when it isn't sure does the text go to the AI. If the AI
+ * can't help, a partial plain-code reading still beats an empty form.
+ */
+export async function readEntry(text: string, accounts: Account[], categories: Category[], today: string, history: Map<string, string>): Promise<Read> {
+  const input = { text, accounts: accounts.map((a) => a.name), categories: categories.map((c) => c.name), today };
+  const r = parseRules(input, history);
+  if (r.sure) return { ok: true, proposal: r, source: "rules" };
+  const a = await parseText(text, accounts, categories, today);
+  if (a.ok) return { ok: true, proposal: a.data.proposal, source: "ai" };
+  if (r.amount_minor !== null) return { ok: true, proposal: r, source: "rules", note: "Read without AI this time. Please check it." };
+  return { ok: false, fail: a.fail };
 }

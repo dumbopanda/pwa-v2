@@ -39,3 +39,17 @@ describe("proposalToDraft", () => {
     for (const reason of ["daily_cap", "minute_cap", "unavailable"] as const) expect(failMessage({ reason })).toMatch(/by hand/);
   });
 });
+
+describe("historyMap", () => {
+  it("maps words of past names to their category, newest first, ignoring transfers and deleted rows", async () => {
+    const { historyMap } = await import("./ai");
+    const e = (name: string, cat: string | null, created: string, extra: object = {}) => ({ id: name + created, client_uid: "", entry_date: "2026-11-01", txn_id: "Nabcdef", account_id: "a",
+      category_id: cat, expense_name: name, more_info: null, txn_type: "Payment", amount_minor: 1, direction: "debit" as const, transfer_group: null, created_at: created, updated_at: "", deleted_at: null, ...extra });
+    const cats = [{ id: "f", client_uid: "", name: "Food", sort_order: 0, archived_at: null, deleted_at: null, updated_at: "" },
+      { id: "g", client_uid: "", name: "Groceries", sort_order: 0, archived_at: null, deleted_at: null, updated_at: "" }];
+    const m = historyMap([e("Dabbawala lunch", "f", "1"), e("dabbawala", "g", "2"), e("Old shop", "f", "3", { deleted_at: "x" }), e("Self Transfer", null, "4", { transfer_group: "t" })], cats);
+    expect(m.get("dabbawala")).toBe("Groceries");
+    expect(m.get("lunch")).toBe("Food");
+    expect(m.has("old")).toBe(false); expect(m.has("self")).toBe(false);
+  });
+});

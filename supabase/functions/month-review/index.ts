@@ -1,8 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { reply, corsHeaders } from "../_shared/cors.ts";
 import { callModel, takeQuota } from "../_shared/ai.ts";
-import { buildReviewRequest, validateReview, type ReviewFacts } from "../_shared/review.ts";
-import { extractToolInput } from "../_shared/parse.ts";
+import { buildReviewMessages, REVIEW_SCHEMA, validateReview, type ReviewFacts } from "../_shared/review.ts";
+import { extractJson } from "../_shared/parse.ts";
 
 // Receives numbers that plain code already computed and returns words about
 // them. It never changes a number: any reply with a number that isn't in the
@@ -22,8 +22,8 @@ Deno.serve(async (req) => {
   if (q === "error") return reply(req, { error: "ai_unavailable" }, 503);
   if (!q.ok) return reply(req, { error: q.reason, retry_after_s: q.retry_after_s }, 429);
 
-  const body = await callModel(buildReviewRequest(facts), 25000);
-  const review = body ? validateReview(extractToolInput(body, "write_review"), facts) : null;
+  const body = await callModel(buildReviewMessages(facts), REVIEW_SCHEMA, 600, 25000);
+  const review = body ? validateReview(extractJson(body), facts) : null;
   if (!review) return reply(req, { error: "ai_unavailable" }, 503);
   return reply(req, { review });
 });

@@ -1,7 +1,7 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { reply, corsHeaders } from "../_shared/cors.ts";
 import { callModel, takeQuota } from "../_shared/ai.ts";
-import { buildRequest, extractToolInput, MAX_TEXT, normalizeProposal, type ParseInput } from "../_shared/parse.ts";
+import { buildMessages, extractJson, MAX_TEXT, normalizeProposal, PROPOSAL_SCHEMA, type ParseInput } from "../_shared/parse.ts";
 
 // Reads one quick-log message and proposes an entry. Sends the model ONLY the
 // text, the caller's own account and category names, and today's date.
@@ -28,8 +28,8 @@ Deno.serve(async (req) => {
   if (q === "error") return reply(req, { error: "ai_unavailable" }, 503);
   if (!q.ok) return reply(req, { error: q.reason, retry_after_s: q.retry_after_s }, 429);
 
-  const body = await callModel(buildRequest(input));
-  const proposal = body ? normalizeProposal(extractToolInput(body), input) : null;
+  const body = await callModel(buildMessages(input), PROPOSAL_SCHEMA, 300);
+  const proposal = body ? normalizeProposal(extractJson(body), input) : null;
   if (!proposal) return reply(req, { error: "ai_unavailable" }, 503);
   return reply(req, { proposal, left_today: q.left_today });
 });

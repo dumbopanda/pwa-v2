@@ -25,8 +25,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByText('Is this right?').waitFor();
   check('confirm card shows amount', (await text('[aria-label="Check this entry"] .big')).includes('₹340.00'));
   check('nothing saved before confirm', !db.entries.some((e) => e.expense_name === 'swiggy'));
-  check('AI got only text + own names + date', JSON.stringify(Object.keys(db.parseCalls[0]).sort()) === '["accounts","categories","text","today"]'
-    && !JSON.stringify(db.parseCalls[0]).match(/balance|5000000|amount/i), JSON.stringify(db.parseCalls[0]));
+  check('clear entry read on the phone: no AI call', db.parseCalls.length === 0 && await p.getByText('Read on your phone').isVisible(), JSON.stringify(db.parseCalls));
   await shot('2-confirm');
   await p.getByRole('button', { name: 'Confirm' }).click();
   await p.getByText('Saved').first().waitFor();
@@ -36,21 +35,30 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('status Logged', await p.getByText('Logged', { exact: true }).isVisible());
   check('ai accepted + first-save time logged', db.events.some((e) => e.name === 'ai_result' && e.props.outcome === 'accepted') && db.events.some((e) => e.name === 'entry_saved' && typeof e.props.ms === 'number' && e.props.via === 'ai'), JSON.stringify(db.events));
 
-  // --- edit from confirm card, then reject
-  await p.getByLabel('Say or type what you spent').fill('chai 20 cash'); await p.getByRole('button', { name: 'Log', exact: true }).click();
+  // --- an unclear entry goes to the AI, with only the text + own names + date
+  await p.getByLabel('Say or type what you spent').fill('dinner around 450 card'); await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
-  check('assumed-account note when none named', await p.getByText(/No account was mentioned/).count() > 0 || true);
+  check('unclear entry goes to the AI', db.parseCalls.length === 1 && await p.getByText('Read by AI').isVisible());
+  check('AI got only text + own names + date', JSON.stringify(Object.keys(db.parseCalls[0]).sort()) === '["accounts","categories","text","today"]'
+    && !JSON.stringify(db.parseCalls[0]).match(/balance|5000000|amount/i), JSON.stringify(db.parseCalls[0]));
   await p.getByRole('button', { name: 'Discard' }).click();
-  check('reject logged, nothing saved', db.events.some((e) => e.props?.outcome === 'rejected') && !db.entries.some((e) => e.expense_name === 'chai' && e.amount_minor === 2000 && e.entry_date !== db.entries[2].entry_date));
+  check('reject logged with its source', db.events.some((e) => e.props?.outcome === 'rejected' && e.props?.source === 'ai'));
 
-  // --- AI down / over the cap: manual add still opens
+  // --- AI down: a partial plain-code reading is still offered, marked as such
+  db.aiMode = 'down';
+  await p.getByLabel('Say or type what you spent').fill('approx 90 snacks'); await p.getByRole('button', { name: 'Log', exact: true }).click();
+  await p.getByText('Is this right?').waitFor();
+  check('AI down: plain-code reading offered with a note', await p.getByText(/Read without AI this time/).isVisible() && (await text('[aria-label="Check this entry"] .big')).includes('₹90.00'));
+  await p.getByRole('button', { name: 'Discard' }).click();
+
+  // --- AI over its cap and nothing readable: the manual form opens with the text
   db.aiMode = 'cap';
-  await p.getByLabel('Say or type what you spent').fill('auto 120'); await p.getByRole('button', { name: 'Log', exact: true }).click();
+  await p.getByLabel('Say or type what you spent').fill('paid the dhobi'); await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByRole('dialog', { name: 'New entry' }).waitFor();
-  check('cap -> manual form opens with the text', (await p.getByLabel('Name or place').inputValue()) === 'auto 120');
+  check('cap -> manual form opens with the text', (await p.getByLabel('Name or place').inputValue()) === 'paid the dhobi');
   await p.getByLabel(/^Amount/).fill('120'); await p.locator('.sheet .tiles').getByRole('button', { name: 'UPI bank', exact: true }).click();
   await p.getByRole('button', { name: /^Save/ }).click(); await p.getByRole('dialog').waitFor({ state: 'detached' });
-  check('manual entry saved', db.entries.some((e) => e.expense_name === 'auto 120' && e.amount_minor === 12000));
+  check('manual entry saved', db.entries.some((e) => e.expense_name === 'paid the dhobi' && e.amount_minor === 12000));
   db.aiMode = 'ok';
 
   // --- validation

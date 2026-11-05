@@ -1,6 +1,6 @@
 import Icon from "../Icon";
 import { useMemo, useRef, useState } from "react";
-import { failMessage, parseText, proposalToDraft } from "../lib/ai";
+import { failMessage, historyMap, proposalToDraft, readEntry } from "../lib/ai";
 import { firstSaveMs, logEvent, saveDraft, setNoSpend } from "../lib/actions";
 import { Empty, Sheet, toast, useAction } from "../components";
 import { checkDraft, draftFromEntry, emptyDraft, type Draft } from "../lib/entryRows";
@@ -14,7 +14,7 @@ import Detail from "./Detail";
 import EntrySheet, { LAST_ACCOUNT } from "./EntrySheet";
 import { buildLines, Lines } from "./EntryRow";
 
-type Pending = { draft: Draft; hint?: string; assumed: boolean; via: "ai" | "sms" };
+type Pending = { draft: Draft; hint?: string; assumed: boolean; via: "ai" | "sms"; source: "rules" | "ai" };
 
 /** The month a review should be offered for: the last 3 days of a month, and the first 5 of the next. */
 export function reviewMonth(today: string): string | null {
@@ -29,7 +29,7 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
   const today = useToday();
   const [text, setText] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
-  const [form, setForm] = useState<{ draft: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; original?: Draft; hint?: string } | null>(null);
+  const [form, setForm] = useState<{ draft: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; original?: Draft; hint?: string; source?: "rules" | "ai" } | null>(null);
   const [detail, setDetail] = useState<Entry | null>(null);
   const [sms, setSms] = useState<string | null>(null);
   const { busy, error, run, setError } = useAction();
@@ -55,11 +55,11 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
   async function read(raw: string, via: "ai" | "sms") {
     const t = raw.trim();
     if (!t) return;
-    const r = await run(() => parseText(t, L.activeAccounts, L.activeCategories, today));
+    const r = await run(() => readEntry(t, L.activeAccounts, L.activeCategories, today, historyMap(L.entries, L.categories)));
     if (!r) return;
     if (!r.ok) { toast(failMessage(r.fail)); by_hand({ name: via === "ai" ? t.slice(0, 120) : "" }); setSms(null); return; }
-    const x = proposalToDraft(r.data.proposal, L.activeAccounts, L.activeCategories, lastAccount(), today);
-    setPending({ draft: x.draft, hint: x.hint, assumed: x.assumedAccount, via });
+    const x = proposalToDraft(r.proposal, L.activeAccounts, L.activeCategories, lastAccount(), today);
+    setPending({ draft: x.draft, hint: r.note ?? x.hint, assumed: x.assumedAccount, via, source: r.source });
     setText(""); setSms(null);
   }
 
@@ -73,11 +73,11 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
     try { localStorage.setItem(LAST_ACCOUNT, pending.draft.accountId); } catch { /* ignore */ }
     const ms = firstSaveMs();
     logEvent("entry_saved", { via: pending.via, ...(ms !== undefined ? { ms } : {}) });
-    logEvent("ai_result", { outcome: "accepted" });
+    logEvent("ai_result", { outcome: "accepted", source: pending.source });
     toast("Saved"); setPending(null);
   }
 
-  function reject() { logEvent("ai_result", { outcome: "rejected" }); setPending(null); setError(null); }
+  function reject() { logEvent("ai_result", { outcome: "rejected", source: pending?.source ?? "ai" }); setPending(null); setError(null); }
 
   const stat = state(today);
   const acc = (id: string) => L.accountById.get(id);
@@ -113,7 +113,8 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
 
       {pending && (
         <div className="hero confirm stack" role="group" aria-label="Check this entry">
-          <div className="caps">Is this right?</div>
+          <div className="row" style={{ justifyContent: "space-between" }}><span className="caps">Is this right?</span>
+            <span className="caps">{pending.source === "ai" ? "Read by AI" : "Read on your phone"}</span></div>
           <div className="big">{pending.draft.amount ? formatMoney(cardOk?.ok ? cardOk.minor : 0, acc(pending.draft.accountId)?.currency ?? "INR") : "No amount"}</div>
           <div>
             {pending.draft.transfer
@@ -127,7 +128,7 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
           {error && <p className="error" role="alert">{error}</p>}
           <div className="row">
             <button className="btn lime grow" onClick={confirm} disabled={busy || !cardOk?.ok}><Icon name="check" size={18} />Confirm</button>
-            <button className="btn ghost grow" onClick={() => { setForm({ draft: pending.draft, via: pending.via, original: pending.draft, hint: pending.hint }); setPending(null); }}>Edit</button>
+            <button className="btn ghost grow" onClick={() => { setForm({ draft: pending.draft, via: pending.via, original: pending.draft, hint: pending.hint, source: pending.source }); setPending(null); }}>Edit</button>
             <button className="iconbtn dark" aria-label="Discard" onClick={reject}><Icon name="close" /></button>
           </div>
         </div>
@@ -180,7 +181,7 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
           <button className="btn primary" disabled={busy || !sms.trim()} onClick={() => read(sms, "sms")}>{busy ? "Reading…" : "Read it"}</button>
         </Sheet>
       )}
-      {form && <EntrySheet initial={form.draft} existing={form.existing} via={form.via} aiOriginal={form.original} hint={form.hint} onClose={() => setForm(null)} />}
+      {form && <EntrySheet initial={form.draft} existing={form.existing} via={form.via} aiOriginal={form.original} source={form.source} hint={form.hint} onClose={() => setForm(null)} />}
       {detail && <Detail entry={detail} onClose={() => setDetail(null)} onEdit={(e) => {
         const a = L.accountById.get(e.account_id);
         setForm({ draft: draftFromEntry(e, a?.currency ?? "INR"), existing: e, via: "manual" });

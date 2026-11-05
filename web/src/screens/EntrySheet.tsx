@@ -11,8 +11,8 @@ import type { Entry } from "../lib/types";
 export const LAST_ACCOUNT = "lastAccount";
 
 /** Add, edit or confirm-and-fix an entry. `via` says where it came from, for the usage metrics. */
-export default function EntrySheet({ initial, existing, via, aiOriginal, hint, onClose }: {
-  initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; hint?: string; onClose: () => void;
+export default function EntrySheet({ initial, existing, via, aiOriginal, source, hint, onClose }: {
+  initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; source?: "rules" | "ai"; hint?: string; onClose: () => void;
 }) {
   const { activeAccounts, activeCategories, accountById } = useLedger();
   const today = useToday();
@@ -31,7 +31,7 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, hint, o
     try { localStorage.setItem(LAST_ACCOUNT, d.accountId); } catch { /* ignore */ }
     const ms = firstSaveMs();
     logEvent("entry_saved", { via: d.transfer ? "manual" : via, ...(ms !== undefined ? { ms } : {}) });
-    if (via === "ai" && aiOriginal) logEvent("ai_result", { outcome: JSON.stringify(aiOriginal) === JSON.stringify(d) ? "accepted" : "edited" });
+    if (via !== "manual" && aiOriginal) logEvent("ai_result", { outcome: JSON.stringify(aiOriginal) === JSON.stringify(d) ? "accepted" : "edited", source: source ?? "ai" });
     toast(existing ? "Changes saved" : "Saved");
     onClose();
   }

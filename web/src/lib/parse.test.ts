@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { normalizeProposal, redactSms, buildUserMessage, weekday, extractToolInput, type ParseInput } from "../../../supabase/functions/_shared/parse.ts";
+import { normalizeProposal, redactSms, buildUserMessage, weekday, extractJson, type ParseInput } from "../../../supabase/functions/_shared/parse.ts";
+import { parseRules } from "../../../supabase/functions/_shared/rules.ts";
 import { templateReview, validateReview, type ReviewFacts } from "../../../supabase/functions/_shared/review.ts";
 import { scoreCase, summarize, type Case } from "../../../evals/score.ts";
 import cases from "../../../evals/cases.json";
@@ -41,9 +42,12 @@ describe("normalizeProposal", () => {
     expect(normalizeProposal(raw({ direction: "maybe" }), input)).toBeNull();
     expect(normalizeProposal(null, input)).toBeNull();
   });
-  it("finds the tool call in an API body", () => {
-    expect(extractToolInput({ content: [{ type: "text" }, { type: "tool_use", name: "propose_entry", input: { a: 1 } }] })).toEqual({ a: 1 });
-    expect(extractToolInput({ content: [] })).toBeNull();
+  it("finds the JSON in a Workers AI body, in JSON mode or plain text", () => {
+    expect(extractJson({ result: { response: { a: 1 } } })).toEqual({ a: 1 });
+    expect(extractJson({ result: { response: 'Sure! {"a": 2} hope that helps' } })).toEqual({ a: 2 });
+    expect(extractJson({ result: { response: "no json here" } })).toBeNull();
+    expect(extractJson({ result: { response: "{broken" } })).toBeNull();
+    expect(extractJson(null)).toBeNull();
   });
 });
 
@@ -106,5 +110,41 @@ describe("eval scoring", () => {
     expect(good.amount && good.direction && good.category && good.account && good.date).toBe(true);
     const none = summarize([scoreCase(c, null)]);
     expect(none.amount_pct).toBe(0);
+  });
+});
+
+describe("plain-code parser", () => {
+  const base = { accounts: ["UPI bank", "Cash", "Credit card", "Salary account"], categories: ["Food & dining", "Groceries", "Transport", "Refund", "Salary"], today: "2026-11-03" };
+  const r = (text: string, h?: Map<string, string>) => parseRules({ ...base, text }, h);
+  it("reads the common shape and is sure about it", () => {
+    expect(r("swiggy 340 upi")).toMatchObject({ amount_minor: 34000, account: "UPI bank", category: "Food & dining", direction: "spent", sure: true });
+  });
+  it("reads Hindi numbers and k / lakh without floats", () => {
+    expect(r("dedh sau chai").amount_minor).toBe(15000);
+    expect(r("saadhe teen sau auto").amount_minor).toBe(35000);
+    expect(r("1.2k groceries").amount_minor).toBe(120000);
+    expect(r("2.5 lakh bonus").amount_minor).toBe(25000000);
+    expect(r("0.1k chai").amount_minor).toBe(10000);
+  });
+  it("is not sure when there is more than one amount, or the text is vague", () => {
+    expect(r("lunch 150 and chai 20").sure).toBe(false);
+    expect(r("around 300 snacks").sure).toBe(false);
+    expect(r("some money on chai").amount_minor).toBeNull();
+  });
+  it("never reads a balance as the amount", () => {
+    expect(r("Rs.1,250.00 debited from A/c XX1234 to VPA zomato@upi. Avl bal Rs 45,300.50").amount_minor).toBe(125000);
+  });
+  it("learns categories from your own history first", () => {
+    expect(r("dabbawala 900", new Map([["dabbawala", "Food & dining"]])).category).toBe("Food & dining");
+    expect(r("dabbawala 900").category).toBeNull();
+  });
+  it("reads transfers both ways round, and a transfer is never income", () => {
+    expect(r("moved 500 from upi to cash")).toMatchObject({ account: "UPI bank", transfer_to: "Cash", amount_minor: 50000 });
+    expect(r("moved 500 to cash from upi")).toMatchObject({ account: "UPI bank", transfer_to: "Cash" });
+    expect(r("transferred 1000 from salary account to upi bank")).toMatchObject({ transfer_to: "UPI bank", direction: "spent" });
+  });
+  it("never proposes a future date", () => {
+    expect(r("5 dec chai 20").date).toBe("2025-12-05");
+    expect(r("kal chai 20").date).toBe("2026-11-02");
   });
 });

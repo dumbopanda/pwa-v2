@@ -2,7 +2,6 @@
 // amount; the model only writes words around them. validateReview() refuses
 // any reply containing a number that isn't in the facts it was given, and the
 // app falls back to templateReview() (no AI) in that case.
-import { PARSE_MODEL } from "./parse.ts";
 
 export type ReviewFacts = {
   month: string;                         // "November 2026"
@@ -16,20 +15,13 @@ export type ReviewFacts = {
 
 export type ReviewText = { summary: string; suggestions: string[] };
 
-export const REVIEW_TOOL = {
-  name: "write_review",
-  description: "Write the month-end summary and three suggestions.",
-  input_schema: {
-    type: "object",
-    properties: {
-      summary: { type: "string", description: "2-4 plain sentences on where the money went." },
-      suggestions: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3, description: "Exactly 3 short, practical suggestions for next month." },
-    },
-    required: ["summary", "suggestions"],
-  },
+export const REVIEW_SCHEMA = {
+  type: "object",
+  properties: { summary: { type: "string" }, suggestions: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 } },
+  required: ["summary", "suggestions"],
 } as const;
 
-export const REVIEW_PROMPT = `You write a calm, plain-language month-end review of a person's spending from numbers that were already computed. Call write_review once.
+export const REVIEW_PROMPT = `You write a calm, plain-language month-end review of a person's spending from numbers that were already computed. Reply with ONLY one JSON object, no other text: {"summary": "2-4 plain sentences", "suggestions": ["three", "short", "sentences"]}
 
 Hard rules:
 - Use ONLY the numbers and amounts exactly as written in the facts. Copy amounts as given, including the currency symbol. Never add, subtract, round, convert, total, average or estimate anything.
@@ -38,17 +30,10 @@ Hard rules:
 - Mention categories that went over budget by name when over_by is set. Mention what is left to save if given.
 - Exactly 3 suggestions, each one short sentence, each about next month and tied to the facts.`;
 
-export function buildReviewRequest(f: ReviewFacts) {
-  return {
-    model: PARSE_MODEL,
-    max_tokens: 700,
-    temperature: 0.3,
-    system: REVIEW_PROMPT,
-    tools: [REVIEW_TOOL],
-    tool_choice: { type: "tool", name: REVIEW_TOOL.name },
-    messages: [{ role: "user", content: `Facts:\n${JSON.stringify(f)}` }],
-  };
-}
+export const buildReviewMessages = (f: ReviewFacts) => [
+  { role: "system", content: REVIEW_PROMPT },
+  { role: "user", content: `Facts:\n${JSON.stringify(f)}` },
+];
 
 const NUM = /\d[\d,]*(?:\.\d+)?/g;
 const canon = (s: string) => s.replace(/,/g, "");

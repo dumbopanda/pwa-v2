@@ -432,3 +432,17 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/email-otp/deno.json"
 entrypoint = "./functions/email-otp/index.ts"
+
+# AI reads (Cloudflare Workers AI, free daily allowance). Signed-in callers only.
+# Secrets: CF_ACCOUNT_ID, CF_API_TOKEN, optional AI_MODEL, ALLOWED_ORIGINS.
+[functions.parse-entry]
+enabled = true
+verify_jwt = true
+import_map = "./functions/parse-entry/deno.json"
+entrypoint = "./functions/parse-entry/index.ts"
+
+[functions.month-review]
+enabled = true
+verify_jwt = true
+import_map = "./functions/month-review/deno.json"
+entrypoint = "./functions/month-review/index.ts"
