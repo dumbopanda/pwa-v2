@@ -6,7 +6,7 @@ import { Empty, Sheet, toast, useAction } from "../components";
 import { checkDraft, draftFromEntry, emptyDraft, type Draft } from "../lib/entryRows";
 import { dayLabel } from "../lib/format";
 import { useLedger, useToday } from "../lib/hooks";
-import { addDays, daysInMonth, dayState, isLogged, missedDays, monthOf, streak } from "../lib/ledger";
+import { addDays, daysInMonth, dayState, isLogged, missedDays, monthOf } from "../lib/ledger";
 import { formatMoney } from "../lib/money";
 import { monthLabel } from "../lib/reviewFacts";
 import type { Entry } from "../lib/types";
@@ -24,7 +24,7 @@ export function reviewMonth(today: string): string | null {
   return null;
 }
 
-export default function Today({ onReview, onSettings }: { onReview: (ym: string) => void; onSettings: () => void }) {
+export default function Today({ onReview }: { onReview: (ym: string) => void }) {
   const L = useLedger();
   const today = useToday();
   const [text, setText] = useState("");
@@ -37,7 +37,6 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
 
   const state = (d: string) => dayState(d, L.loggedDates, L.noSpend);
   const first = L.s.firstDay || today;
-  const run_ = streak(today, state, first);
   const missed = useMemo(() => missedDays(today, state, first, 3), [today, L.loggedDates, L.noSpend, first]);  // eslint-disable-line react-hooks/exhaustive-deps
   const todays = L.entries.filter((e) => e.entry_date === today && isLogged(e));
   const lines = buildLines(todays, L.accountById, L.categoryById, L.accounts);
@@ -85,14 +84,6 @@ export default function Today({ onReview, onSettings }: { onReview: (ym: string)
 
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div><h1>Today</h1><div className="muted">{dayLabel(today)}</div></div>
-        <div className="row">
-          {run_ > 0 && <span className="statuschip" aria-label={`${run_} day streak`}><span className="dot" aria-hidden="true" />{run_}-day streak</span>}
-          <button className="iconbtn" aria-label="Settings" onClick={onSettings}><Icon name="settings" /></button>
-        </div>
-      </div>
-
       {noAccounts ? <Empty>Add an account in Settings to start logging.</Empty> : (
         <form className="stack" onSubmit={(e) => { e.preventDefault(); void read(text, "ai"); }}>
           <label className="lbl" htmlFor="quick">Say or type what you spent</label>

@@ -24,7 +24,8 @@ describe("formatMoney", () => {
   it("formats en-IN without floats", () => {
     expect(formatMoney(12345678, "INR")).toBe("₹1,23,456.78");
     expect(formatMoney(5, "INR")).toBe("₹0.05");
-    expect(formatMoney(-34000, "INR")).toBe("−₹340.00");
+    expect(formatMoney(-34000, "INR")).toBe("−₹340");
+    expect(formatMoney(34050, "INR")).toBe("₹340.50");
     expect(formatMoney(500, "JPY")).toBe("JP¥500");
     expect(formatMoney(999999999, "INR")).toBe("₹99,99,999.99");
   });

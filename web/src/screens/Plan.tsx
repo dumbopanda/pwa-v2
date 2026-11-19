@@ -30,7 +30,6 @@ export default function Plan({ onReview }: { onReview: (ym: string) => void }) {
   const isCurrent = ym === monthOf(today);
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
-      <h1>Plan</h1>
       <MonthNav ym={ym} label={monthLabel(ym)} max={addMonths(monthOf(today), 1)} onChange={(d) => setYm(addMonths(ym, d))} />
 
       <section className="card stack" aria-label="Summary">

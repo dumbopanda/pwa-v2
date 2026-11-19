@@ -5,6 +5,9 @@ import { ToastHost } from "../components";
 import { APP_NAME } from "../config";
 import { useLedger, useToday } from "../lib/hooks";
 import { dayState, streak } from "../lib/ledger";
+import { dayLabel } from "../lib/format";
+import { emptyDraft } from "../lib/entryRows";
+import EntrySheet, { LAST_ACCOUNT } from "./EntrySheet";
 import { openUser, sync, useStore } from "../lib/store";
 import History from "./History";
 import Metrics from "./Metrics";
@@ -14,17 +17,22 @@ import Settings from "./Settings";
 import Stats from "./Stats";
 import Today from "./Today";
 
-type Tab = "today" | "history" | "stats" | "plan";
+type Tab = "today" | "history" | "stats";
 type Overlay = { k: "settings" } | { k: "metrics" } | { k: "review"; ym: string } | null;
-const TABS: [Tab, string][] = [["today", "Today"], ["history", "History"], ["stats", "Stats"], ["plan", "Plan"]];  // the tab key is also its icon name
+// The old app's layout: a header on every screen, a dark dock with the tabs, and a green Add button.
+const TABS: [Tab, string][] = [["today", "Today"], ["history", "History"], ["stats", "Stats"]];  // the tab key is also its icon name
 
 export default function Shell({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("today");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [plan, setPlan] = useState(false);     // Stats tab: Spending or Plan
+  const [adding, setAdding] = useState(false);
   const s = useStore();
   const L = useLedger();
   const today = useToday();
   const opened = useRef(false);
+  const run = streak(today, (d: string) => dayState(d, L.loggedDates, L.noSpend), s.firstDay || today);
+  const lastAccount = () => { try { return localStorage.getItem(LAST_ACCOUNT); } catch { return null; } };
 
   useEffect(() => {
     let live = true;
@@ -47,19 +55,35 @@ export default function Shell({ userId }: { userId: string }) {
 
   if (overlay?.k === "settings") return <><Settings onBack={() => setOverlay(null)} onMetrics={() => setOverlay({ k: "metrics" })} /><ToastHost /></>;
   if (overlay?.k === "metrics") return <Metrics onBack={() => setOverlay({ k: "settings" })} />;
-  if (overlay?.k === "review") return <><Review ym={overlay.ym} onClose={() => setOverlay(null)} onPlan={() => { setOverlay(null); setTab("plan"); }} /><ToastHost /></>;
+  if (overlay?.k === "review") return <><Review ym={overlay.ym} onClose={() => setOverlay(null)} onPlan={() => { setOverlay(null); setTab("stats"); setPlan(true); }} /><ToastHost /></>;
 
   return (
     <div className="app">
       {s.status === "offline" && <div className="notice" role="status" style={{ borderRadius: 0, textAlign: "center" }}>Offline. Showing what was last synced. Saving needs a connection.</div>}
-      {tab === "today" && <Today onSettings={() => setOverlay({ k: "settings" })} onReview={(ym) => setOverlay({ k: "review", ym })} />}
+      <header className="apphead">
+        <div><h1>{APP_NAME}</h1><div className="muted small">{dayLabel(today)}</div></div>
+        <div className="row">
+          {run > 0 && <span className="statuschip" aria-label={`${run} day streak`}><span className="dot" aria-hidden="true" />{run}<span className="wide">-day streak</span></span>}
+          <button className="iconbtn" aria-label="Settings" onClick={() => setOverlay({ k: "settings" })}><Icon name="user" /></button>
+        </div>
+      </header>
+      {tab === "today" && <Today onReview={(ym) => setOverlay({ k: "review", ym })} />}
       {tab === "history" && <History />}
-      {tab === "stats" && <Stats />}
-      {tab === "plan" && <Plan onReview={(ym) => setOverlay({ k: "review", ym })} />}
+      {tab === "stats" && <>
+        <div className="screen" style={{ paddingBottom: 0 }}><div className="seg" role="group" aria-label="Stats view">
+          <button aria-pressed={!plan} onClick={() => setPlan(false)}>Spending</button>
+          <button aria-pressed={plan} onClick={() => setPlan(true)}>Plan</button>
+        </div></div>
+        {plan ? <Plan onReview={(ym) => setOverlay({ k: "review", ym })} /> : <Stats />}
+      </>}
+      {adding && <EntrySheet initial={emptyDraft(today, lastAccount() ?? (L.activeAccounts.length === 1 ? L.activeAccounts[0].id : ""))} via="manual" onClose={() => setAdding(false)} />}
       <ToastHost />
-      <div className="navwrap"><nav className="navpill" aria-label={APP_NAME}>
-        {TABS.map(([k, label]) => <button key={k} className="tab" aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={20} /><span>{label}</span></button>)}
-      </nav></div>
+      <div className="navwrap"><div className="dock">
+        <nav className="navpill" aria-label={APP_NAME}>
+          {TABS.map(([k, label]) => <button key={k} className="tab" aria-label={label} aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={20} /><span>{label}</span></button>)}
+        </nav>
+        <button className="dockadd" onClick={() => setAdding(true)} disabled={L.activeAccounts.length === 0}><Icon name="plus" size={20} /><span>Add</span></button>
+      </div></div>
     </div>
   );
 }

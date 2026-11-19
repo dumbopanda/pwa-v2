@@ -14,7 +14,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   const shot = (n) => p.screenshot({ path: `${OUT}/a-${n}.png`, fullPage: true });
 
   await p.goto('http://localhost:5173/');
-  await p.getByRole('heading', { name: 'Today' }).waitFor();
+  await p.getByLabel('Say or type what you spent').waitFor();
   await shot('1-today');
   check('missed days shown gently', await p.getByText('Some days are blank').isVisible());
   check('no scolding words', !/(missed|failed|lazy|behind)/i.test(await p.locator('body').innerText()));
@@ -23,7 +23,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByLabel('Say or type what you spent').fill('swiggy 340 upi');
   await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
-  check('confirm card shows amount', (await text('[aria-label="Check this entry"] .big')).includes('₹340.00'));
+  check('confirm card shows amount', (await text('[aria-label="Check this entry"] .big')).includes('₹340'));
   check('nothing saved before confirm', !db.entries.some((e) => e.expense_name === 'swiggy'));
   check('clear entry read on the phone: no AI call', db.parseCalls.length === 0 && await p.getByText('Read on your phone').isVisible(), JSON.stringify(db.parseCalls));
   await shot('2-confirm');
@@ -31,7 +31,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByText('Saved').first().waitFor();
   const saved = db.entries.find((e) => e.expense_name === 'swiggy');
   check('saved integer paise on UPI bank, debit, Food', saved && saved.amount_minor === 34000 && saved.direction === 'debit' && saved.account_id === db.A('UPI bank') && saved.category_id === db.C('Food & dining'), JSON.stringify(saved));
-  check('today list + running total', (await text('main')).includes('₹340.00') && (await p.getByText('swiggy').count()) > 0);
+  check('today list + running total', (await text('main')).includes('₹340') && (await p.getByText('swiggy').count()) > 0);
   check('status Logged', await p.getByText('Logged', { exact: true }).isVisible());
   check('ai accepted + first-save time logged', db.events.some((e) => e.name === 'ai_result' && e.props.outcome === 'accepted') && db.events.some((e) => e.name === 'entry_saved' && typeof e.props.ms === 'number' && e.props.via === 'ai'), JSON.stringify(db.events));
 
@@ -48,7 +48,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   db.aiMode = 'down';
   await p.getByLabel('Say or type what you spent').fill('approx 90 snacks'); await p.getByRole('button', { name: 'Log', exact: true }).click();
   await p.getByText('Is this right?').waitFor();
-  check('AI down: plain-code reading offered with a note', await p.getByText(/Read without AI this time/).isVisible() && (await text('[aria-label="Check this entry"] .big')).includes('₹90.00'));
+  check('AI down: plain-code reading offered with a note', await p.getByText(/Read without AI this time/).isVisible() && (await text('[aria-label="Check this entry"] .big')).includes('₹90'));
   await p.getByRole('button', { name: 'Discard' }).click();
 
   // --- AI over its cap and nothing readable: the manual form opens with the text
@@ -183,7 +183,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.waitForTimeout(500);
   await p.unroute('**/*.supabase.co/**'); await p.route('**/*.supabase.co/**', (r) => r.abort());
   await p.reload();
-  await p.getByRole('heading', { name: 'Today' }).waitFor({ timeout: 8000 });
+  await p.getByLabel('Say or type what you spent').waitFor({ timeout: 8000 });
   check('opens offline with cached data', (await text('main')).includes('swiggy'));
   check('offline notice shown', await p.getByText(/Offline\. Showing what was last synced/).isVisible());
   await shot('9-offline');

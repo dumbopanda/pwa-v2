@@ -37,7 +37,8 @@ export function formatMoney(minor: number, currency: string): string {
   const whole = digits ? abs.slice(0, -digits) : abs;
   const frac = digits ? abs.slice(-digits) : "";
   const f = new Intl.NumberFormat("en-IN", {
-    style: "currency", currency, minimumFractionDigits: digits, maximumFractionDigits: digits,
+    // Whole amounts show no ".00", as in the old app: ₹340, ₹340.50.
+    style: "currency", currency, minimumFractionDigits: /^0*$/.test(frac) ? 0 : digits, maximumFractionDigits: digits,
   });
   // Intl accepts a decimal string, so no float is ever created.
   const text = f.format((frac ? `${whole}.${frac}` : whole) as unknown as number);

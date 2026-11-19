@@ -130,8 +130,8 @@ describe("review facts", () => {
   it("are formatted by code, and a reply that changes a number is refused", () => {
     const budgets: Budget[] = [{ id: "1", month: "2026-11-01", category_id: "food", amount_minor: 30000 }];
     const f = reviewFacts(data, accounts, [cat("food", "Food"), cat("rent", "Rent")], budgets, new Set(["2026-11-05"]), "2026-11", "2026-11-30", "INR");
-    expect(f.spent).toBe("₹2,400.00");
-    expect(f.categories.find((c) => c.name === "Food")).toMatchObject({ spent: "₹400.00", budget: "₹300.00", over_by: "₹100.00" });
+    expect(f.spent).toBe("₹2,400");
+    expect(f.categories.find((c) => c.name === "Food")).toMatchObject({ spent: "₹400", budget: "₹300", over_by: "₹100" });
     expect(f.top_places[0].name).toBe("rent");
     expect(f.no_spend_days).toBe(1);
     expect(validateReview(templateReview(f), f)).not.toBeNull();
