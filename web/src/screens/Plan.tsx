@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { setBudget, copyBudgets } from "../lib/actions";
-import { Bar, Empty, MonthNav, toast, useAction } from "../components";
+import { Bar, Empty, toast, useAction } from "../components";
 import { useLedger, useToday } from "../lib/hooks";
 import { addMonths, monthOf } from "../lib/ledger";
 import { amountText } from "../lib/entryRows";
@@ -8,9 +7,8 @@ import { formatMoney, parseAmount } from "../lib/money";
 import { buildPlan } from "../lib/plan";
 import { monthLabel } from "../lib/reviewFacts";
 
-export default function Plan({ onReview }: { onReview: (ym: string) => void }) {
+export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: string) => void }) {
   const L = useLedger(); const today = useToday();
-  const [ym, setYm] = useState(monthOf(today));
   const { busy, error, run } = useAction();
   const cur = L.s.currency;
   const plan = buildPlan(L.entries, L.accounts, L.s.budgets, ym, today, cur);
@@ -30,7 +28,6 @@ export default function Plan({ onReview }: { onReview: (ym: string) => void }) {
   const isCurrent = ym === monthOf(today);
   return (
     <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
-      <MonthNav ym={ym} label={monthLabel(ym)} max={addMonths(monthOf(today), 1)} onChange={(d) => setYm(addMonths(ym, d))} />
 
       <section className="card stack" aria-label="Summary">
         <div className="grid3" style={{ gridTemplateColumns: "1fr 1fr" }}>

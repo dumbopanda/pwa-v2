@@ -1,9 +1,8 @@
 import { useMemo, useRef, useState } from "react";
-import { MonthNav } from "../components";
 import Icon from "../Icon";
 import { amountText, draftFromEntry } from "../lib/entryRows";
 import { useLedger, useToday } from "../lib/hooks";
-import { addDays, addMonths, isLogged, monthOf } from "../lib/ledger";
+import { addDays, isLogged, monthOf } from "../lib/ledger";
 import { formatMoney } from "../lib/money";
 import { monthLabel } from "../lib/reviewFacts";
 import type { Entry } from "../lib/types";
@@ -17,9 +16,8 @@ const dayFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short"
 const wdFmt = new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "UTC" });
 
 /** History, as in the old app: month line, one bar of filters, then each day as its own card. */
-export default function History() {
+export default function History({ ym }: { ym: string }) {
   const L = useLedger(); const today = useToday();
-  const [ym, setYm] = useState(monthOf(today));
   const [kind, setKind] = useState<Kind>("all");
   const [account, setAccount] = useState(""); const [category, setCategory] = useState("");
   const [q, setQ] = useState(""); const [searching, setSearching] = useState(false);
@@ -50,7 +48,6 @@ export default function History() {
   return (
     <main className="screen stack" style={{ gap: "var(--sp-3)" }}>
       <div className="histbar">
-        <div className={needle ? "dim" : ""}><MonthNav ym={ym} label={monthLabel(ym)} max={monthOf(today)} onChange={(d) => setYm(addMonths(ym, d))} /></div>
         <div className="fchips" role="toolbar" aria-label="Filters">
           <div className={`fsearch${searching || q ? " open" : ""}`}>
             <button type="button" className="fs-btn" aria-label="Search" onClick={() => { setSearching(true); setTimeout(() => searchRef.current?.focus(), 0); }}><Icon name="search" size={16} /></button>

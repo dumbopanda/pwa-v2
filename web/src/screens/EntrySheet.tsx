@@ -38,7 +38,12 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
 
   const label = check.ok && from ? `${existing ? "Save changes" : "Save"} · ${formatMoney(check.minor, from.currency)}${d.transfer ? " moved" : d.direction === "spent" ? " out" : " in"}` : existing ? "Save changes" : "Save";
 
-  const cur = from?.currency ?? activeAccounts[0]?.currency ?? "INR";
+  // Each account has one currency; picking a currency shows that currency's accounts.
+  const currencies = [...new Set(activeAccounts.map((a) => a.currency))];
+  const [pickCur, setPickCur] = useState<string | null>(null);
+  const cur = from?.currency ?? pickCur ?? activeAccounts[0]?.currency ?? "INR";
+  const inCur = currencies.length > 1 ? activeAccounts.filter((a) => a.currency === cur) : activeAccounts;
+  const chooseCur = (c: string) => { setPickCur(c); set({ accountId: activeAccounts.find((a) => a.currency === c)?.id ?? "", toAccountId: "" }); };
   const yesterday = addDays(today, -1);
 
   return (
@@ -47,6 +52,11 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
 
       <div className="hero">
         <label className="sr-only" htmlFor="amount">Amount in {cur}</label>
+        {currencies.length > 1 && !existing && (
+          <label className="curpick"><span>{cur}</span><Icon name="down" size={14} />
+            <select aria-label="Currency" value={cur} onChange={(e) => chooseCur(e.target.value)}>{currencies.map((c) => <option key={c}>{c}</option>)}</select>
+          </label>
+        )}
         <div className="heroamt">
           <span className="sym" aria-hidden="true">{currencySymbol(cur)}</span>
           <input id="amount" inputMode="decimal" autoComplete="off" autoFocus={!initial.amount} placeholder="0"
@@ -63,7 +73,7 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
 
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
         <span className="caps">{d.transfer ? "From" : "Account"}</span>
-        <AccountTiles order={accounts} label={d.transfer ? "From account" : "Account"} accounts={activeAccounts} value={d.accountId}
+        <AccountTiles order={accounts} label={d.transfer ? "From account" : "Account"} accounts={inCur} value={d.accountId}
           onPick={(id) => set({ accountId: id, toAccountId: d.toAccountId === id ? "" : d.toAccountId })} />
       </div>
       {d.transfer && (

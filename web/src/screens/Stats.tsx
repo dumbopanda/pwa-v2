@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { MonthNav } from "../components";
+import { useEffect, useState } from "react";
 import Icon from "../Icon";
 import { dayLabel } from "../lib/format";
 import { useLedger, useToday } from "../lib/hooks";
-import { addMonths, balances, daysInMonth, isSpend, loggedDatesOf, monthOf, monthTotals, spendBy, spendByDay, toneOf } from "../lib/ledger";
+import { balances, daysInMonth, isSpend, loggedDatesOf, monthOf, monthTotals, spendBy, spendByDay, toneOf } from "../lib/ledger";
 import { formatMoney } from "../lib/money";
 import { monthLabel } from "../lib/reviewFacts";
 
@@ -12,13 +11,13 @@ const VIEWS: [View, string][] = [["category", "Category"], ["account", "Account"
 const TOP = 5;
 
 /** Stats, as in the old app: what you have, the month's two flows, where it went, when it went, a few facts. */
-export default function Stats() {
+export default function Stats({ ym }: { ym: string }) {
   const L = useLedger(); const today = useToday();
-  const [ym, setYm] = useState(monthOf(today));
   const [pick, setPick] = useState<string | null>(null);
   const [view, setView] = useState<View>("category");
   const [more, setMore] = useState(false);
   const [day, setDay] = useState<number | null>(null);
+  useEffect(() => { setDay(null); setMore(false); }, [ym]);
 
   const isNow = ym === monthOf(today);
   const end = isNow ? today : `${ym}-${String(daysInMonth(ym)).padStart(2, "0")}`;
@@ -74,7 +73,6 @@ export default function Stats() {
 
   return (
     <main className="screen stack" style={{ gap: "var(--sp-3)" }}>
-      <MonthNav ym={ym} label={monthLabel(ym)} max={monthOf(today)} onChange={(d) => { setYm(addMonths(ym, d)); setDay(null); setMore(false); }} />
       {currencies.length > 1 && <div className="fchips">{currencies.map((c) => <button key={c} className="fchip" aria-pressed={c === currency} onClick={() => setPick(c)}>{c}</button>)}</div>}
 
       <section className="hero have" aria-label="What you have">

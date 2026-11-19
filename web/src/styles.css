@@ -274,7 +274,7 @@ select.field { padding-right: var(--sp-2); }
 .fchip::after { content: ""; position: absolute; inset: -6px 0; }           /* 44px tap area around a 32px chip */
 .fchip[aria-pressed="true"], .fchip.on { background: var(--ink); color: var(--lime); box-shadow: none; }
 .fchip.select { padding-right: var(--sp-2); }
-.fchip.select select { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; font-size: 16px; }
+.fchip.select select { position: absolute; inset: 0; z-index: 1; opacity: 0; width: 100%; cursor: pointer; font-size: 16px; }
 .fchip.big { height: var(--h-sm); padding: 0 var(--sp-4); font-size: var(--fs-md); color: var(--text); }
 .fchip.big::after { inset: 0; }
 .fchip.big[aria-pressed="true"] { color: var(--lime); }
@@ -400,4 +400,34 @@ body { zoom: .9; min-height: calc(100dvh / .9); }
 .dockadd:hover:not(:disabled) { background: var(--green-hover); }
 .dockadd:disabled { opacity: .5; }
 @media (max-width: 380px) { .dock .navpill .tab[aria-current="page"] { flex: none; } }
-@media (max-width: 360px) { .apphead .wide { display: none; } }
+.apphead .narrow { display: none; }
+@media (max-width: 360px) { .apphead .wide { display: none; } .apphead .narrow { display: inline; } }
+
+/* ---- Pass 5: month pill, Add payment menu with mic, "Add this entry?" sheet ---- */
+.monthpill { position: relative; display: inline-flex; align-items: center; gap: var(--sp-2); height: 44px; padding: 0 var(--sp-3) 0 var(--sp-4);
+  border: 1.5px solid var(--line-strong); border-radius: var(--r-pill); background: var(--surface); overflow: hidden; touch-action: none; user-select: none; cursor: ns-resize; min-width: 0; }
+.monthpill:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.monthpill > svg { flex: none; color: var(--text-muted); }
+.mp-reel { display: grid; height: 40px; }
+.mp-reel span { display: flex; align-items: center; height: 40px; font-size: var(--fs-xl); font-weight: var(--fw-heavy); letter-spacing: var(--ls-title); white-space: nowrap; }
+.mp-reel span:not(:nth-child(2)) { color: var(--text-faint); }
+.mp-reel span.off { visibility: hidden; }
+.dock { position: relative; }
+.dockadd.mic { background: var(--ink); color: var(--lime); box-shadow: 0 10px 22px -10px rgba(18,22,20,.6); }
+.addscrim { position: fixed; inset: 0; background: rgba(18, 22, 20, .35); z-index: -1; pointer-events: auto; }
+.addmenu { position: absolute; right: 0; bottom: calc(100% + var(--sp-2)); display: flex; flex-direction: column; gap: var(--sp-2); animation: pop .14s ease-out; }
+.addopt { display: inline-flex; align-items: center; gap: var(--sp-2); height: var(--h-md); padding: 0 var(--sp-5, 20px); border: 0; border-radius: var(--r-pill);
+  background: var(--surface); color: var(--text); font-size: var(--fs-lg); font-weight: var(--fw-heavy); box-shadow: 0 10px 28px -12px rgba(18,22,20,.55); cursor: pointer; white-space: nowrap; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+.bigmic { align-self: center; width: 76px; height: 76px; border-radius: 50%; border: 0; background: var(--green); color: var(--on-ink); display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-cta); cursor: pointer; }
+.bigmic.on { background: var(--red); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 12px rgba(214, 63, 63, .15); } }
+@media (prefers-reduced-motion: reduce) { .bigmic.on, .addmenu { animation: none; } }
+.sheetline { margin: calc(-1 * var(--sp-2)) 0 0; color: var(--text-muted); }
+.sheetnote { margin: 0; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-ctl); background: #FBEFD5; color: #7A5410; font-size: var(--fs-xs); font-weight: var(--fw-bold); }
+.sheetactions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.sheetactions .btn { height: var(--h-lg); }
+.curpick { position: relative; display: flex; width: fit-content; margin: 0 auto var(--sp-2); align-items: center; gap: 4px; height: 30px; padding: 0 var(--sp-3);
+  border-radius: var(--r-pill); background: var(--ink-2); color: var(--lime); font-size: var(--fs-sm); font-weight: var(--fw-bold); }
+.curpick select { position: absolute; inset: 0; opacity: 0; width: 100%; font-size: 16px; cursor: pointer; }

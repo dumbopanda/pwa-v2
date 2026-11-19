@@ -1,6 +1,7 @@
 import Icon from "./Icon";
-import { toneOf } from "./lib/ledger";
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { addMonths, toneOf } from "./lib/ledger";
+import { monthLabel } from "./lib/reviewFacts";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
@@ -38,12 +39,36 @@ export function ToastHost() {
   );
 }
 
-export function MonthNav({ ym, label, onChange, max }: { ym: string; label: string; onChange: (d: -1 | 1) => void; max: string }) {
+/**
+ * The month, in a pill. Drag down for the month before (it drops in from the
+ * top), drag up for the month after. Arrow keys and the mouse wheel work too.
+ */
+export function MonthPill({ ym, max, onChange }: { ym: string; max: string; onChange: (ym: string) => void }) {
+  const H = 40;
+  const [dy, setDy] = useState(0);
+  const [anim, setAnim] = useState(false);
+  const start = useRef<number | null>(null);
+  const wheelAt = useRef(0);
+  const prev = addMonths(ym, -1), next = addMonths(ym, 1), canNext = next <= max;
+  const go = (d: -1 | 1) => {
+    setAnim(true);
+    if (d === 1 && !canNext) return setDy(0);
+    setDy(d === -1 ? H : -H);
+    setTimeout(() => { setAnim(false); setDy(0); onChange(d === -1 ? prev : next); }, 160);
+  };
   return (
-    <div className="monthnav">
-      <button className="btn icon" aria-label="Previous month" onClick={() => onChange(-1)}><Icon name="back" /></button>
-      <h2 aria-live="polite">{label}</h2>
-      <button className="btn icon" aria-label="Next month" onClick={() => onChange(1)} disabled={ym >= max}><Icon name="next" /></button>
+    <div className="monthpill" role="spinbutton" tabIndex={0} aria-label="Month, drag up or down to change"
+      aria-valuenow={Number(ym.slice(0, 4)) * 12 + Number(ym.slice(5))} aria-valuetext={monthLabel(ym)}
+      onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); go(-1); } if (e.key === "ArrowUp") { e.preventDefault(); go(1); } }}
+      onWheel={(e) => { if (Date.now() - wheelAt.current < 350 || Math.abs(e.deltaY) < 4) return; wheelAt.current = Date.now(); go(e.deltaY > 0 ? 1 : -1); }}
+      onPointerDown={(e) => { start.current = e.clientY; setAnim(false); e.currentTarget.setPointerCapture(e.pointerId); }}
+      onPointerMove={(e) => { if (start.current === null) return; let v = e.clientY - start.current; if (v < 0 && !canNext) v /= 4; setDy(Math.max(-H, Math.min(H, v))); }}
+      onPointerUp={() => { if (start.current === null) return; start.current = null; if (dy > H / 3) go(-1); else if (dy < -H / 3) go(1); else { setAnim(true); setDy(0); } }}
+      onPointerCancel={() => { start.current = null; setAnim(true); setDy(0); }}>
+      <div className="mp-reel" style={{ transform: `translateY(${dy - H}px)`, transition: anim ? "transform .16s ease-out" : "none" }} aria-hidden="true">
+        <span>{monthLabel(prev)}</span><span>{monthLabel(ym)}</span><span className={canNext ? "" : "off"}>{monthLabel(next)}</span>
+      </div>
+      <Icon name="updown" size={16} />
     </div>
   );
 }
