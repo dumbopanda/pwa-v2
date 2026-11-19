@@ -13,7 +13,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
   const L = useLedger();
   const { busy, error, run } = useAction();
   const [admin, setAdmin] = useState(false);
-  const [newAcc, setNewAcc] = useState(""); const [newCur, setNewCur] = useState(DEFAULT_CURRENCY); const [newCat, setNewCat] = useState("");
+  const [newAcc, setNewAcc] = useState(""); const [newCur, setNewCur] = useState(DEFAULT_CURRENCY); const [newBal, setNewBal] = useState(""); const [newOwe, setNewOwe] = useState(false); const [newCat, setNewCat] = useState("");
   const [del, setDel] = useState(false); const [typed, setTyped] = useState("");
 
   // The metrics page only shows for the owner: the database says no to everyone else.
@@ -47,12 +47,18 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
             <button className="btn" style={{ height: "var(--h-md)" }} disabled={busy} onClick={() => archive("a", a)}>{a.archived_at ? "Restore" : "Hide"}</button>
           </div>
         ))}
-        <form className="row" onSubmit={(e) => { e.preventDefault(); if (newAcc.trim()) run(async () => { await addAccount(newAcc, newCur); setNewAcc(""); }); }}>
-          <input className="field grow" placeholder="New account" aria-label="New account name" maxLength={40} value={newAcc} onChange={(e) => setNewAcc(e.target.value)} />
-          <select className="field" style={{ width: 88 }} aria-label="New account currency" value={newCur} onChange={(e) => setNewCur(e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select>
-          <button className="btn" style={{ height: "var(--h-md)" }} disabled={busy}>Add</button>
+        <form className="stack" style={{ gap: "var(--sp-2)", paddingTop: "var(--sp-2)", borderTop: "1px solid var(--line)" }}
+          onSubmit={(e) => { e.preventDefault(); if (newAcc.trim()) run(async () => { await addAccount(newAcc, newCur, newBal, newOwe); setNewAcc(""); setNewBal(""); setNewOwe(false); toast("Account added"); }); }}>
+          <span className="caps">New account</span>
+          <input className="field" placeholder="Name, like Savings or Wallet" aria-label="New account name" maxLength={40} value={newAcc} onChange={(e) => setNewAcc(e.target.value)} />
+          <div className="row">
+            <select className="field" style={{ width: 88 }} aria-label="New account currency" value={newCur} onChange={(e) => setNewCur(e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select>
+            <input className="field grow" inputMode="decimal" placeholder={newOwe ? "Amount owed today (optional)" : "Balance today (optional)"} aria-label="New account balance today" value={newBal} onChange={(e) => setNewBal(e.target.value)} />
+          </div>
+          <label className="toggle"><input type="checkbox" checked={newOwe} onChange={(e) => setNewOwe(e.target.checked)} />I owe this amount (like a credit card bill)</label>
+          <button className="btn" disabled={busy || !newAcc.trim()}>Add account</button>
         </form>
-        <p className="muted small" style={{ margin: 0 }}>Hidden accounts keep their history. Balances are set when you add the account.</p>
+        <p className="muted small" style={{ margin: 0 }}>Hidden accounts keep their history. A balance set here counts from today.</p>
       </section>
 
       <section className="card stack" aria-label="Categories">

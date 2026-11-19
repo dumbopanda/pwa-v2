@@ -446,3 +446,10 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/month-review/deno.json"
 entrypoint = "./functions/month-review/index.ts"
+
+# Daily keep-alive target. Public by design (no input, returns only {ok}).
+[functions.keepalive]
+enabled = true
+verify_jwt = false
+import_map = "./functions/keepalive/deno.json"
+entrypoint = "./functions/keepalive/index.ts"

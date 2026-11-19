@@ -1,0 +1,21 @@
+# Pings the Supabase project once a day so the free plan never pauses it for inactivity.
+# Scheduled workflows only run from the default branch (main).
+name: keepalive
+on:
+  schedule:
+    - cron: "17 3 * * *"     # 03:17 UTC every day
+  workflow_dispatch: {}      # "Run workflow" button for a manual check
+permissions: {}
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call the keepalive function
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/out -w '%{http_code}' --max-time 30 -X POST \
+              "https://mxodmmsnyzrdklyzhibt.supabase.co/functions/v1/keepalive") && [ "$code" = "200" ] && { cat /tmp/out; echo; exit 0; }
+            echo "attempt $i: HTTP $code"; sleep 20
+          done
+          exit 1

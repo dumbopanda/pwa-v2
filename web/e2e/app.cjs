@@ -148,6 +148,30 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByRole('button', { name: 'Today' }).click(); await p.getByRole('button', { name: 'Settings' }).click();
   await p.getByLabel('New category name').fill('Pets'); await p.getByRole('button', { name: 'Add' }).last().click(); await p.waitForTimeout(300);
   check('category added', db.categories.some((c) => c.name === 'Pets'));
+  // --- add accounts later WITH an opening balance (credit if you have it, debit if you owe it)
+  await p.getByLabel('New account name').fill('Savings'); await p.getByLabel('New account balance today').fill('25,000.50');
+  await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
+  const sv = db.accounts.find((x) => x.name === 'Savings'); const svRow = db.entries.find((e) => e.account_id === sv?.id);
+  check('new account gets a credit opening balance in paise', !!sv && svRow && svRow.amount_minor === 2500050 && svRow.direction === 'credit' && svRow.txn_type === 'Opening balance' && svRow.expense_name === 'Opening balance', JSON.stringify(svRow));
+  await p.getByLabel('New account name').fill('Amex'); await p.getByLabel('New account balance today').fill('1200'); await p.getByLabel(/I owe this amount/).check();
+  await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
+  const am = db.accounts.find((x) => x.name === 'Amex'); const amRow = db.entries.find((e) => e.account_id === am?.id);
+  check('"I owe" gives a debit opening balance', !!am && amRow && amRow.amount_minor === 120000 && amRow.direction === 'debit', JSON.stringify(amRow));
+  await p.getByLabel(/I owe this amount/).uncheck();
+  await p.getByLabel('New account name').fill('Wallet'); await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
+  const wl = db.accounts.find((x) => x.name === 'Wallet');
+  check('no balance = no opening row', !!wl && !db.entries.some((e) => e.account_id === wl.id));
+  await p.getByLabel('New account name').fill('Bad'); await p.getByLabel('New account balance today').fill('12abc');
+  await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText(/doesn't look like an amount/).waitFor();
+  check('bad balance refused, no account created', !db.accounts.some((x) => x.name === 'Bad'));
+  // a failed balance save removes the account again, so a retry works
+  db.failPush = true;
+  await p.getByLabel('New account balance today').fill('500'); await p.getByLabel('New account name').fill('Flaky');
+  await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText(/Nothing was saved|Couldn't reach/).waitFor();
+  const fl = db.accounts.find((x) => x.name === 'Flaky');
+  check('failed balance save rolls the account back (tombstoned, name free)', !fl || !!fl.deleted_at, JSON.stringify(fl));
+  db.failPush = false;
+
   const [dl] = await Promise.all([p.waitForEvent('download'), p.getByRole('button', { name: /Export everything/ }).click()]);
   const csv = require('fs').readFileSync(await dl.path(), 'utf8');
   check('csv export has header + integer-exact amounts', csv.includes('date,account,currency,name,category,direction,amount') && csv.includes(',swiggy,Food & dining,out,360.00,'), csv.slice(0, 300));

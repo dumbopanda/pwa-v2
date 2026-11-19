@@ -2,8 +2,9 @@
 import { supabase } from "../supabase";
 import { entriesCsv } from "./csv";
 import { draftRows, type Draft, type Row } from "./entryRows";
-import { newUid } from "./ids";
-import { currencyDigits } from "./money";
+import { newUid, todayLocal } from "./ids";
+import { openingBalanceRows } from "./onboarding";
+import { currencyDigits, parseAmount } from "./money";
 import { applyLocal, closeUser, getState, sync } from "./store";
 import type { Account, Category, Entry } from "./types";
 
@@ -78,12 +79,29 @@ export async function copyBudgets(from: string, to: string): Promise<void> {
   await sync();
 }
 
-export async function addAccount(name: string, currency: string): Promise<Account> {
+/**
+ * Add an account, optionally with what's in it today as an opening balance (credit if you
+ * have it, debit if you owe it; same row shape as onboarding). If the balance can't be saved
+ * the account is removed again, so a retry never hits "name already used".
+ */
+export async function addAccount(name: string, currency: string, balance = "", owe = false): Promise<Account> {
+  const minor = balance.trim() && balance.trim() !== "0" ? parseAmount(balance, currency) : null;
+  if (balance.trim() && balance.trim() !== "0" && minor === null) fail("That balance doesn't look like an amount.");
   const sort = getState().accounts.length;
-  const { data, error } = await supabase.from("accounts").insert({ client_uid: newUid(), name: name.trim(), currency, sort_order: sort }).select("*").single();
+  const uid = newUid();
+  const { data, error } = await supabase.from("accounts").insert({ client_uid: uid, name: name.trim(), currency, sort_order: sort }).select("*").single();
   if (error) return fail(error.code === "23505" ? "You already have an account with that name." : error.code === "P0002" ? "That's the most accounts allowed." : NET);
-  applyLocal({ accounts: [data as Account] });
-  return data as Account;
+  const acc = data as Account;
+  if (minor) {
+    const rows = openingBalanceRows([{ uid, balanceUid: newUid(), name, currency, balance, owe }], new Map([[uid, acc.id]]), todayLocal());
+    try { applyLocal({ entries: await push(rows as Row[]) }); }
+    catch (e) {
+      await supabase.from("accounts").update({ deleted_at: new Date().toISOString() }).eq("id", acc.id);
+      throw e;
+    }
+  }
+  applyLocal({ accounts: [acc] });
+  return acc;
 }
 export async function updateAccount(id: string, patch: Partial<Pick<Account, "name" | "currency" | "archived_at" | "sort_order">>): Promise<void> {
   const { data, error } = await supabase.from("accounts").update(patch).eq("id", id).select("*").single();

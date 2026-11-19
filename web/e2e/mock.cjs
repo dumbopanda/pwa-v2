@@ -50,6 +50,7 @@ exports.install = async (page, db) => {
       const b = body(); const rows = db[k].filter((x) => !b.p_since || x.updated_at > b.p_since).sort((a, c) => a.updated_at.localeCompare(c.updated_at));
       return ok(rows.slice(0, b.p_limit));
     }
+    if (p.endsWith('/rpc/push_entries') && db.failPush) return ok({ message: 'boom' }, 500);
     if (p.endsWith('/rpc/push_entries')) {
       const out = [];
       for (const row of body().p_rows) {
@@ -67,7 +68,7 @@ exports.install = async (page, db) => {
     }
     if (p === '/rest/v1/categories' && m === 'POST') { const c = { id: uuid(), archived_at: null, deleted_at: null, updated_at: ts(), ...body() }; db.categories.push(c); return ok(c, 201); }
     if (p === '/rest/v1/categories' && m === 'PATCH') { const c = db.categories.find((x) => x.id === q('id')); Object.assign(c, body(), { updated_at: ts() }); return ok(c); }
-    if (p === '/rest/v1/accounts' && m === 'PATCH') { const c = db.accounts.find((x) => x.id === q('id')); Object.assign(c, body(), { updated_at: ts() }); return ok(c); }
+    if (p === '/rest/v1/accounts' && m === 'PATCH') { const c = db.accounts.find((x) => x.id === q('id')); Object.assign(c, body(), { updated_at: ts() }); return obj ? ok(c) : ok([], 204); }
     if (p === '/rest/v1/accounts' && m === 'POST') { const c = { id: uuid(), archived_at: null, deleted_at: null, updated_at: ts(), ...body() }; db.accounts.push(c); return ok(c, 201); }
 
     if (p === '/functions/v1/parse-entry') {

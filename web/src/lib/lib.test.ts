@@ -68,3 +68,15 @@ describe("onboarding", () => {
     expect(rows[0]).toMatchObject({ expense_name: "Opening balance", txn_type: "Opening balance", entry_date: "2026-11-03", category_id: null });
   });
 });
+
+describe("opening balance for an account added later", () => {
+  it("builds one row: credit if you have it, debit if you owe it, none for zero or blank", async () => {
+    const { openingBalanceRows } = await import("./onboarding");
+    const d = (o: object) => ({ uid: "a", balanceUid: "b-uid-0001", name: "X", currency: "INR", balance: "", owe: false, ...o });
+    const ids = new Map([["a", "acc-1"]]);
+    expect(openingBalanceRows([d({ balance: "25,000.50" })], ids, "2026-11-19")[0]).toMatchObject({ amount_minor: 2500050, direction: "credit", txn_type: "Opening balance", account_id: "acc-1", entry_date: "2026-11-19", client_uid: "b-uid-0001" });
+    expect(openingBalanceRows([d({ balance: "1200", owe: true })], ids, "2026-11-19")[0]).toMatchObject({ amount_minor: 120000, direction: "debit" });
+    expect(openingBalanceRows([d({ balance: "" })], ids, "2026-11-19")).toEqual([]);
+    expect(openingBalanceRows([d({ balance: "0" })], ids, "2026-11-19")).toEqual([]);
+  });
+});
