@@ -1,7 +1,7 @@
 -- Behaviour of 0015-0017: currency, categories, budgets, day_status, events,
 -- AI quota, admin metrics.
 begin;
-select plan(23);
+select plan(26);
 
 -- Fire the deferred transfer check at the end of each statement, so a bad
 -- transfer fails inside throws_ok instead of at commit.
@@ -9,7 +9,7 @@ set constraints all immediate;
 
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'usera@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}');
-update public.app_config set value = '["11111111-1111-1111-1111-111111111111"]' where key = 'private.admin_user_ids';
+insert into public.app_config values ('private.admin_emails', '["Usera@Pgtap.Local"]') on conflict (key) do update set value = excluded.value;
 
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"11111111-1111-1111-1111-111111111111"}';
@@ -86,7 +86,23 @@ set local role authenticated;
 select throws_ok($$ insert into public.categories (client_uid, name) values ('cat-0201x', 'One too many') $$, 'P0002', null, '201st category refused');
 
 -- Admin metrics
-select ok(public.admin_metrics() ? 'retention', 'admin can read metrics');
+select ok(public.admin_metrics() ? 'retention', 'admin (by confirmed email, any letter case) can read metrics');
+
+-- A different user is refused; an unconfirmed address never counts; the old id list still works.
+reset role;
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'other@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}'),
+  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444', 'authenticated', 'authenticated', 'usera@pgtap.local', crypt('x', gen_salt('bf')), null, now(), now(), '{}', '{}');
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"33333333-3333-3333-3333-333333333333"}';
+select throws_ok($$ select public.admin_metrics() $$, '42501', null, 'a user not on the list is refused');
+set local request.jwt.claims to '{"sub":"44444444-4444-4444-4444-444444444444","email":"usera@pgtap.local"}';
+select throws_ok($$ select public.admin_metrics() $$, '42501', null, 'the right address, unconfirmed, is refused (and a claim in the token is not trusted)');
+reset role;
+update public.app_config set value = '["33333333-3333-3333-3333-333333333333"]' where key = 'private.admin_user_ids';
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"33333333-3333-3333-3333-333333333333"}';
+select ok(public.admin_metrics() ? 'users', 'the old id list still works');
 
 select * from finish();
 rollback;
