@@ -21,7 +21,7 @@ begin
       (u, 'e2-' || u, '2026-11-01', 'Ytrans1', acct,  'Self Transfer', 'Sent Transfer',     5000, 'debit',  tg),
       (u, 'e3-' || u, '2026-11-01', 'Ytrans1', acct2, 'Self Transfer', 'Received Transfer', 5000, 'credit', tg);
     insert into public.budgets (user_id, month, category_id, amount_minor) values (u, '2026-11-01', cat, 100), (u, '2026-11-01', null, 100);
-    insert into public.day_status (user_id, date, status) values (u, '2026-10-31', 'no_spend');
+    insert into public.day_status (user_id, date, status) values (u, '2026-10-31', 'closed');
     insert into public.events (user_id, name) values (u, 'app_open');
   end loop;
 end $$;

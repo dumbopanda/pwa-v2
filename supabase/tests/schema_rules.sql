@@ -55,9 +55,9 @@ select throws_ok($$ insert into public.budgets (month, amount_minor) values ('20
 select throws_ok($$ insert into public.budgets (month, amount_minor) values ('2026-12-01', 0) $$, '23514', null, 'budget amount must be positive');
 
 -- Day status
-insert into public.day_status (date, status) values ('2026-11-01', 'no_spend');
-select throws_ok($$ insert into public.day_status (date, status) values ('2026-11-01', 'no_spend') $$, '23505', null, 'one day_status per day');
-select lives_ok($$ delete from public.day_status where date = '2026-11-01' $$, 'no-spend can be un-marked');
+insert into public.day_status (date) values ('2026-11-01');
+select throws_ok($$ insert into public.day_status (date) values ('2026-11-01') $$, '23505', null, 'one day_status per day');
+select lives_ok($$ delete from public.day_status where date = '2026-11-01' $$, 'reopening a past day is a no-op, not an error');
 
 -- Events
 select throws_ok($$ insert into public.events (name) values ('Bad Name') $$, '23514', null, 'event names are lowercase identifiers');

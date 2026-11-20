@@ -24,8 +24,8 @@ insert into public.budgets (user_id, month, category_id, amount_minor) values
   ('22222222-2222-2222-2222-222222222222', '2026-11-01', 'bbbbbbbb-0000-0000-0000-0000000000cb', 500000),
   ('22222222-2222-2222-2222-222222222222', '2026-11-01', null, 1000000);
 insert into public.day_status (user_id, date, status) values
-  ('11111111-1111-1111-1111-111111111111', '2026-10-31', 'no_spend'),
-  ('22222222-2222-2222-2222-222222222222', '2026-10-31', 'no_spend');
+  ('11111111-1111-1111-1111-111111111111', '2026-10-31', 'closed'),
+  ('22222222-2222-2222-2222-222222222222', '2026-10-31', 'closed');
 insert into public.events (user_id, name) values
   ('11111111-1111-1111-1111-111111111111', 'app_open'),
   ('22222222-2222-2222-2222-222222222222', 'app_open');
@@ -60,7 +60,7 @@ select throws_ok($$ insert into public.accounts (user_id, client_uid, name) valu
 select throws_ok($$ insert into public.categories (user_id, client_uid, name) values ('22222222-2222-2222-2222-222222222222', 'hack-cat-1', 'x') $$, '42501', null, 'A cannot insert a category as B');
 select throws_ok($$ insert into public.entries (user_id, client_uid, entry_date, txn_id, account_id, expense_name, txn_type, amount_minor, direction) values ('22222222-2222-2222-2222-222222222222', 'hack-entry-1', '2026-11-01', 'Nhackhk', 'bbbbbbbb-0000-0000-0000-00000000000b', 'x', 'Payment', 1, 'debit') $$, '42501', null, 'A cannot insert an entry as B');
 select throws_ok($$ insert into public.budgets (user_id, month, amount_minor) values ('22222222-2222-2222-2222-222222222222', '2026-12-01', 1) $$, '42501', null, 'A cannot insert a budget as B');
-select throws_ok($$ insert into public.day_status (user_id, date, status) values ('22222222-2222-2222-2222-222222222222', '2026-10-30', 'no_spend') $$, '42501', null, 'A cannot insert day_status as B');
+select throws_ok($$ insert into public.day_status (user_id, date, status) values ('22222222-2222-2222-2222-222222222222', '2026-10-30', 'closed') $$, '42501', null, 'A cannot insert day_status as B');
 select throws_ok($$ insert into public.events (user_id, name) values ('22222222-2222-2222-2222-222222222222', 'app_open') $$, '42501', null, 'A cannot insert an event as B');
 
 -- A cannot hand its own row over to B.
@@ -76,12 +76,12 @@ update public.accounts   set name = 'hacked'         where user_id = '22222222-2
 update public.categories set name = 'hacked'         where user_id = '22222222-2222-2222-2222-222222222222';
 update public.entries    set expense_name = 'hacked' where user_id = '22222222-2222-2222-2222-222222222222';
 update public.budgets    set amount_minor = 1        where user_id = '22222222-2222-2222-2222-222222222222';
-update public.day_status set status = 'open'         where user_id = '22222222-2222-2222-2222-222222222222';
 delete from public.budgets    where user_id = '22222222-2222-2222-2222-222222222222';
 delete from public.day_status where user_id = '22222222-2222-2222-2222-222222222222';
 
 -- Verbs with no grant are refused outright.
 select throws_ok($$ update public.events set name = 'x' $$, '42501', null, 'events cannot be updated');
+select throws_ok($$ update public.day_status set status = 'closed' $$, '42501', null, 'closed days cannot be updated');
 select throws_ok($$ delete from public.events $$,           '42501', null, 'events cannot be deleted');
 select throws_ok($$ delete from public.accounts $$,         '42501', null, 'accounts cannot be hard-deleted');
 select throws_ok($$ delete from public.categories $$,       '42501', null, 'categories cannot be hard-deleted');
@@ -95,7 +95,7 @@ select is((select name from public.accounts   where user_id = '22222222-2222-222
 select is((select name from public.categories where user_id = '22222222-2222-2222-2222-222222222222'), 'Food',   'B category untouched');
 select is((select expense_name from public.entries where user_id = '22222222-2222-2222-2222-222222222222'), 'chai', 'B entry untouched');
 select is((select count(*) from public.budgets    where user_id = '22222222-2222-2222-2222-222222222222' and amount_minor > 1), 2::bigint, 'B budgets untouched');
-select is((select status from public.day_status   where user_id = '22222222-2222-2222-2222-222222222222'), 'no_spend', 'B day_status untouched');
+select is((select status from public.day_status   where user_id = '22222222-2222-2222-2222-222222222222'), 'closed', 'B day_status untouched');
 
 -- ===== As anon: nothing =====
 set local role anon;
