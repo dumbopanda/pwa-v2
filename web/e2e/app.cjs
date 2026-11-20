@@ -16,7 +16,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.goto('http://localhost:5173/');
   await p.getByRole('button', { name: 'Add payment' }).waitFor();
   await shot('1-dashboard');
-  check('blank days offered gently', await p.getByText(/days are blank/).isVisible());
+  check('no today-status card on the dashboard', !(await p.locator('body').innerText()).includes('Nothing logged today'));
   check('no scolding words', !/(missed|failed|lazy|behind)/i.test(await p.locator('body').innerText()));
   const say = async (t) => {
     await p.getByRole('button', { name: 'Add payment' }).click(); await p.getByRole('button', { name: 'Speak an entry' }).click();
@@ -25,7 +25,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   const manual = async () => { await p.getByRole('button', { name: 'Add payment' }).click(); await p.getByRole('button', { name: 'Enter manually' }).click(); };
   const card = () => p.getByRole('dialog', { name: 'Add this entry?' });
   const discard = () => card().getByRole('button', { name: 'Close' }).click();
-  const status = () => text('section[aria-label="Today\'s status"]');
+  const status = () => text('.duo');  // this month's Money out / Money in
 
   // --- Add payment -> mic (typed here) -> "Add this entry?" -> one tap
   await say('swiggy 340 upi');
@@ -38,8 +38,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByText('Saved').first().waitFor();
   const saved = db.entries.find((e) => e.expense_name === 'swiggy');
   check('saved integer paise on UPI bank, debit, Food', saved && saved.amount_minor === 34000 && saved.direction === 'debit' && saved.account_id === db.A('UPI bank') && saved.category_id === db.C('Food & dining'), JSON.stringify(saved));
-  check('running total for today', (await status()).includes('₹340'));
-  check('status Logged', await p.getByText('Logged', { exact: true }).isVisible());
+  check('dashboard Money out includes it', (await status()).includes('₹15,360'), await status());  // rent 15,000 + chai 20 + swiggy 340
   const rc = db.events.find((e) => e.name === 'read_check');
   check('accuracy log: said + read + saved, no audio', rc && rc.props.said === 'swiggy 340 upi' && rc.props.outcome === 'accepted' && rc.props.read.amt === '340.00' && rc.props.saved.acc === 'UPI bank', JSON.stringify(rc));
   check('ai accepted + first-save time logged', db.events.some((e) => e.name === 'ai_result' && e.props.outcome === 'accepted') && db.events.some((e) => e.name === 'entry_saved' && typeof e.props.ms === 'number' && e.props.via === 'ai'), JSON.stringify(db.events));
@@ -93,11 +92,6 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('transfer never counted as spend', (await status()) === spentBefore);
 
   // --- missed day: mark no spend
-  await p.getByRole('button', { name: /days are blank/ }).click();
-  const before = await p.getByRole('button', { name: 'No spend' }).count();
-  await p.getByRole('button', { name: 'No spend' }).first().click();
-  await p.waitForTimeout(300);
-  check('no-spend stored and the day leaves the blank list', db.noSpend.length === 1 && (await p.getByRole('button', { name: 'No spend' }).count()) < before, JSON.stringify(db.noSpend));
   check('streak chip shows', await p.getByLabel(/day streak/).count() > 0);
 
   // --- in History: one line per transfer, delete + undo, edit
