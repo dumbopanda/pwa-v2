@@ -149,7 +149,8 @@ function findCategory(ws: string[], direction: Proposal["direction"], categories
 
 const FILLER = new Set(["rs", "inr", "rupaye", "rupay", "rupees", "rupee", "ka", "ki", "ke", "pe", "par", "se", "mein", "me", "to", "from", "via", "using", "on", "for", "at",
   "paid", "spent", "spend", "around", "approx", "approximately", "lagbhag", "about", "got", "received", "credited", "debited", "aaya", "aaye", "mila", "mile",
-  "bheje", "diye", "diya", "kiya", "liye", "liya", "the", "a", "an", "of", "and", "my", "rupaiya", "kharcha", "kharch", "bhara", "your", "with", "by", "is", "was"]);
+  "bheje", "diye", "diya", "kiya", "liye", "liya", "the", "a", "an", "of", "and", "my", "rupaiya", "kharcha", "kharch", "bhara", "your", "with", "by", "is", "was",
+  "i", "we", "it", "account", "acct", "out", "just", "bought", "had", "worth", "total", "today"]);
 
 export type RuleResult = Proposal & { sure: boolean };
 
