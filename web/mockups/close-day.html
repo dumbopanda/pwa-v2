@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Close Day Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../src/styles.css">
+<style>
+/* Mockup-only: static screens, sample data. Not app code. */
+body { zoom: 1 !important; min-height: 0 !important; padding: 24px; display: flex; flex-wrap: wrap; gap: 32px; background: #d9d4c7; }
+.frame { display: flex; flex-direction: column; gap: 8px; }
+.frame h3 { margin: 0; font-size: 15px; max-width: 390px; }
+.phone { position: relative; width: 433px; height: 938px; zoom: .9; overflow: hidden; background: var(--canvas); border-radius: 36px; box-shadow: 0 20px 50px -20px rgba(0,0,0,.4); }
+.phone .navwrap, .phone .scrim, .phone .toast { position: absolute; }
+.phone .scrim { z-index: 20; }
+.phone .screen { padding-top: var(--sp-3); }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+svg.i.s { width: 16px; height: 16px; }
+/* proposed new pieces */
+.opencard { display: flex; align-items: center; gap: var(--sp-3); width: 100%; padding: var(--sp-3) var(--sp-4); border: 1.5px solid #F2B8B8; border-radius: var(--r-card); background: var(--red-soft); color: var(--text); text-align: left; }
+.opencard .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; box-shadow: 0 0 0 4px rgba(198,40,40,.15); }
+.opencard b { display: block; color: var(--red); font-size: var(--fs-lg); }
+.opencard .muted { font-size: var(--fs-sm); }
+.status { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: var(--fw-heavy); }
+.status.open { background: #fff; color: var(--text-2); border: 1px solid var(--line-strong); }
+.status.late { background: var(--red-soft); color: var(--red); }
+.status.closed { background: var(--mint); color: var(--green-ink); }
+.dayhead2 .dsub { display: block; font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--text-muted); margin-top: 1px; }
+.dayhead2 .right { display: flex; align-items: center; gap: var(--sp-2); }
+.dayhead2 .chev { color: var(--text-muted); }
+.daycard.collapsed .dayhead2 { border-bottom: 0; }
+.dname2 b { font-size: var(--fs-lg); font-weight: var(--fw-heavy); letter-spacing: var(--ls-title); }
+.dname2 b small { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-2); margin-left: 6px; }
+.dayfoot { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); }
+.dayfoot .btn { height: var(--h-sm); }
+.lockline { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); font-weight: var(--fw-medium); }
+.noentry { padding: 14px var(--sp-4); color: var(--text-muted); font-size: var(--fs-md); }
+.latetag { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: var(--r-pill); background: var(--amber-soft); color: var(--amber-ink); font-size: var(--fs-2xs); font-weight: var(--fw-bold); }
+.warnbox { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-panel); background: var(--amber-soft); color: var(--amber-ink); font-weight: var(--fw-bold); }
+.ntf { position: absolute; left: 12px; right: 12px; padding: 14px 16px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 8px 24px -10px rgba(0,0,0,.35); font-size: 14px; }
+.ntf .app { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+.lock { position: absolute; inset: 0; background: linear-gradient(160deg, #24332c, #0f1512); color: #fff; }
+.lock .clock { text-align: center; font-size: 76px; font-weight: 600; margin-top: 90px; letter-spacing: -2px; }
+.lock .date { text-align: center; font-size: 17px; opacity: .8; }
+.field.dateish { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4); }
+.legend { font-size: 13px; color: #3b3f3c; max-width: 390px; margin: 0; line-height: 1.45; }
+.mk-lock { position: absolute; inset: 0; background: linear-gradient(160deg, #24332c, #0f1512); color: #fff; display: flex; flex-direction: column; }
+.mk-clock { text-align: center; font-size: 76px; font-weight: 600; margin-top: 90px; letter-spacing: -2px; }
+.mk-date { text-align: center; font-size: 17px; opacity: .8; margin-bottom: 40px; }
+.mk-list { display: flex; flex-direction: column; gap: 12px; padding: 0 12px; }
+.mk-n { padding: 14px 16px; border-radius: 22px; background: #f4f4f2; color: #121614; font-size: 14px; line-height: 1.4; }
+.mk-app { display: flex; justify-content: space-between; font-size: 12px; color: #6b706c; font-weight: 700; margin-bottom: 4px; }
+.mk-t { font-weight: 800; font-size: 15px; }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute">
+ <symbol id="user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></symbol>
+ <symbol id="updown" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></symbol>
+ <symbol id="down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+ <symbol id="up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+ <symbol id="lock" viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z"/></symbol>
+ <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="stats" viewBox="0 0 24 24"><path d="M3 3v18h18M7 16v-4M12 16V8M17 16v-7"/></symbol>
+ <symbol id="list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+ <symbol id="next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+ <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+ <symbol id="warn" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></symbol>
+ <symbol id="cal" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></symbol>
+</svg>
+
+<template id="head"><header class="apphead">
+  <div class="monthpill"><div class="mp-reel" style="transform:translateY(-40px)"><span>October 2026</span><span>November 2026</span><span class="off">December 2026</span></div><svg class="i s"><use href="#updown"/></svg></div>
+  <div class="row"><button class="iconbtn"><svg class="i"><use href="#user"/></svg></button></div>
+</header></template>
+<template id="dockH"><div class="navwrap"><div class="dock"><nav class="navpill">
+  <button class="tab"><svg class="i"><use href="#stats"/></svg><span>Dashboard</span></button>
+  <button class="tab" aria-current="page"><svg class="i"><use href="#list"/></svg><span>History</span></button></nav>
+  <button class="dockadd"><svg class="i"><use href="#plus"/></svg><span>Add payment</span></button></div></div></template>
+<template id="dockD"><div class="navwrap"><div class="dock"><nav class="navpill">
+  <button class="tab" aria-current="page"><svg class="i"><use href="#stats"/></svg><span>Dashboard</span></button>
+  <button class="tab"><svg class="i"><use href="#list"/></svg><span>History</span></button></nav>
+  <button class="dockadd"><svg class="i"><use href="#plus"/></svg><span>Add payment</span></button></div></div></template>
+<template id="chips"><div class="fchips"><span class="fsearch"><span class="fs-btn"></span></span><span class="fs-div"></span>
+  <button class="fchip" aria-pressed="true">All</button><button class="fchip">Open days</button><button class="fchip">Money out</button><button class="fchip">Money in</button><button class="fchip">Transfers</button></div></template>
+
+<!-- 1 -->
+<div class="frame" id="s1"><h3>1 · Dashboard: past days still open</h3><div class="phone">
+  <div data-t="head"></div>
+  <main class="screen stack" style="gap:var(--sp-3)">
+    <button class="opencard"><span class="dot"></span><span class="grow"><b>3 days still open</b><span class="muted">Mon 17, Tue 18, Wed 19 Nov. Add what's missing and close them.</span></span><svg class="i"><use href="#next"/></svg></button>
+    <div class="seg"><button aria-pressed="true">Spending</button><button>Plan</button></div>
+    <div class="hero"><div class="row" style="justify-content:space-between"><span class="small" style="color:var(--on-ink-muted)">What you have</span><span class="pill">today</span></div>
+      <div style="font-size:40px;font-weight:800;color:var(--lime)">₹16,900</div>
+      <div class="row" style="justify-content:space-between;margin-top:8px;border-top:1px solid #2a302d;padding-top:10px"><span><small style="color:var(--on-ink-muted)">Salary account</small><br><b>₹10,000</b></span><span><small style="color:var(--on-ink-muted)">UPI bank</small><br><b>₹2,470</b></span><span><small style="color:var(--on-ink-muted)">Cash</small><br><b>₹4,430</b></span></div></div>
+    <div class="card"><b>Days closed this month</b><div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted small">17 of 20 days closed · today not counted yet</span><b>85%</b></div><div class="bar" style="margin-top:8px"><span style="width:85%"></span></div></div>
+  </main>
+  <div data-t="dockD"></div>
+</div><p class="legend">Red card only when a <b>past</b> day is open. Today never counts. No open days = no card. The "days closed" line replaces the streak chip (also gone from the header).</p></div>
+
+<!-- 2 -->
+<div class="frame" id="s2"><h3>2 · History: day boxes, collapsed</h3><div class="phone">
+  <div data-t="head"></div>
+  <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
+    <section class="daycard collapsed"><div class="dayhead2 today"><span class="dname2"><b>Today<small>Thu 20 Nov</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Yesterday<small>Wed 19 Nov</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Tuesday<small>18 Nov</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Monday<small>17 Nov</small></b><span class="dsub">1 entry · −₹220</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Sunday<small>16 Nov</small></b><span class="dsub">No spend</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Saturday<small>15 Nov</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+  </main>
+  <div data-t="dockH"></div>
+</div><p class="legend">Every day shows, even empty ones. Right side = status, not money. Money moves to the grey line under the date. Today's "Open" is plain grey; a past open day is red. New chip: <b>Open days</b> (where the dashboard card leads).</p></div>
+
+<!-- 3 -->
+<div class="frame" id="s3"><h3>3 · Today opened: entries + Close day</h3><div class="phone">
+  <div data-t="head"></div>
+  <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
+    <section class="daycard"><div class="dayhead2 today"><span class="dname2"><b>Today<small>Thu 20 Nov</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#up"/></svg></span></div>
+      <div class="txns">
+        <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Swiggy</span><span class="tamt out">−₹340</span></span><span class="tmeta">UPI bank · Food & dining</span></span></button>
+        <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Chai</span><span class="tamt out">−₹40</span></span><span class="tmeta">Cash · Food & dining</span></span></button>
+      </div>
+      <div class="dayfoot"><span class="grow muted small">All of today's payments in?</span><button class="btn primary" style="height:var(--h-sm)"><svg class="i s"><use href="#check"/></svg>Close day</button></div>
+    </section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Yesterday<small>Wed 19 Nov</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Tuesday<small>18 Nov</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+  </main>
+  <div data-t="dockH"></div>
+</div><p class="legend">Tap a box to open it. Close day sits at the bottom of the open box. The night reminder lands here, with today already open.</p></div>
+
+<!-- 4 -->
+<div class="frame" id="s4"><h3>4 · Close sheet (day has entries)</h3><div class="phone">
+  <div data-t="head"></div><main class="screen"></main><div data-t="dockH"></div>
+  <div class="scrim"><div class="sheet stack"><span class="grabber"></span>
+    <div class="row"><h2 class="grow">Close Thursday, 20 Nov?</h2><button class="iconbtn"><svg class="i"><use href="#x"/></svg></button></div>
+    <div class="card facts" style="padding:0"><div class="fact"><span class="k">Entries</span><span class="v">2</span></div><div class="fact"><span class="k">Money out</span><span class="v">₹380</span></div><div class="fact"><span class="k">Money in</span><span class="v">₹0</span></div></div>
+    <p class="sheetline" style="margin:0">By closing, you're saying <b>every payment for this day is added</b>. Anything you add later is marked <i>added after closing</i>.</p>
+    <p class="muted small" style="margin:0">You can reopen it until midnight. After that it stays closed.</p>
+    <div class="sheetactions"><button class="btn">Go back</button><button class="btn primary">Close day</button></div>
+  </div></div>
+</div><p class="legend">No undo timer: this sheet is the check.</p></div>
+
+<!-- 5 -->
+<div class="frame" id="s5"><h3>5 · Close sheet (empty day)</h3><div class="phone">
+  <div data-t="head"></div><main class="screen"></main><div data-t="dockH"></div>
+  <div class="scrim"><div class="sheet stack"><span class="grabber"></span>
+    <div class="row"><h2 class="grow">Close Wednesday, 19 Nov?</h2><button class="iconbtn"><svg class="i"><use href="#x"/></svg></button></div>
+    <div class="warnbox"><svg class="i"><use href="#warn"/></svg><span>No payments are recorded for this day.</span></div>
+    <p class="sheetline" style="margin:0">Closing it says <b>you spent nothing</b> on Wednesday, 19 Nov. If you did spend, go back and add it first.</p>
+    <div class="sheetactions"><button class="btn">Go back</button><button class="btn primary">Yes, I spent nothing</button></div>
+  </div></div>
+</div><p class="legend">Same sheet, but an empty day gets the warning and "Yes, I spent nothing".</p></div>
+
+<!-- 6 -->
+<div class="frame" id="s6"><h3>6 · A closed past day, opened</h3><div class="phone">
+  <div data-t="head"></div>
+  <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
+    <section class="daycard"><div class="dayhead2"><span class="dname2"><b>Saturday<small>15 Nov</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#up"/></svg></span></div>
+      <div class="txns">
+        <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Big Bazaar</span><span class="tamt out">−₹1,450</span></span><span class="tmeta">UPI bank · Groceries</span></span></button>
+        <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Auto</span><span class="tamt out">−₹80</span></span><span class="tmeta">Cash · Transport</span></span></button>
+        <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Movie</span><span class="tamt out">−₹500</span></span><span class="tmeta">UPI bank · Fun</span></span></button>
+        <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Parking</span><span class="tamt out">−₹75</span></span><span class="tmeta">Cash · Transport</span><span class="latetag">Added after closing · 16 Nov</span></span></button>
+      </div>
+      <div class="dayfoot"><span class="lockline"><svg class="i s"><use href="#lock"/></svg>Closed 15 Nov, 10:42 pm. You can still add a forgotten payment.</span></div>
+    </section>
+  </main>
+  <div data-t="dockH"></div>
+</div><p class="legend">Past closed days can't reopen. A late entry stays, with its tag. (Today, closed: the footer shows "Reopen" until midnight.)</p></div>
+
+<!-- 7 -->
+<div class="frame" id="s7"><h3>7 · New account: balance date</h3><div class="phone">
+  <div data-t="head"></div>
+  <main class="screen stack" style="gap:var(--sp-3)">
+    <section class="card stack" style="gap:var(--sp-2)"><span class="caps">New account</span>
+      <input class="field" value="HDFC savings">
+      <div class="row"><span class="fchip select cur">INR <svg class="i s"><use href="#down"/></svg></span><input class="field grow" value="15,000"></div>
+      <label class="lbl">Balance as of</label>
+      <div class="row"><div class="field dateish grow"><span>15 Nov 2026</span><svg class="i s"><use href="#cal"/></svg></div><button class="qchip">Today</button></div>
+      <div class="warnbox" style="flex-direction:column;gap:6px;font-weight:600"><b style="display:flex;gap:8px"><svg class="i"><use href="#warn"/></svg>Starting 5 days back</b>
+        <span>You'll need to add every payment from <b>15 Nov to today</b>, or this balance will be wrong. Those days will show as open until you close them.</span>
+        <span>Starting from today is easier.</span>
+        <div class="sheetactions" style="margin-top:4px"><button class="btn">Use today</button><button class="btn primary">Keep 15 Nov</button></div></div>
+      <p class="muted small" style="margin:0">Payments dated before the balance date can't be added to this account.</p>
+    </section>
+  </main>
+  <div data-t="dockD"></div>
+</div><p class="legend">Default is today. Picking an earlier date shows this warning. Same field in onboarding.</p></div>
+
+<!-- 8 -->
+<div class="frame" id="s8"><h3>8 · Reminders on the phone</h3><div class="phone">
+  <div class="mk-lock"><div class="mk-clock">22:30</div><div class="mk-date">Thursday, 20 November</div>
+    <div class="mk-list">
+      <div class="mk-n"><div class="mk-app"><span>EXPENSE TRACKER</span><span>now</span></div><div class="mk-t">Is today complete?</div><div>2 payments so far. Add anything missing, then close the day.</div></div>
+      <div class="mk-n"><div class="mk-app"><span>EXPENSE TRACKER</span><span>9:00 am</span></div><div class="mk-t">Yesterday is still open</div><div>Wednesday has no payments. Add them, or close it as no spend.</div></div>
+      <div class="mk-n"><div class="mk-app"><span>EXPENSE TRACKER</span><span>Sat</span></div><div class="mk-t">5 days to fill in</div><div>Your HDFC savings balance starts 15 Nov. Add those days' payments and close them.</div></div>
+    </div>
+  </div><p class="legend">Night reminder (default 10:30 pm, only if today is open). Morning nudge once for yesterday. Each tap opens that day's box in History.</p></div>
+
+<script>
+document.querySelectorAll('[data-t]').forEach(el => { el.replaceWith(document.getElementById(el.dataset.t).content.cloneNode(true)); });
+</script>
+</body></html>
