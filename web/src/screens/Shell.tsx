@@ -4,11 +4,12 @@ import { logEvent } from "../lib/actions";
 import { MonthPill, ToastHost } from "../components";
 import { APP_NAME } from "../config";
 import { useLedger, useToday } from "../lib/hooks";
-import { addMonths, dayState, monthOf, streak } from "../lib/ledger";
+import { addMonths, monthOf, openPastDays } from "../lib/ledger";
+import { supabase } from "../supabase";
 import { openUser, sync, useStore } from "../lib/store";
-import DayStatus from "./DayStatus";
 import History from "./History";
 import Metrics from "./Metrics";
+import OpenDays from "./OpenDays";
 import Plan from "./Plan";
 import QuickAdd from "./QuickAdd";
 import Review from "./Review";
@@ -29,7 +30,7 @@ export default function Shell({ userId }: { userId: string }) {
   const s = useStore();
   const L = useLedger();
   const opened = useRef(false);
-  const run = streak(today, (d: string) => dayState(d, L.loggedDates, L.noSpend), s.firstDay || today);
+  const [histOpen, setHistOpen] = useState(false);     // History: only open days
   // Only Plan can look a month ahead.
   const max = tab === "stats" && plan ? addMonths(monthOf(today), 1) : monthOf(today);
   const ym = pickedYm > max ? max : pickedYm;
@@ -37,6 +38,8 @@ export default function Shell({ userId }: { userId: string }) {
   useEffect(() => {
     let live = true;
     openUser(userId).then(() => { if (live) void sync(); });
+    // "Today" for the database's close/reopen rule is today in this time zone.
+    try { void supabase.from("profiles").update({ time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).eq("user_id", userId).then(() => undefined, () => undefined); } catch { /* ignore */ }
     const refresh = () => document.visibilityState === "visible" && void sync();
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("online", refresh);
@@ -47,8 +50,7 @@ export default function Shell({ userId }: { userId: string }) {
   useEffect(() => {
     if (opened.current || !s.ready || s.status === "syncing") return;
     opened.current = true;
-    const st = (d: string) => dayState(d, L.loggedDates, L.noSpend);
-    logEvent("app_open", { streak: streak(today, st, s.firstDay || today) });
+    logEvent("app_open", { open_days: openPastDays(today, L.closed, L.start).length });
   }, [s.ready, s.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!s.ready) return <main className="screen"><p className="muted" role="status">{s.status === "offline" ? "You're offline and there's nothing saved on this device yet." : "Loading your ledger…"}</p></main>;
@@ -63,14 +65,13 @@ export default function Shell({ userId }: { userId: string }) {
       <header className="apphead">
         <MonthPill ym={ym} max={max} onChange={setYm} />
         <div className="row">
-          {run > 0 && <span className="statuschip" aria-label={`${run} day streak`}><span className="dot" aria-hidden="true" /><span className="wide">{run}-day streak</span><span className="narrow">{run}</span></span>}
           <button className="iconbtn" aria-label="Settings" onClick={() => setOverlay({ k: "settings" })}><Icon name="user" /></button>
         </div>
       </header>
-      {tab === "history" && <History ym={ym} />}
+      {tab === "history" && <History ym={ym} openOnly={histOpen} onOpenOnly={setHistOpen} />}
       {tab === "stats" && <>
         <div className="screen stack" style={{ paddingBottom: 0, gap: "var(--sp-3)" }}>
-          {ym === monthOf(today) && <DayStatus onReview={(m) => setOverlay({ k: "review", ym: m })} />}
+          <OpenDays onShow={() => { setHistOpen(true); setTab("history"); }} onReview={(m: string) => setOverlay({ k: "review", ym: m })} />
           <div className="seg" role="group" aria-label="Dashboard view">
             <button aria-pressed={!plan} onClick={() => setPlan(false)}>Spending</button>
             <button aria-pressed={plan} onClick={() => setPlan(true)}>Plan</button>

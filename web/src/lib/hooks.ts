@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { todayLocal } from "./ids";
-import { loggedDatesOf } from "./ledger";
+import { loggedDatesOf, startDay } from "./ledger";
 import { useStore } from "./store";
 import type { Account, Category } from "./types";
 
@@ -32,7 +32,8 @@ export function useLedger() {
       accountById: new Map(s.accounts.map((a) => [a.id, a])),
       categoryById: new Map(s.categories.map((c) => [c.id, c])),
       loggedDates: loggedDatesOf(entries),
-      noSpend: new Set(s.noSpend),
+      closed: s.closed,
+      start: startDay(entries, s.firstDay),
     };
-  }, [s.accounts, s.categories, s.entries, s.noSpend, s]);
+  }, [s.accounts, s.categories, s.entries, s.closed, s]);
 }

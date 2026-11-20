@@ -431,3 +431,34 @@ body { zoom: .9; min-height: calc(100dvh / .9); }
 .curpick { position: relative; display: flex; width: fit-content; margin: 0 auto var(--sp-2); align-items: center; gap: 4px; height: 30px; padding: 0 var(--sp-3);
   border-radius: var(--r-pill); background: var(--ink-2); color: var(--lime); font-size: var(--fs-sm); font-weight: var(--fw-bold); }
 .curpick select { position: absolute; inset: 0; opacity: 0; width: 100%; font-size: 16px; cursor: pointer; }
+
+/* ---- Pass 6: close day (open/closed boxes in History, open-days card) ---- */
+.opencard { display: flex; align-items: center; gap: var(--sp-3); width: 100%; padding: var(--sp-3) var(--sp-4); border: 1.5px solid #F2B8B8; border-radius: var(--r-card); background: var(--red-soft); color: var(--text); text-align: left; cursor: pointer; }
+.opencard .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex: none; box-shadow: 0 0 0 4px rgba(198,40,40,.15); }
+.opencard b { display: block; color: var(--red); font-size: var(--fs-lg); }
+.opencard .muted { font-size: var(--fs-sm); }
+.status { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: var(--fw-heavy); }
+.status.open { background: #fff; color: var(--text-2); border: 1px solid var(--line-strong); }
+.status.past { background: var(--red-soft); color: var(--red); }
+.status.closed { background: var(--mint); color: var(--green-ink); }
+button.dayhead2 { width: 100%; border: 0; border-bottom: 1px solid var(--day-band-line); text-align: left; cursor: pointer; font: inherit; color: inherit; }
+button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.dayhead2 .dsub { display: block; font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--text-muted); margin-top: 1px; }
+.dayhead2 .right { display: flex; align-items: center; gap: var(--sp-2); }
+.dayhead2 .chev { color: var(--text-muted); transition: transform var(--t-fast) var(--ease); }
+.daycard.collapsed .dayhead2 { border-bottom: 0; }
+.dayhead2[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.dname2 b { font-size: var(--fs-lg); font-weight: var(--fw-heavy); letter-spacing: var(--ls-title); }
+.dname2 b small { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-2); margin-left: 6px; }
+.dayhead2.today .dname2 b::before { content: ""; display: inline-block; vertical-align: middle; width: 7px; height: 7px; margin-right: var(--sp-2); border-radius: 50%; background: var(--green); }
+.dayfoot { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); }
+.dayfoot .btn { height: var(--h-sm); }
+.lockline { display: flex; align-items: center; gap: 6px; flex: 1; font-size: var(--fs-sm); color: var(--text-muted); font-weight: var(--fw-medium); }
+.lockline svg { flex: none; }
+.noentry { padding: 14px var(--sp-4); color: var(--text-muted); font-size: var(--fs-md); }
+.tline2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tline2 .tmeta { min-width: 0; }
+.latetag { flex: none; display: inline-block; line-height: 16px; padding: 0 7px; border-radius: var(--r-pill); background: var(--amber-soft); color: var(--amber-ink); font-size: var(--fs-2xs); font-weight: var(--fw-bold); }
+.warnbox { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-panel); background: var(--amber-soft); color: var(--amber-ink); font-weight: var(--fw-bold); }
+.warnbox.col { flex-direction: column; gap: 6px; font-weight: 600; }
+.warnbox.col .row { gap: 8px; }

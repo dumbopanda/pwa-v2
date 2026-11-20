@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import Icon from "../Icon";
+import { Bar } from "../components";
 import { dayLabel } from "../lib/format";
 import { useLedger, useToday } from "../lib/hooks";
-import { balances, daysInMonth, isSpend, loggedDatesOf, monthOf, monthTotals, spendBy, spendByDay, toneOf } from "../lib/ledger";
+import { balances, closedInMonth, daysInMonth, isSpend, loggedDatesOf, monthOf, monthTotals, spendBy, spendByDay, toneOf } from "../lib/ledger";
 import { formatMoney } from "../lib/money";
 import { monthLabel } from "../lib/reviewFacts";
 
@@ -49,7 +50,8 @@ export default function Stats({ ym }: { ym: string }) {
   const peak = Math.max(...perDay, 0);
   const lastDay = isNow ? Number(today.slice(8)) : perDay.length;
   const logged = [...loggedDatesOf(L.entries)].filter((d) => monthOf(d) === ym).length;
-  const noSpend = [...L.noSpend].filter((d) => monthOf(d) === ym).length;
+  const noSpend = Object.keys(L.closed).filter((d) => monthOf(d) === ym && !loggedDatesOf(L.entries).has(d)).length;
+  const cm = closedInMonth(ym, today, L.closed, L.start);
   const peakDay = peak > 0 ? perDay.indexOf(peak) + 1 : null;
   const ax = [1, 8, 15, 22, perDay.length];
   // Drag across the chart to read any day (the old app's gesture): the whole strip is the target, not 9px bars.
@@ -89,6 +91,16 @@ export default function Stats({ ym }: { ym: string }) {
           </div>
         )}
       </section>
+
+      {cm.days > 0 && (
+        <section className="card" aria-label="Days closed this month">
+          <b>Days closed this month</b>
+          <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
+            <span className="muted small">{cm.closed} of {cm.days} days closed{isNow ? " · today not counted yet" : ""}</span><b>{Math.round((cm.closed / cm.days) * 100)}%</b>
+          </div>
+          <Bar value={cm.closed} max={cm.days} />
+        </section>
+      )}
 
       <section className="card duo" aria-label="Money out and in">
         <div><span className="k"><i className="o" aria-hidden="true"><Icon name="out" size={12} /></i>Money out</span><b>{m(t.spent)}</b><span className="s">{spends.length} {spends.length === 1 ? "entry" : "entries"}</span></div>
@@ -136,8 +148,8 @@ export default function Stats({ ym }: { ym: string }) {
 
       <section className="card panel facts" aria-label="Facts">
         <div className="phead"><span className="ptitle">This month</span></div>
-        <div className="fact"><span className="k">Days logged</span><span className="v">{logged} of {lastDay}</span></div>
-        <div className="fact"><span className="k">No-spend days</span><span className="v">{noSpend}</span></div>
+        <div className="fact"><span className="k">Days with entries</span><span className="v">{logged} of {lastDay}</span></div>
+        <div className="fact"><span className="k">Closed as no spend</span><span className="v">{noSpend}</span></div>
         <div className="fact"><span className="k">Average a day</span><span className="v">{m(lastDay ? Math.floor(t.spent / lastDay) : 0)}</span></div>
       </section>
       <p className="muted small" style={{ margin: 0, textAlign: "center" }}>Transfers between your accounts and opening balances aren't spending or income.</p>

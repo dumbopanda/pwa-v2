@@ -18,8 +18,8 @@ import { spendBy } from "../lib/ledger";
 export default function Review({ ym, onClose, onPlan }: { ym: string; onClose: () => void; onPlan: () => void }) {
   const L = useLedger(); const today = useToday();
   const cur = L.s.currency;
-  const facts = useMemo(() => reviewFacts(L.entries, L.accounts, L.categories, L.s.budgets, L.noSpend, ym, today, cur),
-    [L.entries, L.accounts, L.categories, L.s.budgets, L.noSpend, ym, today, cur]);
+  const facts = useMemo(() => reviewFacts(L.entries, L.accounts, L.categories, L.s.budgets, new Set(Object.keys(L.closed)), ym, today, cur),
+    [L.entries, L.accounts, L.categories, L.s.budgets, L.closed, ym, today, cur]);
   const plan = buildPlan(L.entries, L.accounts, L.s.budgets, ym, today, cur);
   const cats = spendBy(L.entries, L.accounts, ym, cur, (e) => e.category_id ?? "");
   const m = (n: number) => formatMoney(n, cur);

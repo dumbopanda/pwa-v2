@@ -10,7 +10,7 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 export const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5)) - 1]} ${ym.slice(0, 4)}`;
 
 export function reviewFacts(entries: Entry[], accounts: Account[], categories: Category[], budgets: Budget[],
-  noSpend: Set<string>, ym: string, today: string, currency: string): ReviewFacts {
+  closedDays: Set<string>, ym: string, today: string, currency: string): ReviewFacts {
   const t = monthTotals(entries, accounts, ym).get(currency) ?? { spent: 0, income: 0, net: 0 };
   const plan = buildPlan(entries, accounts, budgets, ym, today, currency);
   const name = new Map(categories.map((c) => [c.id, c.name]));
@@ -32,7 +32,7 @@ export function reviewFacts(entries: Entry[], accounts: Account[], categories: C
     savings_target: plan.savingsTarget === null ? null : m(plan.savingsTarget),
     left_to_save: plan.leftToSave === null ? null : m(plan.leftToSave),
     days_logged: days, days_in_month: daysInMonth(ym),
-    no_spend_days: [...noSpend].filter((d) => monthOf(d) === ym).length,
+    no_spend_days: [...closedDays].filter((d) => monthOf(d) === ym && !loggedDatesOf(entries).has(d)).length,   // closed with nothing logged
     categories: cats, top_places: places,
   };
 }

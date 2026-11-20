@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { firstSaveMs, logEvent, saveDraft } from "../lib/actions";
 import { AccountTiles, currencySymbol, Sheet, toast, useAction } from "../components";
 import Icon from "../Icon";
-import { addDays } from "../lib/ledger";
+import { addDays, balanceDate } from "../lib/ledger";
+import { dayLabel } from "../lib/format";
 import { checkDraft, type Draft } from "../lib/entryRows";
 import { formatMoney } from "../lib/money";
 import { useLedger, useToday } from "../lib/hooks";
@@ -15,7 +16,7 @@ export const LAST_ACCOUNT = "lastAccount";
 export default function EntrySheet({ initial, existing, via, aiOriginal, source, hint, said, onClose }: {
   initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; source?: "rules" | "ai"; hint?: string; said?: string; onClose: () => void;
 }) {
-  const { accounts, activeAccounts, activeCategories, accountById, categoryById } = useLedger();
+  const { accounts, activeAccounts, activeCategories, accountById, categoryById, entries } = useLedger();
   const today = useToday();
   const [d, setD] = useState(initial);
   const { busy, error, run, setError } = useAction();
@@ -38,6 +39,9 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
     onClose();
   }
 
+  // No payment may be dated before an account's balance date (the database enforces it too).
+  const start = [d.accountId, d.transfer ? d.toAccountId : ""].map((id) => (id ? balanceDate(entries, id) : null)).filter((x): x is string => !!x).sort().pop() ?? "";
+  const dateErr = start && d.date < start ? `This account's balance starts ${dayLabel(start)}. Pick that day or later.` : null;
   const label = check.ok && from ? `${existing ? "Save changes" : "Save"} · ${formatMoney(check.minor, from.currency)}${d.transfer ? " moved" : d.direction === "spent" ? " out" : " in"}` : existing ? "Save changes" : "Save";
 
   // Each account has one currency; picking a currency shows that currency's accounts.
@@ -101,7 +105,7 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
         )}
         <div className="grow-row"><Icon name="calendar" />
           <div className="grow"><label className="rowlbl" htmlFor="date">Date</label>
-            <input id="date" type="date" max={today} value={d.date} onChange={(e) => set({ date: e.target.value })} /></div>
+            <input id="date" type="date" min={start || undefined} max={today} value={d.date} onChange={(e) => set({ date: e.target.value })} /></div>
           <button type="button" className="qchip" aria-pressed={d.date === today} onClick={() => set({ date: today })}>Today</button>
           <button type="button" className="qchip" aria-pressed={d.date === yesterday} onClick={() => set({ date: yesterday })}>Yesterday</button>
         </div>
@@ -111,9 +115,9 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
       </div>
 
       {error ? <p className="error" role="alert" style={{ textAlign: "center" }}>{error}</p>
-        : !check.ok && <p className="caption" aria-live="polite">{check.error}</p>}
+        : dateErr ? <p className="caption" role="alert">{dateErr}</p> : !check.ok && <p className="caption" aria-live="polite">{check.error}</p>}
       <div className="sheetfoot">
-        <button className="btn primary" style={{ width: "100%" }} onClick={save} disabled={busy || !check.ok}>{busy ? "Saving…" : label}</button>
+        <button className="btn primary" style={{ width: "100%" }} onClick={save} disabled={busy || !check.ok || !!dateErr}>{busy ? "Saving…" : label}</button>
       </div>
     </Sheet>
   );

@@ -111,3 +111,38 @@ export function AccountTiles({ accounts, value, onPick, label, order }: { accoun
     </div>
   );
 }
+
+/**
+ * "Balance as of": defaults to today. An earlier date asks for a confirmation,
+ * because every payment from that date on must then be added (those days stay
+ * open until closed). `needsConfirm` is true until the person picks Keep.
+ */
+export function useBalanceDate(today: string) {
+  const [value, setValue] = useState(today);
+  const [kept, setKept] = useState(false);
+  return { value, setValue: (v: string) => { setValue(v || today); setKept(false); }, kept, setKept, needsConfirm: value < today && !kept };
+}
+export function BalanceDate({ today, bd }: { today: string; bd: ReturnType<typeof useBalanceDate> }) {
+  const back = Math.round((Date.parse(today) - Date.parse(bd.value)) / 86400000);
+  const label = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${bd.value}T00:00:00Z`));
+  return (
+    <div className="stack" style={{ gap: "var(--sp-2)" }}>
+      <label className="lbl" htmlFor="asof">Balance as of</label>
+      <div className="row">
+        <input id="asof" type="date" className="field grow" max={today} value={bd.value} onChange={(e) => bd.setValue(e.target.value)} />
+        <button type="button" className="qchip" aria-pressed={bd.value === today} onClick={() => bd.setValue(today)}>Today</button>
+      </div>
+      {bd.value < today && !bd.kept && (
+        <div className="warnbox col" role="alert">
+          <b className="row"><Icon name="warn" />Starting {back} {back === 1 ? "day" : "days"} back</b>
+          <span>You'll need to add every payment from <b>{label} to today</b>, or this balance will be wrong. Those days will show as open until you close them.</span>
+          <span>Starting from today is easier.</span>
+          <div className="sheetactions"><button type="button" className="btn" onClick={() => bd.setValue(today)}>Use today</button>
+            <button type="button" className="btn primary" onClick={() => bd.setKept(true)}>Keep {label}</button></div>
+        </div>
+      )}
+      {bd.value < today && bd.kept && <p className="muted small" style={{ margin: 0 }}>From {label}: every payment since then needs adding. Those days stay open until you close them.</p>}
+      <p className="muted small" style={{ margin: 0 }}>Payments dated before this date can't be added to the account.</p>
+    </div>
+  );
+}

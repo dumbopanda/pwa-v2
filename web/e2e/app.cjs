@@ -92,7 +92,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('transfer never counted as spend', (await status()) === spentBefore);
 
   // --- missed day: mark no spend
-  check('streak chip shows', await p.getByLabel(/day streak/).count() > 0);
+  check('no streak chip any more', (await p.getByLabel(/day streak/).count()) === 0);
 
   // --- in History: one line per transfer, delete + undo, edit
   await p.getByRole('button', { name: 'History' }).click();
@@ -106,6 +106,37 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByText('swiggy').first().click(); await p.getByRole('button', { name: 'Edit', exact: true }).click();
   await p.getByLabel(/^Amount/).fill('360'); await p.getByRole('button', { name: /^Save changes/ }).click(); await p.getByRole('dialog').waitFor({ state: 'detached' });
   check('edit updates the same row (no duplicate)', db.entries.filter((e) => e.expense_name === 'swiggy').length === 1 && db.entries.find((e) => e.expense_name === 'swiggy').amount_minor === 36000);
+
+  // --- close day: open until you close it; closed stays closed; empty days warn first
+  const dayN = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toLocaleDateString('en-CA'); };
+  await p.getByRole('button', { name: 'Dashboard' }).click();
+  check('dashboard shows past open days in red (today never counts)', await p.getByText('5 days still open').isVisible());
+  await p.getByRole('button', { name: /days still open/ }).click();
+  check('card leads to History showing open days only', await p.getByRole('button', { name: 'Open days' }).getAttribute('aria-pressed') === 'true' && (await p.locator('.daycard').count()) === 5);
+  await p.getByRole('button', { name: 'Open days' }).click();                      // back to the month
+  const dbox = (label) => p.locator('.daycard', { has: p.locator('.dname2', { hasText: label }) });
+  check('today is open', await dbox('Today').getByText('Open', { exact: true }).isVisible());
+  await dbox('Today').getByRole('button', { name: 'Close day' }).click();
+  await p.getByRole('dialog', { name: /^Close / }).getByText(/every payment for this day is added/).waitFor();
+  await p.getByRole('dialog').getByRole('button', { name: 'Close day' }).click(); await p.getByText('Day closed').waitFor();
+  check('today closed, stored once', Object.keys(db.closed).length === 1 && await dbox('Today').getByText('Closed', { exact: true }).isVisible());
+  await manual(); await p.getByLabel(/^Amount/).fill('10'); await p.locator('.sheet .tiles').getByRole('button', { name: 'Cash', exact: true }).click(); await p.getByLabel('Name or place').fill('late tea');
+  await p.getByRole('button', { name: /^Save/ }).click(); await p.getByRole('dialog').waitFor({ state: 'detached' });
+  check('entry added to a closed day stays closed and is tagged Late', Object.keys(db.closed).length === 1 && await dbox('Today').getByText('Late', { exact: true }).isVisible());
+  await dbox('Today').getByRole('button', { name: 'Reopen' }).click(); await p.getByText('Day reopened').waitFor();
+  check('same-day reopen works', Object.keys(db.closed).length === 0 && await dbox('Today').getByText('Open', { exact: true }).isVisible());
+  await dbox('Yesterday').locator('.dayhead2').click();
+  await dbox('Yesterday').getByRole('button', { name: 'Close day' }).click(); await p.getByRole('dialog').getByRole('button', { name: 'Close day' }).click(); await p.getByText('Day closed').waitFor();
+  check('past closed day has no Reopen', (await dbox('Yesterday').getByRole('button', { name: 'Reopen' }).count()) === 0 && Object.keys(db.closed).length === 1);
+  const empty = p.locator('.daycard', { has: p.locator('.dname2 small', { hasText: new Date(dayN(2) + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'long', timeZone: 'UTC' }) }) }).first();
+  await empty.locator('.dayhead2').click(); await empty.getByRole('button', { name: 'Close day' }).click();
+  await p.getByText('No payments are recorded for this day.').waitFor();
+  await p.getByRole('dialog').getByRole('button', { name: 'Yes, I spent nothing' }).click(); await p.getByText('Closed as no spend').waitFor();
+  check('empty day needs the "spent nothing" confirm, then closes', Object.keys(db.closed).length === 2);
+  await p.getByRole('button', { name: 'Dashboard' }).click();
+  check('open-day count drops as days close', await p.getByText('3 days still open').isVisible());
+  check('days closed this month shown', await p.getByText(/of \d+ days closed/).isVisible());
+  await p.getByRole('button', { name: 'History' }).click();
 
   // --- history
   await p.getByRole('button', { name: 'Search', exact: true }).click();
@@ -178,6 +209,21 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   await p.getByLabel('New account name').fill('Wallet'); await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
   const wl = db.accounts.find((x) => x.name === 'Wallet');
   check('no balance = no opening row', !!wl && !db.entries.some((e) => e.account_id === wl.id));
+  // --- balance date: earlier date needs a confirm; payments can't go before it
+  await p.getByLabel('New account name').fill('Backdated'); await p.getByLabel('New account balance today').fill('1000');
+  await p.getByLabel('Balance as of').fill(dayN(2));
+  check('earlier balance date warns and blocks Add until you choose', await p.getByText('Starting 2 days back').isVisible() && await p.getByRole('button', { name: 'Add account' }).isDisabled());
+  await p.getByRole('button', { name: /^Keep / }).click();
+  await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
+  const bk = db.accounts.find((x) => x.name === 'Backdated'); const bkRow = db.entries.find((e) => e.account_id === bk?.id);
+  check('opening balance is dated the chosen day', bkRow && bkRow.entry_date === dayN(2) && bkRow.amount_minor === 100000, JSON.stringify(bkRow));
+  await p.getByRole('button', { name: 'Back' }).click();
+  await manual(); await p.locator('.sheet .tiles').getByRole('button', { name: 'Backdated', exact: true }).click();
+  await p.getByLabel('Date').fill(dayN(3));
+  check('no payment before the balance date: Save disabled with a reason', await p.getByText(/balance starts/).isVisible() && await p.getByRole('button', { name: /^Save/ }).isDisabled());
+  await p.keyboard.press('Escape');
+  await p.getByRole('button', { name: 'Settings' }).click();
+
   await p.getByLabel('New account name').fill('Bad'); await p.getByLabel('New account balance today').fill('12abc');
   await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText(/doesn't look like an amount/).waitFor();
   check('bad balance refused, no account created', !db.accounts.some((x) => x.name === 'Bad'));

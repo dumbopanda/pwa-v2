@@ -69,31 +69,46 @@ export function spendByDay(entries: Entry[], accounts: Account[], ym: string, cu
 
 export const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
-export type DayState = "open" | "logged" | "no_spend";
-
-/** A day with an entry is "logged"; otherwise "no_spend" if you tapped it; otherwise "open". */
-export function dayState(date: string, loggedDates: Set<string>, noSpend: Set<string>): DayState {
-  return loggedDates.has(date) ? "logged" : noSpend.has(date) ? "no_spend" : "open";
-}
 export const loggedDatesOf = (entries: Entry[]) => new Set(entries.filter(isLogged).map((e) => e.entry_date));
 
 /**
- * Streak: consecutive days that are logged or marked no-spend, ending today.
- * Today still being open doesn't break it yet; counting then starts yesterday.
+ * The first day that counts: the day you started, or the earliest account
+ * balance date if that is earlier (you chose to fill those days in).
  */
-export function streak(today: string, state: (d: string) => DayState, firstDay: string): number {
-  let d = state(today) === "open" ? addDays(today, -1) : today;
-  let n = 0;
-  while (d >= firstDay && state(d) !== "open") { n++; d = addDays(d, -1); }
-  return n;
+export function startDay(entries: Entry[], firstDay: string): string {
+  let d = firstDay;
+  for (const e of entries) if (e.txn_type === "Opening balance" && (!d || e.entry_date < d)) d = e.entry_date;
+  return d;
 }
 
-/** Past days (not today) with nothing logged and no no-spend mark, newest first, never before your first day. */
-export function missedDays(today: string, state: (d: string) => DayState, firstDay: string, max = 7): string[] {
+/** Days before today that are still open (not closed by you), newest first. Today never counts: it isn't over. */
+export function openPastDays(today: string, closed: Record<string, string>, start: string): string[] {
   const out: string[] = [];
-  for (let d = addDays(today, -1), i = 0; i < 30 && d >= firstDay && out.length < max; d = addDays(d, -1), i++) if (state(d) === "open") out.push(d);
+  if (!start) return out;
+  for (let d = addDays(today, -1); d >= start; d = addDays(d, -1)) if (!closed[d]) out.push(d);
   return out;
 }
+
+/** How many past days of a month count, and how many of those you closed. Today never counts. */
+export function closedInMonth(ym: string, today: string, closed: Record<string, string>, start: string): { days: number; closed: number } {
+  let days = 0, n = 0;
+  for (let i = 1; i <= daysInMonth(ym); i++) {
+    const d = `${ym}-${String(i).padStart(2, "0")}`;
+    if (d >= today || d < start) continue;
+    days++; if (closed[d]) n++;
+  }
+  return { days, closed: n };
+}
+
+/** The date an account's balance starts: no payment may be dated before it. null = no opening balance. */
+export function balanceDate(entries: Entry[], accountId: string): string | null {
+  let d: string | null = null;
+  for (const e of entries) if (e.account_id === accountId && e.txn_type === "Opening balance" && (d === null || e.entry_date < d)) d = e.entry_date;
+  return d;
+}
+
+/** Added after its day was closed: the entry was created after the close time. */
+export const isLate = (e: Entry, closed: Record<string, string>) => !!closed[e.entry_date] && e.created_at > closed[e.entry_date];
 export { sumBy };
 
 /** One colour family per account, by its place in your list, so an account looks the same on every screen. */

@@ -19,11 +19,13 @@ async function push(rows: Row[]): Promise<Entry[]> {
     if (error.code === "P0002") fail("You've reached the entry limit. Export your data and contact support.");
     if (error.code === "P0001") fail("That transfer didn't look right, so it wasn't saved.");
     if (error.code === "23503") fail("That account or category no longer exists. Pull down to refresh.");
+    if (error.code === "P0005") fail("That date is before this account's balance starts. Pick a later date.");
     return fail(NET);
   }
   const now = new Date().toISOString();
   const got = new Map((data as Pushed).map((r) => [r.client_uid, r]));
-  return rows.map((r) => ({ ...r, id: got.get(r.client_uid)!.id, updated_at: got.get(r.client_uid)!.updated_at, created_at: now, deleted_at: r.deleted_at } as Entry));
+  const had = new Map(getState().entries.map((e) => [e.client_uid, e.created_at]));   // an edit keeps its original created time ("Late" depends on it)
+  return rows.map((r) => ({ ...r, id: got.get(r.client_uid)!.id, updated_at: got.get(r.client_uid)!.updated_at, created_at: had.get(r.client_uid) ?? now, deleted_at: r.deleted_at } as Entry));
 }
 
 /** Save a new entry or transfer (or an edit, when `existing` is given). Returns the saved entries. */
@@ -50,13 +52,21 @@ export async function undoDelete(e: Entry): Promise<void> {
   await sync();
 }
 
-export async function setNoSpend(date: string, on: boolean): Promise<void> {
-  const { error } = on
-    ? await supabase.from("day_status").upsert({ date, status: "no_spend" }, { onConflict: "user_id,date" })
-    : await supabase.from("day_status").delete().eq("date", date);
+/** "Every payment for this day is added." Needs a connection. A future day can't be closed. */
+export async function closeDay(date: string): Promise<void> {
+  const { data, error } = await supabase.from("day_status").upsert({ date }, { onConflict: "user_id,date", ignoreDuplicates: true }).select("date, created_at");
+  if (error) fail(error.code === "42501" ? "You can't close a day that hasn't happened yet." : NET);
+  const at = (data as { created_at: string }[] | null)?.[0]?.created_at ?? getState().closed[date] ?? new Date().toISOString();
+  applyLocal({ closed: { ...getState().closed, [date]: at } });
+}
+
+/** Reopen a closed day. Only the same day: once it is over, a closed day stays closed (the database enforces it). */
+export async function reopenDay(date: string): Promise<void> {
+  const { data, error } = await supabase.from("day_status").delete().eq("date", date).select("date");
   if (error) fail(NET);
-  const s = getState().noSpend.filter((d) => d !== date);
-  applyLocal({ noSpend: on ? [...s, date] : s });
+  if (!data?.length) { await sync(); fail("A day can't be reopened once it is over."); }
+  const { [date]: _gone, ...rest } = getState().closed;
+  applyLocal({ closed: rest });
 }
 
 /** Set, change or clear a monthly budget. categoryId null = the savings target. amount 0 clears it. */
@@ -84,7 +94,7 @@ export async function copyBudgets(from: string, to: string): Promise<void> {
  * have it, debit if you owe it; same row shape as onboarding). If the balance can't be saved
  * the account is removed again, so a retry never hits "name already used".
  */
-export async function addAccount(name: string, currency: string, balance = "", owe = false): Promise<Account> {
+export async function addAccount(name: string, currency: string, balance = "", owe = false, asOf = todayLocal()): Promise<Account> {
   const minor = balance.trim() && balance.trim() !== "0" ? parseAmount(balance, currency) : null;
   if (balance.trim() && balance.trim() !== "0" && minor === null) fail("That balance doesn't look like an amount.");
   const sort = getState().accounts.length;
@@ -93,7 +103,7 @@ export async function addAccount(name: string, currency: string, balance = "", o
   if (error) return fail(error.code === "23505" ? "You already have an account with that name." : error.code === "P0002" ? "That's the most accounts allowed." : NET);
   const acc = data as Account;
   if (minor) {
-    const rows = openingBalanceRows([{ uid, balanceUid: newUid(), name, currency, balance, owe }], new Map([[uid, acc.id]]), todayLocal());
+    const rows = openingBalanceRows([{ uid, balanceUid: newUid(), name, currency, balance, owe }], new Map([[uid, acc.id]]), asOf);
     try { applyLocal({ entries: await push(rows as Row[]) }); }
     catch (e) {
       await supabase.from("accounts").update({ deleted_at: new Date().toISOString() }).eq("id", acc.id);

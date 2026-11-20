@@ -5,7 +5,7 @@ const uuid = () => '00000000-0000-4000-8000-' + String(++seq).padStart(12, '0');
 const iso = (d) => d.toISOString().slice(0, 10);
 exports.makeDb = () => {
   const today = new Date(); const day = (n) => iso(new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - n)));
-  const db = { calls: [], events: [], noSpend: [], budgets: [], aiMode: 'ok', parseCalls: [], reviewMode: 'fail' };
+  const db = { calls: [], events: [], closed: {}, budgets: [], aiMode: 'ok', parseCalls: [], reviewMode: 'fail' };
   const acc = (name, cur = 'INR') => ({ id: uuid(), client_uid: 'cu-' + name, name, currency: cur, sort_order: 0, archived_at: null, deleted_at: null, updated_at: ts(), created_at: ts() });
   db.accounts = [acc('UPI bank'), acc('Cash'), acc('Credit card'), acc('US account', 'USD')];
   const cat = (name) => ({ id: uuid(), client_uid: 'cc-' + name, name, sort_order: 0, archived_at: null, deleted_at: null, updated_at: ts() });
@@ -38,10 +38,20 @@ exports.install = async (page, db) => {
       if (m === 'PATCH') { Object.assign(db.budgets.find((b) => b.id === q('id')), body()); return ok([], 204); }
       if (m === 'DELETE') { db.budgets = db.budgets.filter((b) => b.id !== q('id')); return ok([], 204); }
     }
-    if (p === '/rest/v1/day_status') {
-      if (m === 'GET') return ok(db.noSpend.map((date) => ({ date, status: 'no_spend' })));
-      if (m === 'POST') { const b = body(); if (!db.noSpend.includes(b.date)) db.noSpend.push(b.date); return ok([], 201); }
-      if (m === 'DELETE') { db.noSpend = db.noSpend.filter((d) => d !== q('date')); return ok([], 204); }
+    if (p === '/rest/v1/day_status') {                // one row per closed day; reopen only today; no future close
+      const todayIso = iso(new Date());
+      if (m === 'GET') return ok(Object.entries(db.closed).map(([date, created_at]) => ({ date, created_at })));
+      if (m === 'POST') {
+        const b = body();
+        if (b.date > todayIso) return ok({ code: '42501', message: 'new row violates row-level security policy' }, 403);
+        if (db.closed[b.date]) return ok([], 201);
+        db.closed[b.date] = ts(); return ok([{ date: b.date, created_at: db.closed[b.date] }], 201);
+      }
+      if (m === 'DELETE') {
+        const d = q('date');
+        if (d !== todayIso || !db.closed[d]) return ok([]);
+        delete db.closed[d]; return ok([{ date: d }]);
+      }
     }
     if (p === '/rest/v1/events') { db.events.push(body()); return ok([], 201); }
     if (p === '/rest/v1/rpc/admin_metrics') return ok({ message: 'not_admin', code: '42501' }, 403);
@@ -54,6 +64,8 @@ exports.install = async (page, db) => {
     if (p.endsWith('/rpc/push_entries')) {
       const out = [];
       for (const row of body().p_rows) {
+        const ob = db.entries.filter((x) => x.account_id === row.account_id && x.txn_type === 'Opening balance' && !x.deleted_at).map((x) => x.entry_date).sort()[0];
+        if (row.txn_type !== 'Opening balance' && ob && row.entry_date < ob) return ok({ code: 'P0005', message: 'Payments on this account start on ' + ob }, 400);
         let e = db.entries.find((x) => x.client_uid === row.client_uid);
         if (e) { const del = e.deleted_at || row.deleted_at; Object.assign(e, row, { deleted_at: del, updated_at: ts() }); }
         else { e = { id: uuid(), created_at: ts(), updated_at: ts(), ...row, deleted_at: row.deleted_at ?? null }; db.entries.push(e); }

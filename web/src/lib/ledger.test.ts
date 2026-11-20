@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, balances, dayState, daysInMonth, loggedDatesOf, missedDays, monthTotals, spendBy, spendByDay, streak } from "./ledger";
+import { addDays, addMonths, balanceDate, balances, closedInMonth, daysInMonth, isLate, loggedDatesOf, monthTotals, openPastDays, spendBy, spendByDay, startDay } from "./ledger";
 import { buildPlan } from "./plan";
 import { cell, entriesCsv } from "./csv";
 import { reviewFacts } from "./reviewFacts";
@@ -57,32 +57,37 @@ describe("balances and totals", () => {
   });
 });
 
-describe("day status and streak", () => {
-  const logged = loggedDatesOf(data);               // Nov 1, 2, 3 (opening balance alone doesn't count)
-  const noSpend = new Set(["2026-10-30"]);
-  const st = (d: string) => dayState(d, logged, noSpend);
+describe("closed days", () => {
+  const closed = { "2026-11-01": "2026-11-01T22:00:00Z", "2026-11-02": "2026-11-02T22:00:00Z" };
 
   it("an opening balance alone never marks a day logged", () => {
     expect(loggedDatesOf([data[0]]).size).toBe(0);
   });
-  it("derives logged / no_spend / open", () => {
-    expect([st("2026-11-02"), st("2026-10-30"), st("2026-10-29")]).toEqual(["logged", "no_spend", "open"]);
+  it("lists past days not closed, newest first; today never counts", () => {
+    expect(openPastDays("2026-11-06", closed, "2026-10-30")).toEqual(["2026-11-05", "2026-11-04", "2026-11-03", "2026-10-31", "2026-10-30"]);
+    expect(openPastDays("2026-11-03", { "2026-11-02": "x" }, "2026-11-03")).toEqual([]);   // started today: nothing is past yet
+    expect(openPastDays("2026-11-06", closed, "")).toEqual([]);
   });
-  it("counts consecutive logged or no-spend days", () => {
-    // Nov 3, 2, 1 and Oct 31 are logged, Oct 30 is no-spend, Oct 29 is open: 5 days.
-    expect(streak("2026-11-03", st, "2026-10-01")).toBe(5);
+  it("counts closed days of a month, not today and not before the start", () => {
+    expect(closedInMonth("2026-11", "2026-11-06", closed, "2026-11-01")).toEqual({ days: 5, closed: 2 });
+    expect(closedInMonth("2026-11", "2026-11-06", closed, "2026-11-04")).toEqual({ days: 2, closed: 0 });
+    expect(closedInMonth("2026-10", "2026-11-06", {}, "2026-11-01")).toEqual({ days: 0, closed: 0 });
   });
-  it("today being open doesn't break the streak yet", () => {
-    expect(streak("2026-11-04", st, "2026-10-01")).toBe(streak("2026-11-03", st, "2026-10-01"));
+  it("an earlier balance date pulls the start day back, so those days show as open", () => {
+    const ob = (account_id: string, entry_date: string) => ({ ...data[0], account_id, entry_date, txn_type: "Opening balance" });
+    expect(startDay([ob("a", "2026-11-01")], "2026-11-05")).toBe("2026-11-01");
+    expect(startDay([ob("a", "2026-11-09")], "2026-11-05")).toBe("2026-11-05");
   });
-  it("a missed day breaks it, and never counts before your first day", () => {
-    expect(streak("2026-11-06", st, "2026-10-01")).toBe(0);
-    expect(streak("2026-11-03", st, "2026-11-02")).toBe(2);
+  it("balanceDate is the account's opening balance date, if any", () => {
+    const rows = [{ ...data[0], account_id: "a", entry_date: "2026-11-15", txn_type: "Opening balance" }, { ...data[0], account_id: "a", entry_date: "2026-11-20", txn_type: "Opening balance" }];
+    expect(balanceDate(rows, "a")).toBe("2026-11-15");
+    expect(balanceDate(rows, "other")).toBeNull();
   });
-  it("lists missed days newest first, never before the first day, never today", () => {
-    expect(missedDays("2026-11-06", st, "2026-10-01").slice(0, 3)).toEqual(["2026-11-05", "2026-11-04", "2026-10-29"].slice(0, 3));
-    expect(missedDays("2026-11-06", st, "2026-11-05")).toEqual(["2026-11-05"]);
-    expect(missedDays("2026-11-03", st, "2026-11-03")).toEqual([]);
+  it("an entry created after its day was closed is late; one created before is not; an open day has none", () => {
+    const e = (entry_date: string, created_at: string) => ({ ...data[1], entry_date, created_at });
+    expect(isLate(e("2026-11-01", "2026-11-03T08:00:00Z"), closed)).toBe(true);
+    expect(isLate(e("2026-11-01", "2026-11-01T20:00:00Z"), closed)).toBe(false);
+    expect(isLate(e("2026-11-05", "2026-11-06T08:00:00Z"), closed)).toBe(false);
   });
 });
 

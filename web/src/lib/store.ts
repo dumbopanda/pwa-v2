@@ -12,14 +12,14 @@ export type State = {
   ready: boolean;                 // a snapshot or a first pull has landed
   status: "idle" | "syncing" | "offline";
   accounts: Account[]; categories: Category[]; entries: Entry[]; budgets: Budget[];
-  noSpend: string[];              // dates marked "I spent nothing"
+  closed: Record<string, string>; // closed days: date -> when it was closed (ISO)
   currency: string;               // profile currency (budgets use it)
   firstDay: string;               // the day you started: streak and "missed" never look before it
   cursors: { accounts: Cursor; categories: Cursor; entries: Cursor };
 };
 
 const blank = (): State => ({
-  userId: null, ready: false, status: "idle", accounts: [], categories: [], entries: [], budgets: [], noSpend: [],
+  userId: null, ready: false, status: "idle", accounts: [], categories: [], entries: [], budgets: [], closed: {},
   currency: "INR", firstDay: "", cursors: { accounts: { ts: null, id: null }, categories: { ts: null, id: null }, entries: { ts: null, id: null } },
 });
 
@@ -46,15 +46,15 @@ const SNAP = (u: string) => `snap:${u}`;
 // ponytail: the whole ledger is one JSON snapshot. Fine to tens of thousands of rows; move to per-store records past that.
 async function saveSnapshot() {
   if (!state.userId) return;
-  const { accounts, categories, entries, budgets, noSpend, currency, firstDay, cursors } = state;
-  try { await kv("readwrite", (s) => s.put({ accounts, categories, entries, budgets, noSpend, currency, firstDay, cursors }, SNAP(state.userId!))); } catch { /* private mode: run without a cache */ }
+  const { accounts, categories, entries, budgets, closed, currency, firstDay, cursors } = state;
+  try { await kv("readwrite", (s) => s.put({ accounts, categories, entries, budgets, closed, currency, firstDay, cursors }, SNAP(state.userId!))); } catch { /* private mode: run without a cache */ }
 }
 
 export async function openUser(userId: string) {
   state = { ...blank(), userId };
   try {
     const snap = await kv<Partial<State> | undefined>("readonly", (s) => s.get(SNAP(userId)));
-    if (snap?.entries) state = { ...state, ...snap, userId, ready: true, status: "idle" };
+    if (snap?.entries) state = { ...state, ...snap, closed: snap.closed ?? {}, userId, ready: true, status: "idle" };
   } catch { /* no cache */ }
   setState({});
 }
@@ -99,7 +99,7 @@ export function sync(): Promise<void> {
       ]);
       const [b, d, p] = await Promise.all([
         supabase.from("budgets").select("id, month, category_id, amount_minor"),
-        supabase.from("day_status").select("date, status"),
+        supabase.from("day_status").select("date, created_at"),
         supabase.from("profiles").select("currency, onboarded_at").eq("user_id", state.userId).maybeSingle(),
       ]);
       if (b.error || d.error) throw b.error ?? d.error;
@@ -107,7 +107,7 @@ export function sync(): Promise<void> {
       const started = p.data?.onboarded_at as string | undefined;
       setState({
         accounts: merge(state.accounts, a.rows), categories: merge(state.categories, c.rows), entries,
-        budgets: (b.data ?? []) as Budget[], noSpend: (d.data ?? []).filter((r) => r.status === "no_spend").map((r) => r.date as string),
+        budgets: (b.data ?? []) as Budget[], closed: Object.fromEntries((d.data ?? []).map((r) => [r.date as string, r.created_at as string])),
         currency: (p.data?.currency as string | undefined)?.trim() || state.currency,
         firstDay: started ? todayLocal(new Date(started)) : state.firstDay,
         cursors: { accounts: a.cursor, categories: c.cursor, entries: e.cursor }, ready: true, status: "idle",
@@ -121,10 +121,10 @@ export function sync(): Promise<void> {
 }
 
 /** Merge rows a write just returned, so the screen updates before the next pull. */
-export function applyLocal(p: { entries?: Entry[]; accounts?: Account[]; categories?: Category[]; budgets?: Budget[]; noSpend?: string[] }) {
+export function applyLocal(p: { entries?: Entry[]; accounts?: Account[]; categories?: Category[]; budgets?: Budget[]; closed?: Record<string, string> }) {
   setState({
     entries: merge(state.entries, p.entries ?? []), accounts: merge(state.accounts, p.accounts ?? []),
-    categories: merge(state.categories, p.categories ?? []), budgets: p.budgets ?? state.budgets, noSpend: p.noSpend ?? state.noSpend,
+    categories: merge(state.categories, p.categories ?? []), budgets: p.budgets ?? state.budgets, closed: p.closed ?? state.closed,
   });
   void saveSnapshot();
 }

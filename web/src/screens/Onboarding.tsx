@@ -2,6 +2,7 @@ import Icon from "../Icon";
 import { useMemo, useState } from "react";
 import { APP_NAME, DEFAULT_CURRENCY } from "../config";
 import { newUid, todayLocal } from "../lib/ids";
+import { BalanceDate, useBalanceDate } from "../components";
 import { DEFAULT_CATEGORIES, SUGGESTED_ACCOUNTS, openingBalanceRows, validateAccounts, type AccountDraft } from "../lib/onboarding";
 import { supabase } from "../supabase";
 
@@ -17,17 +18,19 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
   const [cats, setCats] = useState<Cat[]>(() => DEFAULT_CATEGORIES.map((c) => ({ uid: newUid(), ...c })));
   const [custom, setCustom] = useState("");
   const [tried, setTried] = useState(false);
+  const bd = useBalanceDate(todayLocal());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const check = useMemo(() => validateAccounts(accounts), [accounts]);
+  const hasBalance = accounts.some((a) => a.balance.trim() && a.balance.trim() !== "0");
   const unused = SUGGESTED_ACCOUNTS.filter((s) => !accounts.some((a) => a.name.trim().toLowerCase() === s.toLowerCase()));
   const edit = (uid: string, patch: Partial<AccountDraft>) =>
     setAccounts((xs) => xs.map((a) => (a.uid === uid ? { ...a, ...patch } : a)));
 
   function next() {
     setTried(true);
-    if (!check.form && check.rows.every((r) => !r)) { setStep(2); setError(null); }
+    if (!check.form && check.rows.every((r) => !r) && !(hasBalance && bd.needsConfirm)) { setStep(2); setError(null); }
   }
 
   function addCustom(e: React.FormEvent) {
@@ -57,7 +60,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
       if (cat.error) throw cat.error;
 
       const ids = new Map(acc.data.map((r) => [r.client_uid as string, r.id as string]));
-      const rows = openingBalanceRows(accounts, ids, todayLocal());
+      const rows = openingBalanceRows(accounts, ids, bd.value);
       if (rows.length) {
         const push = await supabase.rpc("push_entries", { p_rows: rows });
         if (push.error) throw push.error;
@@ -121,7 +124,9 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
             <button className="fchip big" onClick={() => setAccounts((xs) => [...xs, newDraft()])}><Icon name="plus" size={16} />Other</button>
           </div>
 
+          {hasBalance && <section className="card"><BalanceDate today={todayLocal()} bd={bd} /></section>}
           {tried && check.form && <p className="error">{check.form}</p>}
+          {tried && hasBalance && bd.needsConfirm && <p className="error">Choose Use today or Keep the earlier date first.</p>}
           <div className="pagefoot"><button className="btn primary" style={{ width: "100%" }} onClick={next}>Next</button></div>
         </>
       )}

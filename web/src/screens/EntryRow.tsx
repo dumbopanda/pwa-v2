@@ -26,7 +26,7 @@ export function buildLines(entries: Entry[], accountById: Map<string, Account>, 
 }
 
 /** Rows as in the old app: account tile, name and amount on top, account and category below, your note under that. */
-export function Lines({ lines, onOpen }: { lines: Line[]; onOpen: (e: Entry) => void }) {
+export function Lines({ lines, onOpen, late }: { lines: Line[]; onOpen: (e: Entry) => void; late?: (e: Entry) => boolean }) {
   return (
     <div className="txns">
       {lines.map((l) => (
@@ -37,7 +37,9 @@ export function Lines({ lines, onOpen }: { lines: Line[]; onOpen: (e: Entry) => 
               <span className="tname">{l.title}</span>
               <span className={`tamt ${l.kind === "move" ? "flat" : l.kind}`}>{l.kind === "out" ? "−" : l.kind === "in" ? "+" : ""}{l.amount}</span>
             </span>
-            <span className="tmeta">{l.sub}</span>
+            {late?.(l.entry)
+              ? <span className="tline2"><span className="tmeta">{l.sub}</span><span className="latetag">Late</span></span>
+              : <span className="tmeta">{l.sub}</span>}
             {l.note && <span className="tnote">{l.note}</span>}
           </span>
         </button>
