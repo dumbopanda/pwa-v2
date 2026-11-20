@@ -33,7 +33,8 @@ svg.i.s { width: 16px; height: 16px; }
 .dayfoot .btn { height: var(--h-sm); }
 .lockline { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-muted); font-weight: var(--fw-medium); }
 .noentry { padding: 14px var(--sp-4); color: var(--text-muted); font-size: var(--fs-md); }
-.latetag { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: var(--r-pill); background: var(--amber-soft); color: var(--amber-ink); font-size: var(--fs-2xs); font-weight: var(--fw-bold); }
+.tline2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.latetag { flex: none; display: inline-block; line-height: 16px; padding: 0 7px; border-radius: var(--r-pill); background: var(--amber-soft); color: var(--amber-ink); font-size: var(--fs-2xs); font-weight: var(--fw-bold); }
 .warnbox { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-panel); background: var(--amber-soft); color: var(--amber-ink); font-weight: var(--fw-bold); }
 .ntf { position: absolute; left: 12px; right: 12px; padding: 14px 16px; border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: 0 8px 24px -10px rgba(0,0,0,.35); font-size: 14px; }
 .ntf .app { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
@@ -99,12 +100,12 @@ svg.i.s { width: 16px; height: 16px; }
 <div class="frame" id="s2"><h3>2 · History: day boxes, collapsed</h3><div class="phone">
   <div data-t="head"></div>
   <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
-    <section class="daycard collapsed"><div class="dayhead2 today"><span class="dname2"><b>Today<small>Thu 20 Nov</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Yesterday<small>Wed 19 Nov</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Tuesday<small>18 Nov</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Monday<small>17 Nov</small></b><span class="dsub">1 entry · −₹220</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Sunday<small>16 Nov</small></b><span class="dsub">No spend</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Saturday<small>15 Nov</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2 today"><span class="dname2"><b>20 Nov<small>Today</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>19 Nov<small>Yesterday</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>18 Nov<small>Tuesday</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>17 Nov<small>Monday</small></b><span class="dsub">1 entry · −₹220</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>16 Nov<small>Sunday</small></b><span class="dsub">No spend</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>15 Nov<small>Saturday</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
   </main>
   <div data-t="dockH"></div>
 </div><p class="legend">Every day shows, even empty ones. Right side = status, not money. Money moves to the grey line under the date. Today's "Open" is plain grey; a past open day is red. New chip: <b>Open days</b> (where the dashboard card leads).</p></div>
@@ -113,15 +114,15 @@ svg.i.s { width: 16px; height: 16px; }
 <div class="frame" id="s3"><h3>3 · Today opened: entries + Close day</h3><div class="phone">
   <div data-t="head"></div>
   <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
-    <section class="daycard"><div class="dayhead2 today"><span class="dname2"><b>Today<small>Thu 20 Nov</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#up"/></svg></span></div>
+    <section class="daycard"><div class="dayhead2 today"><span class="dname2"><b>20 Nov<small>Today</small></b><span class="dsub">2 entries · −₹380</span></span><span class="right"><span class="status open">Open</span><svg class="i s chev"><use href="#up"/></svg></span></div>
       <div class="txns">
         <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Swiggy</span><span class="tamt out">−₹340</span></span><span class="tmeta">UPI bank · Food & dining</span></span></button>
         <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Chai</span><span class="tamt out">−₹40</span></span><span class="tmeta">Cash · Food & dining</span></span></button>
       </div>
       <div class="dayfoot"><span class="grow muted small">All of today's payments in?</span><button class="btn primary" style="height:var(--h-sm)"><svg class="i s"><use href="#check"/></svg>Close day</button></div>
     </section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Yesterday<small>Wed 19 Nov</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
-    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>Tuesday<small>18 Nov</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>19 Nov<small>Yesterday</small></b><span class="dsub">No entries</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
+    <section class="daycard collapsed"><div class="dayhead2"><span class="dname2"><b>18 Nov<small>Tuesday</small></b><span class="dsub">3 entries · −₹1,240</span></span><span class="right"><span class="status late">Open</span><svg class="i s chev"><use href="#down"/></svg></span></div></section>
   </main>
   <div data-t="dockH"></div>
 </div><p class="legend">Tap a box to open it. Close day sits at the bottom of the open box. The night reminder lands here, with today already open.</p></div>
@@ -153,18 +154,18 @@ svg.i.s { width: 16px; height: 16px; }
 <div class="frame" id="s6"><h3>6 · A closed past day, opened</h3><div class="phone">
   <div data-t="head"></div>
   <main class="screen stack" style="gap:var(--sp-3)"><div data-t="chips"></div>
-    <section class="daycard"><div class="dayhead2"><span class="dname2"><b>Saturday<small>15 Nov</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#up"/></svg></span></div>
+    <section class="daycard"><div class="dayhead2"><span class="dname2"><b>15 Nov<small>Saturday</small></b><span class="dsub">4 entries · −₹2,105 · 1 added later</span></span><span class="right"><span class="status closed"><svg class="i s"><use href="#lock"/></svg>Closed</span><svg class="i s chev"><use href="#up"/></svg></span></div>
       <div class="txns">
         <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Big Bazaar</span><span class="tamt out">−₹1,450</span></span><span class="tmeta">UPI bank · Groceries</span></span></button>
         <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Auto</span><span class="tamt out">−₹80</span></span><span class="tmeta">Cash · Transport</span></span></button>
         <button class="txn"><span class="ttile acc1">U</span><span class="tbody"><span class="tline1"><span class="tname">Movie</span><span class="tamt out">−₹500</span></span><span class="tmeta">UPI bank · Fun</span></span></button>
-        <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Parking</span><span class="tamt out">−₹75</span></span><span class="tmeta">Cash · Transport</span><span class="latetag">Added after closing · 16 Nov</span></span></button>
+        <button class="txn"><span class="ttile acc2">C</span><span class="tbody"><span class="tline1"><span class="tname">Parking</span><span class="tamt out">−₹75</span></span><span class="tline2"><span class="tmeta">Cash · Transport</span><span class="latetag">Late</span></span></span></button>
       </div>
       <div class="dayfoot"><span class="lockline"><svg class="i s"><use href="#lock"/></svg>Closed 15 Nov, 10:42 pm. You can still add a forgotten payment.</span></div>
     </section>
   </main>
   <div data-t="dockH"></div>
-</div><p class="legend">Past closed days can't reopen. A late entry stays, with its tag. (Today, closed: the footer shows "Reopen" until midnight.)</p></div>
+</div><p class="legend">Past closed days can't reopen. A late entry gets a small "Late" tag under its amount; the row stays the same height. Opening it shows "Added after closing, 16 Nov". (Today, closed: the footer shows "Reopen" until midnight.)</p></div>
 
 <!-- 7 -->
 <div class="frame" id="s7"><h3>7 · New account: balance date</h3><div class="phone">
