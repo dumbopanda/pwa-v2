@@ -149,7 +149,8 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
           <div className="notice">
             Your entries are private to your account. Quick log reads most entries on your phone. Only when it
             can't, the words you typed and your account and category names go to an AI service (Cloudflare) to read
-            them. It doesn't keep or train on them, and never sees your balances or other entries. You can export or
+            them. It doesn't keep or train on them, and never sees your balances or other entries. To check and improve
+            reading, we keep the text of what you said or typed (never the audio) next to what you saved. You can export or
             delete everything from Settings.
           </div>
 

@@ -8,9 +8,10 @@ import { dayLabel } from "../lib/format";
 import { useLedger, useToday } from "../lib/hooks";
 import { formatMoney } from "../lib/money";
 import EntrySheet, { LAST_ACCOUNT } from "./EntrySheet";
+import { readCheckProps } from "../lib/readCheck";
 
-type Pending = { draft: Draft; hint?: string; assumed: boolean; source: "rules" | "ai" };
-type Form = { draft: Draft; via: "manual" | "ai"; original?: Draft; hint?: string; source?: "rules" | "ai" };
+type Pending = { draft: Draft; hint?: string; assumed: boolean; source: "rules" | "ai"; said: string };
+type Form = { draft: Draft; via: "manual" | "ai"; original?: Draft; hint?: string; source?: "rules" | "ai"; said?: string };
 type SR = { lang: string; interimResults: boolean; maxAlternatives: number; onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void; onend: () => void; onerror: () => void; start(): void; stop(): void };
 const W = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
 const SpeechCtor = W.SpeechRecognition ?? W.webkitSpeechRecognition;
@@ -59,10 +60,10 @@ export default function QuickAdd() {
     setText(null);
     if (!r.ok) {
       toast(failMessage(r.fail));
-      return setForm({ draft: { ...emptyDraft(today, lastAccount() ?? ""), name: t.slice(0, 120) }, via: "manual" });
+      return setForm({ draft: { ...emptyDraft(today, lastAccount() ?? ""), name: t.slice(0, 120) }, via: "manual", said: t });
     }
     const x = proposalToDraft(r.proposal, L.activeAccounts, L.activeCategories, lastAccount(), today);
-    setPending({ draft: x.draft, hint: r.note ?? x.hint, assumed: x.assumedAccount, source: r.source });
+    setPending({ draft: x.draft, hint: r.note ?? x.hint, assumed: x.assumedAccount, source: r.source, said: t });
   }
 
   async function confirm() {
@@ -76,10 +77,15 @@ export default function QuickAdd() {
     const ms = firstSaveMs();
     logEvent("entry_saved", { via: "ai", ...(ms !== undefined ? { ms } : {}) });
     logEvent("ai_result", { outcome: "accepted", source: pending.source });
+    logEvent("read_check", readCheckProps(pending.said, "accepted", pending.source, today, pending.draft, pending.draft, L));
     toast("Saved"); setPending(null);
   }
 
-  function reject() { logEvent("ai_result", { outcome: "rejected", source: pending?.source ?? "ai" }); setPending(null); setError(null); }
+  function reject() {
+    logEvent("ai_result", { outcome: "rejected", source: pending?.source ?? "ai" });
+    if (pending) logEvent("read_check", readCheckProps(pending.said, "rejected", pending.source, today, pending.draft, null, L));
+    setPending(null); setError(null);
+  }
 
   const p = pending?.draft;
   const ok = p ? checkDraft(p, L.activeAccounts, today) : null;
@@ -141,13 +147,13 @@ export default function QuickAdd() {
           </div>
           {error && <p className="error" role="alert">{error}</p>}
           <div className="sheetactions">
-            <button className="btn" onClick={() => { setForm({ draft: p, via: "ai", original: p, hint: pending.hint, source: pending.source }); setPending(null); }}>Edit entry</button>
+            <button className="btn" onClick={() => { setForm({ draft: p, via: "ai", original: p, hint: pending.hint, source: pending.source, said: pending.said }); setPending(null); }}>Edit entry</button>
             <button className="btn primary" onClick={confirm} disabled={busy || !ok?.ok}>{busy ? "Saving…" : "Add entry"}</button>
           </div>
         </Sheet>
       )}
 
-      {form && <EntrySheet initial={form.draft} via={form.via} aiOriginal={form.original} source={form.source} hint={form.hint} onClose={() => setForm(null)} />}
+      {form && <EntrySheet initial={form.draft} via={form.via} aiOriginal={form.original} source={form.source} hint={form.hint} said={form.said} onClose={() => setForm(null)} />}
     </>
   );
 }

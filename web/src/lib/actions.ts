@@ -130,7 +130,7 @@ export function firstSaveMs(): number | undefined {
 }
 
 /** Usage metric. Fire and forget; never blocks or breaks the screen. Props are numbers and fixed labels only. */
-export function logEvent(name: string, props: Record<string, number | string | boolean> = {}): void {
+export function logEvent(name: string, props: Record<string, unknown> = {}): void {
   void supabase.from("events").insert({ name, props }).then(() => undefined, () => undefined);
 }
 

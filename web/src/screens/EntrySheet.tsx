@@ -7,14 +7,15 @@ import { checkDraft, type Draft } from "../lib/entryRows";
 import { formatMoney } from "../lib/money";
 import { useLedger, useToday } from "../lib/hooks";
 import type { Entry } from "../lib/types";
+import { readCheckProps } from "../lib/readCheck";
 
 export const LAST_ACCOUNT = "lastAccount";
 
 /** Add, edit or confirm-and-fix an entry. `via` says where it came from, for the usage metrics. */
-export default function EntrySheet({ initial, existing, via, aiOriginal, source, hint, onClose }: {
-  initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; source?: "rules" | "ai"; hint?: string; onClose: () => void;
+export default function EntrySheet({ initial, existing, via, aiOriginal, source, hint, said, onClose }: {
+  initial: Draft; existing?: Entry; via: "manual" | "ai" | "sms"; aiOriginal?: Draft; source?: "rules" | "ai"; hint?: string; said?: string; onClose: () => void;
 }) {
-  const { accounts, activeAccounts, activeCategories, accountById } = useLedger();
+  const { accounts, activeAccounts, activeCategories, accountById, categoryById } = useLedger();
   const today = useToday();
   const [d, setD] = useState(initial);
   const { busy, error, run, setError } = useAction();
@@ -32,6 +33,7 @@ export default function EntrySheet({ initial, existing, via, aiOriginal, source,
     const ms = firstSaveMs();
     logEvent("entry_saved", { via: d.transfer ? "manual" : via, ...(ms !== undefined ? { ms } : {}) });
     if (via !== "manual" && aiOriginal) logEvent("ai_result", { outcome: JSON.stringify(aiOriginal) === JSON.stringify(d) ? "accepted" : "edited", source: source ?? "ai" });
+    if (said) logEvent("read_check", readCheckProps(said, aiOriginal ? (JSON.stringify(aiOriginal) === JSON.stringify(d) ? "accepted" : "edited") : "unread", source ?? "rules", today, aiOriginal ?? null, d, { accountById, categoryById }));
     toast(existing ? "Changes saved" : "Saved");
     onClose();
   }

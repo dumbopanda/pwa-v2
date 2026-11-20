@@ -40,6 +40,8 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('saved integer paise on UPI bank, debit, Food', saved && saved.amount_minor === 34000 && saved.direction === 'debit' && saved.account_id === db.A('UPI bank') && saved.category_id === db.C('Food & dining'), JSON.stringify(saved));
   check('running total for today', (await status()).includes('₹340'));
   check('status Logged', await p.getByText('Logged', { exact: true }).isVisible());
+  const rc = db.events.find((e) => e.name === 'read_check');
+  check('accuracy log: said + read + saved, no audio', rc && rc.props.said === 'swiggy 340 upi' && rc.props.outcome === 'accepted' && rc.props.read.amt === '340.00' && rc.props.saved.acc === 'UPI bank', JSON.stringify(rc));
   check('ai accepted + first-save time logged', db.events.some((e) => e.name === 'ai_result' && e.props.outcome === 'accepted') && db.events.some((e) => e.name === 'entry_saved' && typeof e.props.ms === 'number' && e.props.via === 'ai'), JSON.stringify(db.events));
 
   // --- an unclear entry goes to the AI, with only the text + own names + date
@@ -49,6 +51,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('AI got only text + own names + date', JSON.stringify(Object.keys(db.parseCalls[0]).sort()) === '["accounts","categories","text","today"]'
     && !JSON.stringify(db.parseCalls[0]).match(/balance|5000000|amount/i), JSON.stringify(db.parseCalls[0]));
   await discard();
+  check('rejected read logged with its text', db.events.some((e) => e.name === 'read_check' && e.props.outcome === 'rejected' && e.props.said === 'dinner around 450 card' && e.props.saved === null));
   check('reject logged with its source', db.events.some((e) => e.props?.outcome === 'rejected' && e.props?.source === 'ai'));
 
   // --- AI down: a partial plain-code reading is still offered, marked as such
