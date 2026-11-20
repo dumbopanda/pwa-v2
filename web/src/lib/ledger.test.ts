@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, balanceDate, balances, closedInMonth, daysInMonth, isLate, loggedDatesOf, monthTotals, openPastDays, spendBy, spendByDay, startDay } from "./ledger";
+import { addDays, addMonths, balanceDate, balances, daysInMonth, isLate, loggedDatesOf, monthTotals, openPastDays, spendBy, spendByDay, startDay } from "./ledger";
 import { buildPlan } from "./plan";
 import { cell, entriesCsv } from "./csv";
 import { reviewFacts } from "./reviewFacts";
@@ -67,11 +67,6 @@ describe("closed days", () => {
     expect(openPastDays("2026-11-06", closed, "2026-10-30")).toEqual(["2026-11-05", "2026-11-04", "2026-11-03", "2026-10-31", "2026-10-30"]);
     expect(openPastDays("2026-11-03", { "2026-11-02": "x" }, "2026-11-03")).toEqual([]);   // started today: nothing is past yet
     expect(openPastDays("2026-11-06", closed, "")).toEqual([]);
-  });
-  it("counts closed days of a month, not today and not before the start", () => {
-    expect(closedInMonth("2026-11", "2026-11-06", closed, "2026-11-01")).toEqual({ days: 5, closed: 2 });
-    expect(closedInMonth("2026-11", "2026-11-06", closed, "2026-11-04")).toEqual({ days: 2, closed: 0 });
-    expect(closedInMonth("2026-10", "2026-11-06", {}, "2026-11-01")).toEqual({ days: 0, closed: 0 });
   });
   it("an earlier balance date pulls the start day back, so those days show as open", () => {
     const ob = (account_id: string, entry_date: string) => ({ ...data[0], account_id, entry_date, txn_type: "Opening balance" });

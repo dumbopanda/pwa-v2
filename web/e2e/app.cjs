@@ -135,7 +135,6 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('empty day needs the "spent nothing" confirm, then closes', Object.keys(db.closed).length === 2);
   await p.getByRole('button', { name: 'Dashboard' }).click();
   check('open-day count drops as days close', await p.getByText('3 days still open').isVisible());
-  check('days closed this month shown', await p.getByText(/of \d+ days closed/).isVisible());
   await p.getByRole('button', { name: 'History' }).click();
 
   // --- history
@@ -215,6 +214,7 @@ const results = []; const check = (name, ok, extra = '') => { results.push([ok ?
   check('earlier balance date warns and blocks Add until you choose', await p.getByText('Starting 2 days back').isVisible() && await p.getByRole('button', { name: 'Add account' }).isDisabled());
   await p.getByRole('button', { name: /^Keep / }).click();
   await p.getByRole('button', { name: 'Add account' }).click(); await p.getByText('Account added').waitFor();
+  for (let i = 0; i < 20 && !db.entries.some((e) => e.account_id === db.accounts.find((x) => x.name === 'Backdated')?.id); i++) await p.waitForTimeout(100);
   const bk = db.accounts.find((x) => x.name === 'Backdated'); const bkRow = db.entries.find((e) => e.account_id === bk?.id);
   check('opening balance is dated the chosen day', bkRow && bkRow.entry_date === dayN(2) && bkRow.amount_minor === 100000, JSON.stringify(bkRow));
   await p.getByRole('button', { name: 'Back' }).click();

@@ -71,11 +71,11 @@ export default function Shell({ userId }: { userId: string }) {
       {tab === "history" && <History ym={ym} openOnly={histOpen} onOpenOnly={setHistOpen} />}
       {tab === "stats" && <>
         <div className="screen stack" style={{ paddingBottom: 0, gap: "var(--sp-3)" }}>
-          <OpenDays onShow={() => { setHistOpen(true); setTab("history"); }} onReview={(m: string) => setOverlay({ k: "review", ym: m })} />
           <div className="seg" role="group" aria-label="Dashboard view">
             <button aria-pressed={!plan} onClick={() => setPlan(false)}>Spending</button>
             <button aria-pressed={plan} onClick={() => setPlan(true)}>Plan</button>
           </div>
+          {!plan && <OpenDays onShow={() => { setHistOpen(true); setTab("history"); }} onReview={(m: string) => setOverlay({ k: "review", ym: m })} />}
         </div>
         {plan ? <Plan ym={ym} onReview={(m) => setOverlay({ k: "review", ym: m })} /> : <Stats ym={ym} />}
       </>}

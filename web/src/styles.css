@@ -415,8 +415,9 @@ body { zoom: .9; min-height: calc(100dvh / .9); }
 .dock { position: relative; }
 .dockadd.mic { background: var(--ink); color: var(--lime); box-shadow: 0 10px 22px -10px rgba(18,22,20,.6); }
 .addscrim { position: fixed; inset: 0; background: rgba(18, 22, 20, .35); z-index: -1; pointer-events: auto; }
-.addmenu { position: absolute; right: 0; bottom: calc(100% + var(--sp-2)); display: flex; flex-direction: column; gap: var(--sp-2); animation: pop .14s ease-out; }
-.addopt { display: inline-flex; align-items: center; gap: var(--sp-2); height: var(--h-md); padding: 0 var(--sp-5, 20px); border: 0; border-radius: var(--r-pill);
+.addslot { position: relative; flex: 1; min-width: 0; display: flex; }
+.addmenu { position: absolute; left: 0; right: 0; bottom: calc(100% + var(--sp-2)); display: flex; flex-direction: column; gap: var(--sp-2); animation: pop .14s ease-out; }
+.addopt { display: flex; width: 100%; justify-content: center; align-items: center; gap: var(--sp-2); height: var(--h-md); padding: 0 var(--sp-5, 20px); border: 0; border-radius: var(--r-pill);
   background: var(--surface); color: var(--text); font-size: var(--fs-lg); font-weight: var(--fw-heavy); box-shadow: 0 10px 28px -12px rgba(18,22,20,.55); cursor: pointer; white-space: nowrap; }
 @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
 .bigmic { align-self: center; width: 76px; height: 76px; border-radius: 50%; border: 0; background: var(--green); color: var(--on-ink); display: flex; align-items: center; justify-content: center;

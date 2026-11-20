@@ -111,14 +111,16 @@ export default function QuickAdd() {
   return (
     <>
       {menu && <div className="addscrim" onClick={() => setMenu(false)} />}
-      {menu && (
-        <div className="addmenu">
-          <button className="addopt" onClick={manual}><Icon name="note" size={20} />Enter manually</button>
-        </div>
-      )}
-      {menu
-        ? <button className="dockadd mic" aria-label="Speak an entry" onClick={listen}><Icon name="mic" size={22} /><span>Speak</span></button>
-        : <button className="dockadd" aria-expanded={false} onClick={() => setMenu(true)} disabled={noAccounts}><Icon name="plus" size={20} /><span>Add payment</span></button>}
+      <div className="addslot">
+        {menu && (
+          <div className="addmenu">
+            <button className="addopt" onClick={manual}><Icon name="note" size={20} />Enter manually</button>
+          </div>
+        )}
+        {menu
+          ? <button className="dockadd mic" aria-label="Speak an entry" onClick={listen}><Icon name="mic" size={22} /><span>Speak</span></button>
+          : <button className="dockadd" aria-expanded={false} onClick={() => setMenu(true)} disabled={noAccounts}><Icon name="plus" size={20} /><span>Add payment</span></button>}
+      </div>
 
       {text !== null && (
         <Sheet title="Say it or type it" onClose={() => { rec.current?.stop(); setText(null); }}>

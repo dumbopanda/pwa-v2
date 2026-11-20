@@ -89,17 +89,6 @@ export function openPastDays(today: string, closed: Record<string, string>, star
   return out;
 }
 
-/** How many past days of a month count, and how many of those you closed. Today never counts. */
-export function closedInMonth(ym: string, today: string, closed: Record<string, string>, start: string): { days: number; closed: number } {
-  let days = 0, n = 0;
-  for (let i = 1; i <= daysInMonth(ym); i++) {
-    const d = `${ym}-${String(i).padStart(2, "0")}`;
-    if (d >= today || d < start) continue;
-    days++; if (closed[d]) n++;
-  }
-  return { days, closed: n };
-}
-
 /** The date an account's balance starts: no payment may be dated before it. null = no opening balance. */
 export function balanceDate(entries: Entry[], accountId: string): string | null {
   let d: string | null = null;
