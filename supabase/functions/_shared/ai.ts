@@ -2,6 +2,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { DEFAULT_MODEL } from "./parse.ts";
 
+const FALLBACK_MODEL = "@cf/ibm-granite/granite-4.0-h-micro";
+
 export type Quota = { ok: true; left_today: number } | { ok: false; reason: string; retry_after_s?: number };
 
 /** Count this call against the caller's own quota (10/min, 50/day), using their JWT. */
@@ -25,7 +27,8 @@ export async function callModel(messages: { role: string; content: string }[], s
   const account = Deno.env.get("CF_ACCOUNT_ID"), token = Deno.env.get("CF_API_TOKEN");
   if (!account || !token) return null;
   const model = Deno.env.get("AI_MODEL") || DEFAULT_MODEL;
-  const url = `https://api.cloudflare.com/client/v4/accounts/${account}/ai/run/${model}`;
+  const urlFor = (m: string) => `https://api.cloudflare.com/client/v4/accounts/${account}/ai/run/${m}`;
+  let url = urlFor(model);
   const send = (json: boolean) => fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
@@ -36,6 +39,8 @@ export async function callModel(messages: { role: string; content: string }[], s
     let r = await send(true);
     // Models that don't do JSON schema refuse it with a 4xx (seen: 400, 403 code 5025). Retry in plain mode.
     if (r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 429) r = await send(false);
+    // Shared daily allowance used up (429): retry once on the ~14x cheaper model.
+    if (r.status === 429 && model !== FALLBACK_MODEL) { url = urlFor(FALLBACK_MODEL); r = await send(false); }
     return r.ok ? await r.json() : null;
   } catch {
     return null;

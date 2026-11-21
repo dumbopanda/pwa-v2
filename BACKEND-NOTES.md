@@ -1,6 +1,6 @@
 # Backend notes
 
-Postgres 17 on Supabase, from migrations 0001 to 0013.
+Postgres 17 on Supabase, from migrations 0001 to 0018. The app is an online-only PWA.
 
 ## Tables (schema `public`)
 
@@ -12,7 +12,26 @@ Postgres 17 on Supabase, from migrations 0001 to 0013.
 
 **entries**: `id` uuid PK. `user_id` as above. `client_uid` text (8 to 64). `entry_date` date (>= 2000-01-01). `txn_id` text, `^[YN][a-z0-9]{6}$`. `account_id` uuid, composite FK (account_id, user_id) to accounts. `expense_name` text (1 to 120). `more_info` text (<=300). `txn_type` text (1 to 60). `txn_freq` enum one_off/monthly, default monthly. `amount_minor` bigint, > 0 and <= 999999999. `direction` enum debit/credit. `transfer_group` uuid. `created_at`, `updated_at`, `deleted_at`. Unique (user_id, client_uid).
 
+**accounts** also has `currency` char(3) default 'INR' (locked once the account has live entries). **entries** also has `category_id` uuid (composite FK to categories; null for transfers and opening balances).
+
+**categories**: same shape and sync rules as accounts (`client_uid`, tombstones, `pull_categories`). Unique live name per user, case-insensitive.
+
+**budgets**: `month` (first day), `category_id` (null = the month's savings target), `amount_minor`. One per category per month. Plain rows, deletable.
+
+**day_status**: PK (user_id, date), `status` open/logged/no_spend. App stores only no_spend. Deletable.
+
+**events**: append-only usage metrics. `name`, `props` jsonb (<=1000 bytes, no amounts or names). Server-stamped time. Also holds the `ai_call` rows used for the AI quota.
+
 **email_otps**: `id` bigint identity PK, `email` (lowercase), `code_hash`, `ip`, `created_at`, `expires_at`, `attempts` smallint, `consumed_at`, `invalidated_at`.
+
+## AI quota and admin (0017)
+- `ai_take_quota(fn)`: called by parse-entry and month-review with the caller's JWT before each model call. Per user: `ai_daily_cap` 50 per rolling 24 h, `ai_minute_cap` 10 per minute (both in `app_config`). Returns ok, or `daily_cap` / `minute_cap`.
+- `admin_metrics()`: owner-only counts and averages. Checks the caller against `private.admin_user_ids` inside the function. `private.*` config keys are hidden from users.
+
+## Row caps and grants (0014, 0016, 0018)
+- Per-user row caps: accounts 50, categories 200, budgets 5000, day_status 20000, events 50000 (entries has its own).
+- `anon` has no privileges. `authenticated` gets only what RLS allows. New functions start with no EXECUTE.
+- 0018 revokes EXECUTE on Supabase's `rls_auto_enable()`.
 
 ## IDs
 - Row `id`: server uuid. `client_uid`: client-made UUID string, the sync idempotency key.
@@ -48,4 +67,4 @@ profiles, accounts and entries use ENABLE and FORCE.
 - The app signs in with Google by ID-token exchange. Whether the Google provider is enabled on the hosted project isn't in the repo.
 - Redirects in the file: `site_url` `http://127.0.0.1:3000`, `additional_redirect_urls` `["https://127.0.0.1:3000"]`.
 
-`config.toml` references `seed.sql`, which doesn't exist.
+`supabase/seed.sql` is empty on purpose (no seed data).
