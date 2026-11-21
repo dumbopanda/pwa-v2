@@ -25,7 +25,8 @@ export default function OpenDays({ onShow, onReview }: { onShow: () => void; onR
   const review = reviewMonth(today);
   const at = (d: string) => new Date(`${d}T00:00:00Z`);
   const first = open.slice(0, 3).reverse();
-  const list = first.map((d) => short.format(at(d))).join(", ") + (open.length <= 3 ? ` ${mon.format(at(open[0]))}` : ` and ${open.length - 3} more`);
+  // Only built when there are open days: with none, open[0] is undefined and the date format throws.
+  const list = !open.length ? "" : first.map((d) => short.format(at(d))).join(", ") + (open.length <= 3 ? ` ${mon.format(at(open[0]))}` : ` and ${open.length - 3} more`);
   return (
     <>
       {open.length > 0 && (
