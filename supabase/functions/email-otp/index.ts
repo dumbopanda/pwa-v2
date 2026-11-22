@@ -12,9 +12,9 @@ import nodemailer from "nodemailer";
 // 0011_email_otp.sql and 0013, not here. This function only generates the code,
 // hashes it, sends the email, and mints the session after otp_check() says ok.
 //
-// Secrets: OTP_PEPPER (HMAC key for stored code hashes), GMAIL_USER and
-// GMAIL_APP_PASSWORD (codes are sent from the owner's own Gmail over SMTP --
-// ~500/day, no third-party email service).
+// Secrets: OTP_PEPPER (HMAC key for stored code hashes), SMTP_HOST, SMTP_USER,
+// SMTP_PASS, and optional SMTP_FROM (an address the SMTP user may send as, e.g.
+// noreply@ alias in Zoho). Old GMAIL_USER / GMAIL_APP_PASSWORD still work.
 
 const url = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -160,8 +160,10 @@ function clientIp(req: Request): string | null {
 }
 
 async function sendEmail(to: string, code: string): Promise<void> {
-  const user = Deno.env.get("GMAIL_USER");
-  const pass = Deno.env.get("GMAIL_APP_PASSWORD");
+  const host = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+  const user = Deno.env.get("SMTP_USER") || Deno.env.get("GMAIL_USER");
+  const pass = Deno.env.get("SMTP_PASS") || Deno.env.get("GMAIL_APP_PASSWORD");
+  const from = Deno.env.get("SMTP_FROM") || user;
   const subject = `${code} is your ${APP_NAME} sign-in code`;
   const text = `Your ${APP_NAME} sign-in code is ${code}.\n\nIt expires in 5 minutes and works once. ` +
     `If you didn't ask for it, ignore this email.`;
@@ -173,13 +175,13 @@ async function sendEmail(to: string, code: string): Promise<void> {
 </div></div>`;
 
   // Port 465 (implicit TLS): Edge Functions block outbound 25 and 587.
-  if (!user || !pass) throw new Error("GMAIL_USER / GMAIL_APP_PASSWORD not set");
+  if (!user || !pass) throw new Error("SMTP_USER / SMTP_PASS not set");
   await nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host,
     port: 465,
     secure: true,
     auth: { user, pass },
-  }).sendMail({ from: `${APP_NAME} <${user}>`, to, subject, text, html });
+  }).sendMail({ from: `${APP_NAME} <${from}>`, to, subject, text, html });
 }
 
 function json(body: unknown, status = 200): Response {
