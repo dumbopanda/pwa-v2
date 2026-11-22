@@ -2,12 +2,11 @@ import Icon from "../Icon";
 import { useEffect, useState } from "react";
 import { addAccount, addCategory, deleteMyAccount, exportCsv, updateAccount, updateCategory } from "../lib/actions";
 import { BalanceDate, toast, useAction, useBalanceDate } from "../components";
-import { APP_NAME, DEFAULT_CURRENCY } from "../config";
+import { APP_NAME, DEFAULT_CURRENCY, currencyList } from "../config";
 import { useLedger, useToday } from "../lib/hooks";
 import { supabase } from "../supabase";
 import type { Account, Category } from "../lib/types";
 
-const CURRENCIES = [DEFAULT_CURRENCY, ...Intl.supportedValuesOf("currency").filter((c) => c !== DEFAULT_CURRENCY)];
 
 export default function Settings({ onBack, onMetrics }: { onBack: () => void; onMetrics: () => void }) {
   const L = useLedger();
@@ -43,7 +42,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
             <input className="field grow" aria-label="Account name" maxLength={40} defaultValue={a.name} key={a.name} onBlur={(e) => rename("a", a, e.target.value)} style={{ opacity: a.archived_at ? .55 : 1 }} />
             <select className="field" style={{ width: 88 }} aria-label={`${a.name} currency`} value={a.currency} disabled={hasEntries(a) || busy}
               title={hasEntries(a) ? "Has entries, so the currency is locked" : undefined} onChange={(e) => run(() => updateAccount(a.id, { currency: e.target.value }))}>
-              {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+              {currencyList(a.currency).map((c) => <option key={c}>{c}</option>)}
             </select>
             <button className="btn" style={{ height: "var(--h-md)" }} disabled={busy} onClick={() => archive("a", a)}>{a.archived_at ? "Restore" : "Hide"}</button>
           </div>
@@ -53,7 +52,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
           <span className="caps">New account</span>
           <input className="field" placeholder="Name, like Savings or Wallet" aria-label="New account name" maxLength={40} value={newAcc} onChange={(e) => setNewAcc(e.target.value)} />
           <div className="row">
-            <select className="field" style={{ width: 88 }} aria-label="New account currency" value={newCur} onChange={(e) => setNewCur(e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select>
+            <select className="field" style={{ width: 88 }} aria-label="New account currency" value={newCur} onChange={(e) => setNewCur(e.target.value)}>{currencyList().map((c) => <option key={c}>{c}</option>)}</select>
             <input className="field grow" inputMode="decimal" placeholder={newOwe ? "Amount owed today (optional)" : "Balance today (optional)"} aria-label="New account balance today" value={newBal} onChange={(e) => setNewBal(e.target.value)} />
           </div>
           {newBal.trim() && <BalanceDate today={today} bd={bd} />}

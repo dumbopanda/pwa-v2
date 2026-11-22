@@ -1,19 +1,50 @@
 import Icon from "../Icon";
 import { useMemo, useState } from "react";
-import { APP_NAME, DEFAULT_CURRENCY } from "../config";
+import { APP_NAME, DEFAULT_CURRENCY, currencyList } from "../config";
 import { newUid, todayLocal } from "../lib/ids";
 import { BalanceDate, useBalanceDate } from "../components";
 import { DEFAULT_CATEGORIES, SUGGESTED_ACCOUNTS, openingBalanceRows, validateAccounts, type AccountDraft } from "../lib/onboarding";
 import { supabase } from "../supabase";
 
-const CURRENCIES = [DEFAULT_CURRENCY, ...Intl.supportedValuesOf("currency").filter((c) => c !== DEFAULT_CURRENCY)];
+const symbol = (cur: string) => {
+  try { return new Intl.NumberFormat("en", { style: "currency", currency: cur, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((p) => p.type === "currency")?.value ?? cur; }
+  catch { return cur; }
+};
+
+// What the app does, one idea per screen. Pictures are decorative CSS.
+const INTRO = [
+  { title: "Say it once.", body: "Speak or type “chai 20”. It's logged.", art: "say" },
+  { title: "Close each day.", body: "Tap Close when every payment is in. No gaps.", art: "days" },
+  { title: "See where it went.", body: "Spending by category, month by month.", art: "bars" },
+] as const;
+
+function IntroArt({ kind }: { kind: (typeof INTRO)[number]["art"] }) {
+  if (kind === "say") return (
+    <div className="iart" aria-hidden="true">
+      <div className="say">“Chai 20, auto 80 from UPI”</div>
+      <div className="card rows"><div className="r"><span>Chai</span><b className="amt">₹20</b></div><div className="r"><span>Auto</span><b className="amt">₹80</b></div></div>
+    </div>
+  );
+  if (kind === "days") return (
+    <div className="iart" aria-hidden="true">
+      <div className="daysrow">{["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i} className={i < 5 ? "closed" : i === 5 ? "open" : ""}>{i < 5 ? <Icon name="check" size={16} /> : d}</span>)}</div>
+      <div className="card"><b>Saturday</b><span className="muted small"> · open</span></div>
+    </div>
+  );
+  return (
+    <div className="iart" aria-hidden="true">
+      <div className="card barsart">{[["Food", 78], ["Transport", 46], ["Bills", 30]].map(([n, w]) => <div key={n} className="r"><span>{n}</span><i style={{ width: `${w}%` }} /></div>)}</div>
+    </div>
+  );
+}
 const newDraft = (name = ""): AccountDraft =>
   ({ uid: newUid(), balanceUid: newUid(), name, currency: DEFAULT_CURRENCY, balance: "", owe: name === "Credit card" });
 
 type Cat = { uid: string; name: string; on: boolean };
 
 export default function Onboarding({ userId, onDone }: { userId: string; onDone: () => void }) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [slide, setSlide] = useState(0);
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [cats, setCats] = useState<Cat[]>(() => DEFAULT_CATEGORIES.map((c) => ({ uid: newUid(), ...c })));
   const [custom, setCustom] = useState("");
@@ -77,42 +108,69 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
     }
   }
 
+  const pageFoot = (label: string, onClick: () => void, extra?: React.ReactNode) => (
+    <div className="pagefoot stack" style={{ gap: "var(--sp-2)" }}>
+      <button className="btn primary" style={{ width: "100%" }} onClick={onClick}>{label}</button>
+      {extra}
+    </div>
+  );
+
+  if (step === 0) {
+    const last = slide === INTRO.length - 1;
+    return (
+      <main className="screen onb intro">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div className="dots" aria-label={`Screen ${slide + 1} of ${INTRO.length}`}>{INTRO.map((_, i) => <span key={i} className={i === slide ? "on" : ""} />)}</div>
+          <button className="btn quiet" onClick={() => setStep(1)}>Skip</button>
+        </div>
+        <IntroArt kind={INTRO[slide].art} />
+        <div className="stack" style={{ gap: "var(--sp-2)" }}>
+          <h1 className="bigtitle">{INTRO[slide].title}</h1>
+          <p className="muted lead">{INTRO[slide].body}</p>
+        </div>
+        {pageFoot(last ? "Get started" : "Next", () => (last ? setStep(1) : setSlide(slide + 1)),
+          slide > 0 && <button className="btn quiet" onClick={() => setSlide(slide - 1)}>Back</button>)}
+      </main>
+    );
+  }
+
   return (
-    <main className="screen stack onb" style={{ gap: "var(--sp-4)" }}>
+    <main className="screen stack onb" style={{ gap: "var(--sp-5)" }}>
       <div className="steps" aria-label={`Step ${step} of 2`}><span className="on" /><span className={step === 2 ? "on" : ""} /></div>
 
       {step === 1 && (
         <>
           <div className="stack" style={{ gap: "var(--sp-1)" }}>
             <span className="caps">Step 1 of 2</span>
-            <h1>Where does your money sit?</h1>
-            <p className="muted" style={{ margin: 0 }}>Add each account and what's in it today. You can change these later.</p>
+            <h1 className="bigtitle">Where does your money sit?</h1>
+            <p className="muted lead">Add your accounts. You can change them later.</p>
           </div>
 
           {accounts.map((a, i) => {
             const err = tried ? check.rows[i] : null;
             return (
               <div key={a.uid} className="card onbacct">
-                <div className="row">
+                <div className="acchead">
                   <span className={`ttile acc${i % 4}`} aria-hidden="true">{a.name.trim().charAt(0).toUpperCase() || "?"}</span>
                   <input className="bare grow" placeholder="Account name" aria-label="Account name" maxLength={40}
                     value={a.name} onChange={(e) => edit(a.uid, { name: e.target.value })} />
-                  <button className="iconbtn flat" aria-label={`Remove ${a.name || "account"}`}
-                    onClick={() => setAccounts((xs) => xs.filter((x) => x.uid !== a.uid))}><Icon name="close" /></button>
+                  <button className="iconbtn flat sm" aria-label={`Remove ${a.name || "account"}`}
+                    onClick={() => setAccounts((xs) => xs.filter((x) => x.uid !== a.uid))}><Icon name="close" size={18} /></button>
                 </div>
-                <div className="seg small" role="group" aria-label={`${a.name || "Account"}: balance type`}>
-                  <button type="button" aria-pressed={!a.owe} onClick={() => edit(a.uid, { owe: false })}>I have</button>
-                  <button type="button" aria-pressed={a.owe} onClick={() => edit(a.uid, { owe: true })}>I owe (card)</button>
-                </div>
-                <div className="row">
-                  <label className="fchip select cur">
+                <div className="amountrow">
+                  <span className="sym" aria-hidden="true">{symbol(a.currency)}</span>
+                  <input className="amountin grow" inputMode="decimal" placeholder="0" aria-label={a.owe ? "Amount owed today" : "Balance today"}
+                    value={a.balance} onChange={(e) => edit(a.uid, { balance: e.target.value })} />
+                  <label className="curpick">
                     <span>{a.currency}</span><Icon name="down" size={14} />
                     <select aria-label="Currency" value={a.currency} onChange={(e) => edit(a.uid, { currency: e.target.value })}>
-                      {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+                      {currencyList(a.currency).map((c) => <option key={c}>{c}</option>)}
                     </select>
                   </label>
-                  <input className="field inset grow" inputMode="decimal" placeholder={a.owe ? "Amount owed today" : "Balance today (optional)"}
-                    aria-label="Balance today" value={a.balance} onChange={(e) => edit(a.uid, { balance: e.target.value })} />
+                </div>
+                <div className="seg quiet" role="group" aria-label={`${a.name || "Account"}: balance type`}>
+                  <button type="button" aria-pressed={!a.owe} onClick={() => edit(a.uid, { owe: false })}>I have</button>
+                  <button type="button" aria-pressed={a.owe} onClick={() => edit(a.uid, { owe: true })}>I owe</button>
                 </div>
                 {err && <p className="error">{err}</p>}
               </div>
@@ -120,14 +178,14 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
           })}
 
           <div className="chips">
-            {unused.map((s) => <button key={s} className="fchip big" onClick={() => setAccounts((xs) => [...xs, newDraft(s)])}><Icon name="plus" size={16} />{s}</button>)}
-            <button className="fchip big" onClick={() => setAccounts((xs) => [...xs, newDraft()])}><Icon name="plus" size={16} />Other</button>
+            {unused.map((s) => <button key={s} className="fchip add" onClick={() => setAccounts((xs) => [...xs, newDraft(s)])}><Icon name="plus" size={16} />{s}</button>)}
+            <button className="fchip add" onClick={() => setAccounts((xs) => [...xs, newDraft()])}><Icon name="plus" size={16} />Other</button>
           </div>
 
           {hasBalance && <section className="card"><BalanceDate today={todayLocal()} bd={bd} /></section>}
           {tried && check.form && <p className="error">{check.form}</p>}
           {tried && hasBalance && bd.needsConfirm && <p className="error">Choose Use today or Keep the earlier date first.</p>}
-          <div className="pagefoot"><button className="btn primary" style={{ width: "100%" }} onClick={next}>Next</button></div>
+          {pageFoot("Next", next)}
         </>
       )}
 
@@ -135,8 +193,8 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
         <>
           <div className="stack" style={{ gap: "var(--sp-1)" }}>
             <span className="caps">Step 2 of 2</span>
-            <h1>What do you spend on?</h1>
-            <p className="muted" style={{ margin: 0 }}>Tap to pick or drop. Add your own if something's missing.</p>
+            <h1 className="bigtitle">What do you spend on?</h1>
+            <p className="muted lead">Pick what fits. Add your own.</p>
           </div>
 
           <div className="chips">
@@ -151,12 +209,14 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
             <button className="btn">Add</button>
           </form>
 
-          <div className="notice">
-            Your entries are private to your account. Quick log reads most entries on your phone. Only when it
-            can't, the words you typed and your account and category names go to an AI service (Cloudflare) to read
-            them. It doesn't keep or train on them, and never sees your balances or other entries. To check and improve
-            reading, we keep the text of what you said or typed (never the audio) next to what you saved. You can export or
-            delete everything from Settings.
+          <div className="notice privacy">
+            <b className="row"><Icon name="lock" size={16} />Your data stays yours</b>
+            <ul>
+              <li>Private to your account.</li>
+              <li>Most entries are read on your phone. When AI helps, it sees only your words and category names, and keeps nothing.</li>
+              <li>We keep what you typed (never audio) to improve reading. Export or delete it all in Settings.</li>
+            </ul>
+            <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a>
           </div>
 
           {error && <p className="error" role="alert">{error}</p>}

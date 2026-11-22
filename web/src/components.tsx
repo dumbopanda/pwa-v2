@@ -135,14 +135,14 @@ export function BalanceDate({ today, bd }: { today: string; bd: ReturnType<typeo
       {bd.value < today && !bd.kept && (
         <div className="warnbox col" role="alert">
           <b className="row"><Icon name="warn" />Starting {back} {back === 1 ? "day" : "days"} back</b>
-          <span>You'll need to add every payment from <b>{label} to today</b>, or this balance will be wrong. Those days will show as open until you close them.</span>
-          <span>Starting from today is easier.</span>
+          <span>Add every payment from <b>{label}</b> to today, or this balance will be wrong.</span>
           <div className="sheetactions"><button type="button" className="btn" onClick={() => bd.setValue(today)}>Use today</button>
             <button type="button" className="btn primary" onClick={() => bd.setKept(true)}>Keep {label}</button></div>
         </div>
       )}
-      {bd.value < today && bd.kept && <p className="muted small" style={{ margin: 0 }}>From {label}: every payment since then needs adding. Those days stay open until you close them.</p>}
-      <p className="muted small" style={{ margin: 0 }}>Payments dated before this date can't be added to the account.</p>
+      <p className="muted small" style={{ margin: 0 }}>
+        {bd.value < today && bd.kept ? `Days since ${label} stay open until you close them.` : "Payments can't be dated before this."}
+      </p>
     </div>
   );
 }
