@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import SignIn from "./screens/SignIn";
+import SignIn, { CONSENT_KEY } from "./screens/SignIn";
 import Onboarding from "./screens/Onboarding";
 import Shell from "./screens/Shell";
 import { closeUser } from "./lib/store";
@@ -22,6 +22,15 @@ export default function App() {
   }, []);
 
   const userId = session?.user.id;
+  // Consent log: the ticked box from sign-in, saved once signed in. Kept and retried on next open if it fails.
+  useEffect(() => {
+    if (!userId) return;
+    let props: Record<string, unknown> | null = null;
+    try { props = JSON.parse(localStorage.getItem(CONSENT_KEY) ?? "null"); } catch { return; }
+    if (!props) return;
+    supabase.from("events").insert({ name: "consent_accepted", props })
+      .then(({ error }) => { if (!error) try { localStorage.removeItem(CONSENT_KEY); } catch { /* ignore */ } });
+  }, [userId]);
   useEffect(() => {
     if (!userId) { setOnboarded(undefined); return; }
     setLoadError(false);

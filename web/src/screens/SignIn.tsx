@@ -2,6 +2,14 @@ import { useState } from "react";
 import { APP_NAME } from "../config";
 import { emailOtp, supabase } from "../supabase";
 
+/** Version of /privacy.html the person agrees to. Bump when the page changes. */
+export const POLICY_VERSION = 1;
+export const CONSENT_KEY = "consent_pending";
+/** Kept until App logs it after sign-in (survives the Google redirect). */
+function markConsent() {
+  try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ version: POLICY_VERSION, agreed_at: new Date().toISOString() })); } catch { /* ignore */ }
+}
+
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function otpMessage(r: { error?: string; retry_after_s?: number; attempts_left?: number }): string {
@@ -26,9 +34,10 @@ export default function SignIn() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   async function google() {
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); markConsent();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
@@ -53,6 +62,7 @@ export default function SignIn() {
     setBusy(true); setError(null);
     const r = await emailOtp({ action: "verify", email: email.trim().toLowerCase(), code });
     if (r.ok && r.access_token && r.refresh_token) {
+      markConsent();
       const { error } = await supabase.auth.setSession({ access_token: r.access_token, refresh_token: r.refresh_token });
       if (!error) return; // App switches screens on the auth event
     }
@@ -69,9 +79,9 @@ export default function SignIn() {
 
       {mode === "start" && (
         <div className="stack">
-          <button className="btn dark" onClick={google} disabled={busy}>Continue with Google</button>
+          <button className="btn dark" onClick={google} disabled={busy || !agreed}>Continue with Google</button>
           <div className="divider">or</div>
-          <button className="btn" onClick={() => { setMode("email"); setError(null); }} disabled={busy}>Use an email code</button>
+          <button className="btn" onClick={() => { setMode("email"); setError(null); }} disabled={busy || !agreed}>Use an email code</button>
         </div>
       )}
 
@@ -97,7 +107,12 @@ export default function SignIn() {
       )}
 
       {error && <p className="error" role="alert">{error}</p>}
-      <p className="muted small" style={{ margin: 0 }}>By continuing you agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a>.</p>
+      {mode === "start" && (
+        <label className="toggle">
+          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+          <span>I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a></span>
+        </label>
+      )}
     </main>
   );
 }
