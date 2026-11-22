@@ -81,6 +81,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
         <b>Your data</b>
         <p className="muted small" style={{ margin: 0 }}>To check and improve quick log, the text of what you said or typed (never the audio) is kept next to what you saved. It's deleted with your account.</p>
         <button className="btn" disabled={busy} onClick={() => run(exportCsv)}>Export everything as CSV</button>
+        <a className="btn" href="/privacy.html" target="_blank" rel="noopener">Privacy policy and terms</a>
         {admin && <button className="btn" onClick={onMetrics}>Usage metrics</button>}
       </section>
 

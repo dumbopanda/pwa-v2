@@ -97,6 +97,7 @@ export default function SignIn() {
       )}
 
       {error && <p className="error" role="alert">{error}</p>}
+      <p className="muted small" style={{ margin: 0 }}>By continuing you agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a>.</p>
     </main>
   );
 }

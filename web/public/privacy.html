@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy and terms · Spend Roll</title>
+<style>
+  :root { --bg: #F4F1EA; --text: #181C1A; --muted: #69665F; --line: rgba(0,0,0,.1); }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121614; --text: #EDEBE6; --muted: #9EAD9C; --line: rgba(255,255,255,.12); } }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; } h2 { font-size: 1.1rem; margin: 28px 0 6px; }
+  p, li { margin: 6px 0; } ul { padding-left: 20px; } .muted { color: var(--muted); }
+  a { color: inherit; } hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy and terms</h1>
+  <p class="muted">Spend Roll · Version 1 · 22 November 2026</p>
+
+  <p>Spend Roll is a personal expense tracker in early testing. This page says what it stores, why, who else sees it, and how to delete it. By signing in you agree to it.</p>
+
+  <h2>What we store</h2>
+  <ul>
+    <li><b>Your email</b>, to sign you in. With Google sign-in, Google also shares your name.</li>
+    <li><b>What you enter</b>: accounts, balances, payments, categories, budgets and closed days.</li>
+    <li><b>Your time zone</b>, so "today" matches your day.</li>
+    <li><b>Quick log text</b>: the words you typed or said, saved next to the entry they made, to check and improve quick log. Never the audio.</li>
+    <li><b>Simple usage events</b>: when the app opens, how long saving took, and whether you kept or edited a quick-log suggestion. Used only to improve the app.</li>
+  </ul>
+  <p>We don't collect your location, contacts, bank logins or card numbers. No ads. We never sell or share your data for marketing.</p>
+
+  <h2>Who else handles it</h2>
+  <ul>
+    <li><b>Supabase</b> stores the data, in Mumbai, India.</li>
+    <li><b>Cloudflare</b> hosts the app. Quick log and the month review use Cloudflare Workers AI. It gets only the text you logged, your own account and category names, and today's date, or your month's totals. Bank balances in pasted SMS are removed first. Cloudflare doesn't train on it.</li>
+    <li><b>Your browser</b> turns speech into text when you use the mic (Google on Chrome, Apple on Safari). We only receive the text.</li>
+    <li><b>Gmail</b> sends sign-in codes.</li>
+  </ul>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li><b>See and fix</b>: everything is in the app. Edit any entry.</li>
+    <li><b>Copy</b>: Settings → Export everything as CSV.</li>
+    <li><b>Delete</b>: Settings → Delete my account removes your account and all your data at once.</li>
+    <li><b>Questions or complaints</b>: <a href="mailto:contact@spendroll.com">contact@spendroll.com</a>. We reply within 7 days.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <p>Data is encrypted in transit. Each person can read only their own rows, enforced by the database. No system is perfect; if your data is ever exposed we will tell you.</p>
+
+  <hr>
+
+  <h2>Terms</h2>
+  <ul>
+    <li>For people aged 18 and over.</li>
+    <li>Free, early version, provided as it is. Features may change or stop.</li>
+    <li><b>Keep your own copy.</b> We don't promise backups yet. Export CSV now and then.</li>
+    <li>Spend Roll is a record-keeping tool, not financial advice. Check AI suggestions before saving.</li>
+    <li>Don't misuse the service or try to access other people's data.</li>
+    <li>If this page changes in a way that matters, the app will ask you again.</li>
+  </ul>
+</main>
+</body>
+</html>
