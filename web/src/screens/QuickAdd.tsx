@@ -9,6 +9,7 @@ import { useLedger, useToday } from "../lib/hooks";
 import { formatMoney } from "../lib/money";
 import EntrySheet, { LAST_ACCOUNT } from "./EntrySheet";
 import { readCheckProps } from "../lib/readCheck";
+import { supabase } from "../supabase";
 
 type Pending = { draft: Draft; hint?: string; assumed: boolean; source: "rules" | "ai"; said: string };
 type Form = { draft: Draft; via: "manual" | "ai"; original?: Draft; hint?: string; source?: "rules" | "ai"; said?: string };
@@ -36,6 +37,14 @@ export default function QuickAdd() {
   const noAccounts = L.activeAccounts.length === 0;
 
   useEffect(() => () => rec.current?.stop(), []);
+
+  // Quick log (speak/type -> read) is switched per database: app_config key "quick_log" = true.
+  // Off, missing or unreadable means off, so "Add payment" opens the manual form.
+  const [quickLog, setQuickLog] = useState(false);
+  useEffect(() => {
+    supabase.from("app_config").select("value").eq("key", "quick_log").maybeSingle()
+      .then(({ data }) => setQuickLog(data?.value === true), () => undefined);
+  }, []);
 
   function manual() {
     setMenu(false);
@@ -119,7 +128,7 @@ export default function QuickAdd() {
         )}
         {menu
           ? <button className="dockadd mic" aria-label="Speak an entry" onClick={listen}><Icon name="mic" size={22} /><span>Speak</span></button>
-          : <button className="dockadd" aria-expanded={false} onClick={() => setMenu(true)} disabled={noAccounts}><Icon name="plus" size={20} /><span>Add payment</span></button>}
+          : <button className="dockadd" aria-expanded={false} onClick={() => (quickLog ? setMenu(true) : manual())} disabled={noAccounts}><Icon name="plus" size={20} /><span>Add payment</span></button>}
       </div>
 
       {text !== null && (

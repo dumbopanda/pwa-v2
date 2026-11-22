@@ -31,6 +31,7 @@ exports.install = async (page, db) => {
     if (m === 'OPTIONS') return r.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
     db.calls.push(m + ' ' + p);
 
+    if (p === '/rest/v1/app_config') return ok(obj ? { value: db.quickLog !== false } : [{ value: db.quickLog !== false }]);
     if (p === '/rest/v1/profiles') return ok(obj ? db.profile : [db.profile]);
     if (p === '/rest/v1/budgets') {
       if (m === 'GET') return ok(db.budgets);
