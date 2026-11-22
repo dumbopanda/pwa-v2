@@ -6,8 +6,8 @@ import { emailOtp, supabase } from "../supabase";
 export const POLICY_VERSION = 1;
 export const CONSENT_KEY = "consent_pending";
 /** Kept until App logs it after sign-in (survives the Google redirect). */
-function markConsent(marketing: boolean) {
-  try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ version: POLICY_VERSION, marketing, agreed_at: new Date().toISOString() })); } catch { /* ignore */ }
+function markConsent() {
+  try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ version: POLICY_VERSION, agreed_at: new Date().toISOString() })); } catch { /* ignore */ }
 }
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,10 +58,9 @@ export default function SignIn() {
   // Read straight from the boxes, not React state: a browser that restores a
   // ticked box after reload would otherwise leave the buttons blocked.
   const agreeRef = useRef<HTMLInputElement>(null);
-  const marketingRef = useRef<HTMLInputElement>(null);
 
   function agreed(): boolean {
-    if (agreeRef.current?.checked) { markConsent(!!marketingRef.current?.checked); return true; }
+    if (agreeRef.current?.checked) { markConsent(); return true; }
     setError("Tick “I agree to the privacy policy and terms” first.");
     agreeRef.current?.focus();
     return false;
@@ -134,10 +133,6 @@ export default function SignIn() {
           <label className="toggle">
             <input ref={agreeRef} type="checkbox" autoComplete="off" onChange={() => setError(null)} />
             <span>I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a></span>
-          </label>
-          <label className="toggle">
-            <input ref={marketingRef} type="checkbox" autoComplete="off" />
-            <span>Send me product news and offers (optional)</span>
           </label>
         </div>
         <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> Continue with Google</button>
