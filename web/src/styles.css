@@ -463,3 +463,13 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .warnbox { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-panel); background: var(--amber-soft); color: var(--amber-ink); font-weight: var(--fw-bold); }
 .warnbox.col { flex-direction: column; gap: 6px; font-weight: 600; }
 .warnbox.col .row { gap: 8px; }
+
+/* Sign-in: name and line at the top, everything to act on at the bottom. */
+.signin { min-height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; gap: var(--sp-6); padding-top: calc(var(--sp-8) * 2); }
+.signin-title { font-size: 44px; line-height: 1.02; letter-spacing: -0.035em; }
+.signin-hero { position: relative; align-self: flex-end; width: 72%; margin-top: var(--sp-6); }
+.signin-hero .say { background: var(--ink); color: var(--lime); font-weight: var(--fw-bold); font-size: var(--fs-sm);
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--r-panel) var(--r-panel) var(--sp-1) var(--r-panel); width: max-content; max-width: 100%; margin: 0 0 var(--sp-2) auto; }
+.signin-hero .rows { display: flex; flex-direction: column; gap: var(--sp-2); transform: rotate(-2deg); }
+.signin-hero .r { display: flex; justify-content: space-between; font-weight: var(--fw-medium); }
+.signin-hero .r b { color: var(--green-ink); }
