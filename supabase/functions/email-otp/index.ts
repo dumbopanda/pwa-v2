@@ -7,7 +7,7 @@ import nodemailer from "nodemailer";
 //   POST { action: "send",   email }        -> emails a fresh code
 //   POST { action: "verify", email, code }  -> returns a Supabase session
 //
-// Every limit (5-min expiry, 2-min resend cooldown, hourly/daily caps, 5 wrong guesses,
+// Every limit (3-min expiry, 150s resend cooldown, hourly/daily caps, 5 wrong guesses,
 // consume-on-success) is enforced by otp_issue()/otp_check() in
 // 0011_email_otp.sql and 0013, not here. This function only generates the code,
 // hashes it, sends the email, and mints the session after otp_check() says ok.
@@ -165,13 +165,13 @@ async function sendEmail(to: string, code: string): Promise<void> {
   const pass = Deno.env.get("SMTP_PASS") || Deno.env.get("GMAIL_APP_PASSWORD");
   const from = Deno.env.get("SMTP_FROM") || user;
   const subject = `${code} is your ${APP_NAME} sign-in code`;
-  const text = `Your ${APP_NAME} sign-in code is ${code}.\n\nIt expires in 5 minutes and works once. ` +
+  const text = `Your ${APP_NAME} sign-in code is ${code}.\n\nIt expires in 3 minutes and works once. ` +
     `If you didn't ask for it, ignore this email.`;
   const html = `<div style="font-family:system-ui,sans-serif;background:#F4F1EA;padding:32px">
 <div style="max-width:420px;margin:auto;background:#fff;border:1px solid #E5E3DB;border-radius:22px;padding:28px">
 <p style="margin:0 0 8px;color:#5F5C56;font-size:14px">Your ${APP_NAME} sign-in code</p>
 <p style="margin:0 0 20px;font-size:34px;font-weight:800;letter-spacing:8px;color:#181C1A">${code}</p>
-<p style="margin:0;color:#5F5C56;font-size:13px">Expires in 5 minutes and works once. If you didn't ask for it, ignore this email.</p>
+<p style="margin:0;color:#5F5C56;font-size:13px">Expires in 3 minutes and works once. If you didn't ask for it, ignore this email.</p>
 </div></div>`;
 
   // Port 465 (implicit TLS): Edge Functions block outbound 25 and 587.

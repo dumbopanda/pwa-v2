@@ -473,3 +473,12 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .signin-hero .rows { display: flex; flex-direction: column; gap: var(--sp-2); transform: rotate(-2deg); }
 .signin-hero .r { display: flex; justify-content: space-between; font-weight: var(--fw-medium); }
 .signin-hero .r b { color: var(--green-ink); }
+.signin.top { justify-content: flex-start; gap: var(--sp-8); }
+.otp { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-2); }
+.otp span { height: 56px; display: grid; place-items: center; border-radius: var(--r-input); border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: var(--fs-2xl); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.otp input { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: var(--fs-input); }
+.otp:focus-within span.on { border-color: var(--green); box-shadow: var(--ring); }
+.otp-timer { margin: 0; text-align: center; font-size: var(--fs-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.linkbtn { border: 0; background: none; padding: var(--sp-2) 0; font-weight: var(--fw-bold); color: var(--green-ink); cursor: pointer; }
+.linkbtn:disabled { color: var(--text-faint); font-weight: var(--fw-medium); cursor: default; }
