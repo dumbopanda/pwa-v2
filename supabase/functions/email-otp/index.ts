@@ -26,8 +26,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Browser origins allowed to call this (the web app). Comma-separated in the
 // ALLOWED_ORIGINS secret, e.g. "https://app.example.com,http://localhost:5173".
 const ALLOWED = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-// Product name for the email. Undecided, so it's a setting, never hard-coded.
-const APP_NAME = Deno.env.get("APP_NAME") || "Your expense tracker";
+// Product name for the email: "Spend Roll" on prod, "Spend Roll Dev" on dev (APP_NAME secret).
+const APP_NAME = Deno.env.get("APP_NAME") || "Spend Roll";
 
 function cors(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";

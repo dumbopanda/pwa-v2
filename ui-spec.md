@@ -1,6 +1,6 @@
-# UI Spec — Expense Tracker (shared front end)
+# UI Spec — Spend Roll (shared front end)
 
-Applies to both the personal tracker (make.com backend, 3 fixed accounts) and the Expense Tracker APK (Supabase backend, N accounts). Front end is the same; backend/values differ per app.
+Applies to both the personal tracker (make.com backend, 3 fixed accounts) and the Spend Roll APK (Supabase backend, N accounts). Front end is the same; backend/values differ per app.
 
 ## Nav — 3 tabs
 Add Payment | History | Stats
