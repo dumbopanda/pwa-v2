@@ -551,32 +551,32 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .iart .txn { cursor: default; }
 .iart .dayfoot .btn { height: var(--h-sm); }
 
-/* PLAN: hero answer, goal, then budgets ranked by how close they are to the limit. */
-.planhero { background: var(--ink); color: var(--on-ink); border-radius: var(--r-card); padding: var(--sp-5) var(--sp-4) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2);
-  box-shadow: 0 1px 2px rgba(24,28,26,.05), 0 10px 28px -14px rgba(24,28,26,.28); }
-.planhero .hkey { justify-content: flex-start; }
-.planhero .hval { font-size: 40px; margin: 0; }
-.planhint { margin: 0; color: var(--on-ink-muted); font-size: var(--fs-sm); }
-.planbar { height: 8px; border-radius: var(--r-pill); background: var(--ink-line); overflow: hidden; margin-top: var(--sp-1); }
-.planbar span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--lime); }
-.planbar span.over { background: var(--red-on-ink); }
-.planfacts { display: flex; gap: var(--sp-4); margin-top: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--ink-line); }
-.planfacts > div { display: flex; flex-direction: column; min-width: 0; }
-.planfacts span { font-size: var(--fs-2xs); font-weight: var(--fw-bold); color: var(--on-ink-muted); }
-.planfacts b { font-size: var(--fs-lg); font-weight: var(--fw-heavy); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.plancard { display: flex; flex-direction: column; gap: var(--sp-2); }
-.planhead { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
-.plannote { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.planlist { gap: 0; padding: 0 var(--sp-4); }
-.planrow { display: flex; flex-direction: column; gap: 6px; padding: var(--sp-3) 0; }
-.planrow + .planrow { border-top: 1px solid var(--line); }
-.planline { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
-.planname { font-weight: var(--fw-bold); min-width: 0; overflow-wrap: anywhere; }
-.planline b { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.planline b.over { color: var(--red); }
-.planline.sub { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.planrow.flat .planline { min-height: var(--h-sm); }
-.planin { height: 36px; padding: 0 var(--sp-3); border: 1px solid transparent; border-radius: var(--r-ctl); background: var(--inset); text-align: right;
-  font-size: var(--fs-md); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
-.planin::placeholder { color: var(--text-faint); font-weight: var(--fw-medium); }
-.planin:focus { outline: none; border-color: var(--green); box-shadow: var(--ring); background: var(--surface); }
+/* PLAN: one number, the month against its pace, rows that fill as money goes. */
+.pnum { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-2) var(--sp-1) 0; }
+.pk { font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text-muted); }
+.pv { font-size: 56px; line-height: 1.05; font-weight: var(--fw-heavy); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pv.dim { font-size: var(--fs-3xl); color: var(--text-faint); } .pv.over { color: var(--red); }
+.ps { margin: var(--sp-1) 0 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.pdays { margin: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.pbars { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 96px; }
+.pbars i { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--green-bar); }
+.pbars i.hot { background: #E8A0A0; } .pbars i.now { background: var(--ink); } .pbars i.later { background: var(--track); }
+.ppace { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--text-2); pointer-events: none; }
+.pdays figcaption { display: flex; justify-content: space-between; font-size: var(--fs-2xs); font-weight: var(--fw-medium); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.prow { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 60px; padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-panel); background: var(--surface); box-shadow: var(--shadow-1); overflow: hidden; cursor: pointer; text-align: left; }
+.prow > i { position: absolute; inset: 0 auto 0 0; background: var(--mint); transition: width var(--t-med) var(--ease); }
+.prow > i.warn { background: var(--amber-soft); } .prow > i.over { background: var(--red-soft); }
+.prow > * { position: relative; }
+.prow > i { position: absolute; }
+.prow .pl { display: flex; flex-direction: column; min-width: 0; }
+.prow .pl small { font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--text-2); font-variant-numeric: tabular-nums; }
+.prow .pr { white-space: nowrap; font-variant-numeric: tabular-nums; } .prow .pr.over { color: var(--red); }
+.prow.goal { background: var(--ink); color: var(--on-ink); box-shadow: none; }
+.prow.goal > i { background: rgba(204,242,68,.28); }
+.prow.goal .pl small { color: var(--on-ink-muted); } .prow.goal .pr { color: var(--lime); }
+.planin { width: 112px; height: 40px; padding: 0 var(--sp-3); border: 1.5px solid var(--green); border-radius: var(--r-ctl); background: var(--surface); text-align: right;
+  font-size: var(--fs-input); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.planin:focus { outline: none; box-shadow: var(--ring); }
+.padd { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-3); }
+.padd > span { font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text-muted); }

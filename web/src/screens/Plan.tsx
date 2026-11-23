@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { setBudget, copyBudgets } from "../lib/actions";
 import { Empty, toast, useAction } from "../components";
 import { useLedger, useToday } from "../lib/hooks";
-import { addMonths, monthOf, spendBy } from "../lib/ledger";
+import { addMonths, daysInMonth, isSpend, monthOf, spendBy } from "../lib/ledger";
 import { amountText } from "../lib/entryRows";
 import { formatMoney, parseAmount } from "../lib/money";
 import { buildPlan } from "../lib/plan";
@@ -10,103 +11,102 @@ import { monthLabel } from "../lib/reviewFacts";
 export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: string) => void }) {
   const L = useLedger(); const today = useToday();
   const { busy, error, run } = useAction();
+  const [editing, setEditing] = useState<string | null>(null);   // a category id, or "goal"
   const cur = L.s.currency;
   const plan = buildPlan(L.entries, L.accounts, L.s.budgets, ym, today, cur);
   const m = (n: number) => formatMoney(n, cur);
   const row = (id: string | null) => L.s.budgets.find((b) => b.month === `${ym}-01` && b.category_id === id);
-  const byCat = new Map(spendBy(L.entries, L.accounts, ym, cur, (e) => e.category_id ?? "").map((x) => [x.key, x.spent]));
   const prevHas = L.s.budgets.some((b) => b.month === `${addMonths(ym, -1)}-01`);
+  const isCurrent = ym === monthOf(today);
 
   async function commit(id: string | null, value: string) {
+    setEditing(null);
     const v = value.trim();
     const minor = v === "" || v === "0" ? 0 : parseAmount(v, cur);
     if (minor === null) return toast(`That isn't a valid ${cur} amount`);
-    const had = row(id)?.amount_minor ?? 0;
-    if (minor === had) return;
+    if (minor === (row(id)?.amount_minor ?? 0)) return;
     await run(() => setBudget(`${ym}-01`, id, minor));
   }
 
-  const isCurrent = ym === monthOf(today);
-  const pct = (v: number, max: number) => (max > 0 ? Math.min(100, Math.round((v / max) * 100)) : 0);
-  const budgeted = L.activeCategories.flatMap((c) => { const r = plan.rows.find((x) => x.category_id === c.id); return r && r.budget > 0 ? [{ c, r }] : []; })
-    .sort((a, b) => b.r.spent / b.r.budget - a.r.spent / a.r.budget);        // closest to the limit first
-  const rest = L.activeCategories.filter((c) => !plan.rows.some((x) => x.category_id === c.id && x.budget > 0));
-  const input = (id: string | null, label: string, ph: string, width = 104) => {
-    const b = row(id);
-    return <input className="planin" style={{ width }} inputMode="decimal" placeholder={ph} aria-label={label} disabled={busy}
-      key={`${id}${ym}${b?.amount_minor}`} defaultValue={b ? amountText(b.amount_minor, cur) : ""} onBlur={(e) => commit(id, e.target.value)} />;
-  };
+  // One bar per day against the daily pace (budget / days in the month).
+  const total = daysInMonth(ym);
+  const todayN = today.startsWith(ym) ? Number(today.slice(8)) : today < ym ? 0 : total + 1;
+  const perDay = Array.from({ length: total }, () => 0);
+  for (const e of L.entries) if (isSpend(e) && monthOf(e.entry_date) === ym && L.accountById.get(e.account_id)?.currency === cur) perDay[Number(e.entry_date.slice(8)) - 1] += e.amount_minor;
+  const pace = plan.budgetTotal > 0 ? plan.budgetTotal / total : 0;
+  const scale = Math.max(pace * 1.6, ...perDay, 1);
 
+  const byCat = new Map(spendBy(L.entries, L.accounts, ym, cur, (e) => e.category_id ?? "").map((x) => [x.key, x.spent]));
+  const rowOf = (cid: string) => plan.rows.find((x) => x.category_id === cid && x.budget > 0);
+  const shown = L.activeCategories.filter((c) => rowOf(c.id) || editing === c.id)
+    .sort((a, b) => { const ra = rowOf(a.id), rb = rowOf(b.id); return (rb ? rb.spent / rb.budget : 0) - (ra ? ra.spent / ra.budget : 0); });   // closest to the limit first
+  const addable = L.activeCategories.filter((c) => !rowOf(c.id) && editing !== c.id);
+  const pct = (v: number, max: number) => (max > 0 ? Math.min(100, (v / max) * 100) : 0);
+
+  const field = (id: string | null, label: string, dark = false) => (
+    <input className={`planin ${dark ? "dark" : ""}`} autoFocus inputMode="decimal" placeholder="Amount" aria-label={label}
+      defaultValue={row(id) ? amountText(row(id)!.amount_minor, cur) : ""} onClick={(e) => e.stopPropagation()}
+      onBlur={(e) => commit(id, e.target.value)} onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
+  );
+
+  const goal = plan.savingsTarget ?? 0;
   return (
     <main className="screen stack" style={{ gap: "var(--sp-5)" }}>
-      {/* 1. The answer: what is left, and what is safe today. */}
-      <section className="planhero" aria-label="This month">
+      {/* The one number. */}
+      <header className="pnum">
         {plan.budgetTotal === 0 ? (
-          <>
-            <span className="hkey">Budget for {monthLabel(ym)}</span>
-            <div className="hval">Not set</div>
-            <p className="planhint">Give any category a budget below. This turns into what you can spend each day.</p>
-          </>
+          <><span className="pk">Plan for {monthLabel(ym)}</span><b className="pv dim">No budget yet</b><p className="ps">Give a category a budget below. This becomes what you can spend each day.</p></>
+        ) : isCurrent && plan.left > 0 ? (
+          <><span className="pk">You can spend today</span><b className="pv">{m(plan.safeDaily)}</b>
+            <p className="ps">{m(plan.left)} left of {m(plan.budgetTotal)} · {plan.daysLeft} {plan.daysLeft === 1 ? "day" : "days"} to go</p></>
         ) : (
-          <>
-            <span className="hkey">{plan.left < 0 ? "Over budget by" : "Left to spend"}</span>
-            <div className={`hval ${plan.left < 0 ? "neg" : ""}`}>{m(Math.abs(plan.left))}</div>
-            <div className="planbar" role="presentation"><span className={plan.left < 0 ? "over" : ""} style={{ width: `${pct(plan.spentTotal, plan.budgetTotal)}%` }} /></div>
-            <div className="planfacts">
-              <div><span>Spent</span><b>{m(plan.spentTotal)}</b></div>
-              <div><span>Budget</span><b>{m(plan.budgetTotal)}</b></div>
-              {isCurrent && plan.daysLeft > 0 && <div><span>Safe a day</span><b>{m(plan.safeDaily)}</b></div>}
-            </div>
-          </>
+          <><span className="pk">{plan.left < 0 ? "Over budget by" : "Left this month"}</span><b className={`pv ${plan.left < 0 ? "over" : ""}`}>{m(Math.abs(plan.left))}</b>
+            <p className="ps">Spent {m(plan.spentTotal)} of {m(plan.budgetTotal)}</p></>
         )}
-      </section>
+      </header>
 
-      {/* 2. The goal. */}
-      <section className="card plancard" aria-label="Savings goal">
-        <div className="planhead"><b>Savings goal</b>{input(null, "Savings goal amount", "Set goal")}</div>
-        {plan.savingsTarget !== null && plan.savingsTarget > 0 && (
-          <>
-            <div className="bar" role="presentation"><span style={{ width: `${pct(plan.saved, plan.savingsTarget)}%` }} /></div>
-            <p className="plannote">{m(plan.saved)} saved{plan.leftToSave! > 0 ? ` · ${m(plan.leftToSave!)} to go` : " · Goal reached"}</p>
-          </>
-        )}
-      </section>
-
-      {/* 3. Where the budget goes: closest to the limit first. */}
-      <section className="stack" style={{ gap: "var(--sp-3)" }} aria-label="Budgets by category">
-        <div className="row"><span className="caps grow">Budgets</span>
-          {prevHas && !budgeted.length && <button className="btn quiet" disabled={busy} onClick={() => run(() => copyBudgets(`${addMonths(ym, -1)}-01`, `${ym}-01`))}>Copy last month</button>}
-        </div>
-        {L.activeCategories.length === 0 && <Empty>Add categories in Settings.</Empty>}
-        {budgeted.length > 0 && (
-          <div className="card plancard planlist">
-            {budgeted.map(({ c, r }) => (
-              <div key={c.id} className="planrow">
-                <div className="planline"><span className="planname">{c.name}</span>
-                  <b className={r.over ? "over" : ""}>{r.over ? `${m(-r.left)} over` : `${m(r.left)} left`}</b></div>
-                <div className="bar" role="presentation"><span className={r.over ? "over" : ""} style={{ width: `${pct(r.spent, r.budget)}%` }} /></div>
-                <div className="planline sub"><span>Spent {m(r.spent)} of</span>{input(c.id, `${c.name} budget`, "Budget", 96)}</div>
-              </div>
+      {/* The month, day by day, against the pace. */}
+      {plan.budgetTotal > 0 && (
+        <figure className="pdays" aria-label="Spending by day">
+          <div className="pbars">
+            {perDay.map((v, i) => (
+              <i key={i} className={i + 1 === todayN ? "now" : i + 1 > todayN ? "later" : v > pace ? "hot" : ""} style={{ height: `${Math.max(pct(v, scale), 3)}%` }} />
             ))}
+            <span className="ppace" style={{ bottom: `${pct(pace, scale)}%` }} />
           </div>
-        )}
-        {rest.length > 0 && (
-          <>
-            {budgeted.length > 0 && <span className="caps">No budget yet</span>}
-            <div className="card plancard planlist">
-              {rest.map((c) => (
-                <div key={c.id} className="planrow flat">
-                  <div className="planline"><span className="planname">{c.name}</span>
-                    {input(c.id, `${c.name} budget`, "Set budget", 96)}</div>
-                  {(byCat.get(c.id) ?? 0) > 0 && <span className="plannote">Spent {m(byCat.get(c.id)!)} so far</span>}
-                </div>
-              ))}
+          <figcaption><span>1</span><span>Daily pace {m(Math.round(pace))}</span><span>{total}</span></figcaption>
+        </figure>
+      )}
+
+      {/* Budgets: each row fills as the money goes. Tap to change. */}
+      <section className="stack" style={{ gap: "var(--sp-2)" }} aria-label="Budgets">
+        {L.activeCategories.length === 0 && <Empty>Add categories in Settings.</Empty>}
+        {shown.map((c) => {
+          const r = rowOf(c.id); const used = r ? r.spent / r.budget : 0;
+          return (
+            <div key={c.id} className="prow" role="button" tabIndex={0} aria-label={`${c.name} budget`} onClick={() => setEditing(c.id)} onKeyDown={(e) => e.key === "Enter" && setEditing(c.id)}>
+              {r && <i className={r.over ? "over" : used >= .85 ? "warn" : ""} style={{ width: `${pct(r.spent, r.budget)}%` }} />}
+              <span className="pl"><b>{c.name}</b>{r && <small>Spent {m(r.spent)} of {m(r.budget)}</small>}</span>
+              {editing === c.id ? field(c.id, `${c.name} budget`) : r && <b className={`pr ${r.over ? "over" : ""}`}>{r.over ? `${m(-r.left)} over` : `${m(r.left)} left`}</b>}
             </div>
-          </>
+          );
+        })}
+        {addable.length > 0 && (
+          <div className="padd"><span>{shown.length ? "Also budget" : "Pick a category"}</span>
+            <div className="chips">{addable.map((c) => <button key={c.id} className="fchip add" onClick={() => setEditing(c.id)}>{c.name}{(byCat.get(c.id) ?? 0) > 0 ? ` · ${m(byCat.get(c.id)!)}` : ""}</button>)}</div></div>
         )}
+        {prevHas && !shown.length && <button className="btn quiet" disabled={busy} onClick={() => run(() => copyBudgets(`${addMonths(ym, -1)}-01`, `${ym}-01`))}>Copy last month's budgets</button>}
       </section>
+
+      {/* The goal, set apart in dark. */}
+      <div className="prow goal" role="button" tabIndex={0} aria-label="Savings goal" onClick={() => setEditing("goal")} onKeyDown={(e) => e.key === "Enter" && setEditing("goal")}>
+        {goal > 0 && <i style={{ width: `${pct(plan.saved, goal)}%` }} />}
+        <span className="pl"><b>Savings goal</b><small>{goal > 0 ? `${m(plan.saved)} saved${plan.leftToSave! > 0 ? ` · ${m(plan.leftToSave!)} to go` : " · reached"}` : "Tap to set"}</small></span>
+        {editing === "goal" ? field(null, "Savings goal amount", true) : goal > 0 && <b className="pr">{m(goal)}</b>}
+      </div>
+
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="btn" onClick={() => onReview(ym)}>Open {monthLabel(ym)} review</button>
+      <button className="btn quiet" onClick={() => onReview(ym)}>Open {monthLabel(ym)} review</button>
     </main>
   );
 }
