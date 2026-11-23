@@ -8,6 +8,10 @@ import { supabase } from "../supabase";
 import type { Account, Category } from "../lib/types";
 
 
+const OCCUPATIONS = ["Student", "Software / IT", "Business owner", "Doctor / Healthcare", "Teacher / Educator", "Engineer", "Finance / Banking",
+  "Government employee", "Homemaker", "Retired", "Freelancer", "Sales / Marketing", "Artist / Creative", "Farmer", "Other"];
+type Prof = { display_name: string; age: string; location: string; occupation: string };
+
 export default function Settings({ onBack, onMetrics }: { onBack: () => void; onMetrics: () => void }) {
   const L = useLedger();
   const { busy, error, run } = useAction();
@@ -15,6 +19,25 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
   const [newAcc, setNewAcc] = useState(""); const [newCur, setNewCur] = useState(DEFAULT_CURRENCY); const [newBal, setNewBal] = useState(""); const [newOwe, setNewOwe] = useState(false); const [newCat, setNewCat] = useState("");
   const today = useToday(); const bd = useBalanceDate(today);
   const [del, setDel] = useState(false); const [typed, setTyped] = useState("");
+
+  const [prof, setProf] = useState<Prof>({ display_name: "", age: "", location: "", occupation: "" });
+  const [profErr, setProfErr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!L.s.userId) return;
+    supabase.from("profiles").select("display_name, age, location, occupation").eq("user_id", L.s.userId).maybeSingle().then((r) => {
+      if (r.data) setProf({ display_name: r.data.display_name ?? "", age: r.data.age?.toString() ?? "", location: r.data.location ?? "", occupation: r.data.occupation ?? "" });
+    }, () => undefined);
+  }, [L.s.userId]);
+  // Saves one field when it is left. Empty clears it; age must be 13 to 120 (the database checks the same).
+  async function saveProf(patch: Partial<Prof>) {
+    const next = { ...prof, ...patch }; setProf(next); setProfErr(null);
+    const age = next.age.trim() === "" ? null : Number(next.age);
+    if (age !== null && !(Number.isInteger(age) && age >= 13 && age <= 120)) return setProfErr("Age must be between 13 and 120");
+    const r = await supabase.from("profiles").update({
+      display_name: next.display_name.trim() || null, age, location: next.location.trim() || null, occupation: next.occupation || null,
+    }).eq("user_id", L.s.userId!);
+    if (r.error) setProfErr("Couldn't save. Try again."); else toast("Saved");
+  }
 
   // The metrics page only shows for the owner: the database says no to everyone else.
   useEffect(() => { supabase.rpc("admin_metrics").then((r) => setAdmin(!r.error), () => undefined); }, []);
@@ -35,11 +58,31 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
       <div className="row"><button className="iconbtn" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>Settings</h1></div>
       {error && <p className="error" role="alert">{error}</p>}
 
+      <section className="card stack" aria-label="Profile">
+        <b>About you</b>
+        <label className="stack" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>Name</span>
+          <input className="field" maxLength={80} autoComplete="name" value={prof.display_name} onChange={(e) => setProf({ ...prof, display_name: e.target.value })} onBlur={(e) => saveProf({ display_name: e.target.value })} /></label>
+        <div className="row">
+          <label className="stack" style={{ gap: 4, width: 96 }}><span className="lbl" style={{ margin: 0 }}>Age</span>
+            <input className="field" inputMode="numeric" maxLength={3} value={prof.age} onChange={(e) => setProf({ ...prof, age: e.target.value.replace(/\D/g, "") })} onBlur={(e) => saveProf({ age: e.target.value })} /></label>
+          <label className="stack grow" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>City</span>
+            <input className="field" maxLength={80} autoComplete="address-level2" value={prof.location} onChange={(e) => setProf({ ...prof, location: e.target.value })} onBlur={(e) => saveProf({ location: e.target.value })} /></label>
+        </div>
+        <label className="stack" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>What you do</span>
+          <select className="field" value={prof.occupation} onChange={(e) => saveProf({ occupation: e.target.value })}>
+            <option value="">Not set</option>{OCCUPATIONS.map((o) => <option key={o}>{o}</option>)}
+          </select></label>
+        {profErr && <p className="error" role="alert">{profErr}</p>}
+        <p className="muted small" style={{ margin: 0 }}>Optional. Only you see this. It helps us make the app fit people like you.</p>
+      </section>
+
       <section className="card stack" aria-label="Accounts">
         <b>Accounts</b>
         {L.accounts.map((a) => (
           <div key={a.id} className="row">
-            <input className="field grow" aria-label="Account name" maxLength={40} defaultValue={a.name} key={a.name} onBlur={(e) => rename("a", a, e.target.value)} style={{ opacity: a.archived_at ? .55 : 1 }} />
+            <label className="namefield grow" style={{ opacity: a.archived_at ? .55 : 1 }}>
+              <input className="bare" aria-label="Account name" maxLength={40} defaultValue={a.name} key={a.name} onBlur={(e) => rename("a", a, e.target.value)} /><Icon name="edit" size={16} />
+            </label>
             <select className="field" style={{ width: 88 }} aria-label={`${a.name} currency`} value={a.currency} disabled={hasEntries(a) || busy}
               title={hasEntries(a) ? "Has entries, so the currency is locked" : undefined} onChange={(e) => run(() => updateAccount(a.id, { currency: e.target.value }))}>
               {currencyList(a.currency).map((c) => <option key={c}>{c}</option>)}
@@ -66,7 +109,9 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
         <b>Categories</b>
         {L.categories.map((c) => (
           <div key={c.id} className="row">
-            <input className="field grow" aria-label="Category name" maxLength={40} defaultValue={c.name} key={c.name} onBlur={(e) => rename("c", c, e.target.value)} style={{ opacity: c.archived_at ? .55 : 1 }} />
+            <label className="namefield grow" style={{ opacity: c.archived_at ? .55 : 1 }}>
+              <input className="bare" aria-label="Category name" maxLength={40} defaultValue={c.name} key={c.name} onBlur={(e) => rename("c", c, e.target.value)} /><Icon name="edit" size={16} />
+            </label>
             <button className="btn" style={{ height: "var(--h-md)" }} disabled={busy} onClick={() => archive("c", c)}>{c.archived_at ? "Restore" : "Hide"}</button>
           </div>
         ))}
@@ -80,7 +125,7 @@ export default function Settings({ onBack, onMetrics }: { onBack: () => void; on
         <b>Your data</b>
         <p className="muted small" style={{ margin: 0 }}>To check and improve quick log, the text of what you said or typed (never the audio) is kept next to what you saved. It's deleted with your account.</p>
         <button className="btn" disabled={busy} onClick={() => run(exportCsv)}>Export everything as CSV</button>
-        <a className="btn" href="/privacy.html" target="_blank" rel="noopener">Privacy policy and terms</a>
+        <a className="btn" style={{ color: "inherit", textDecoration: "none" }} href="/privacy.html" target="_blank" rel="noopener">Privacy policy and terms</a>
         {admin && <button className="btn" onClick={onMetrics}>Usage metrics</button>}
       </section>
 
