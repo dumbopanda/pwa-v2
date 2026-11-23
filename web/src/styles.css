@@ -58,15 +58,9 @@
   --scrim:rgba(0,0,0,.65); --scrim-soft:rgba(0,0,0,.5);
   color-scheme: dark;
 }
-/* The hero panels turn into the brand lime with near-black ink (the one loud block on a quiet page). Inside them the accents swap:
-   --lime becomes the near-black, so every "lime on dark" rule reads "black on lime" without touching the rules. */
-:root[data-theme="dark"] :is(.hero, .planhero) {
-  --ink:#CCF244; --ink-2:#B8DD36; --on-ink:#0B0B0B; --on-ink-muted:#46530F; --on-ink-faint:#6B7A1E; --ink-line:rgba(0,0,0,.18);
-  --lime:#0B0B0B; --on-lime:#CCF244; --red-on-ink:#B3170F;
-}
-:root[data-theme="dark"] .hero .notice { background: rgba(0,0,0,.08); }
-:root[data-theme="dark"] .hero .dot { box-shadow: 0 0 0 1.5px #0B0B0B; }
-:root[data-theme="dark"] .hchip { background: rgba(0,0,0,.1); }
+/* The hero panels sit on the same card layer as the other boxes (no loud fill). */
+:root[data-theme="dark"] :is(.hero, .planhero) { --ink:var(--surface); --ink-2:var(--inset); }
+
 /* A sheet floats above the page, so everything inside it steps up one more layer. */
 :root[data-theme="dark"] .sheet {
   --canvas:#151515; --surface:#1D1D1D; --inset:#262626; --hover:#262626; --track:#303030;
