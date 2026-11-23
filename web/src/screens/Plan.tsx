@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Icon from "../Icon";
 import { setBudget, copyBudgets } from "../lib/actions";
 import { Empty, toast, useAction } from "../components";
 import { useLedger, useToday } from "../lib/hooks";
@@ -12,6 +13,7 @@ export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: stri
   const L = useLedger(); const today = useToday();
   const { busy, error, run } = useAction();
   const [editing, setEditing] = useState<string | null>(null);   // a category id, or "goal"
+  const cancelled = useRef(false);
   const cur = L.s.currency;
   const plan = buildPlan(L.entries, L.accounts, L.s.budgets, ym, today, cur);
   const m = (n: number) => formatMoney(n, cur);
@@ -43,11 +45,23 @@ export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: stri
   const addable = L.activeCategories.filter((c) => !rowOf(c.id) && editing !== c.id);
   const pct = (v: number, max: number) => (max > 0 ? Math.min(100, (v / max) * 100) : 0);
 
-  const field = (id: string | null, label: string, dark = false) => (
-    <input className={`planin ${dark ? "dark" : ""}`} autoFocus inputMode="decimal" placeholder="Amount" aria-label={label}
-      defaultValue={row(id) ? amountText(row(id)!.amount_minor, cur) : ""} onClick={(e) => e.stopPropagation()}
-      onBlur={(e) => commit(id, e.target.value)} onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
-  );
+  const sym = m(0).replace(/[\d.,\s]/g, "");   // "₹", "$", ...
+  // ✓ saves, ✕ drops the edit. Buttons keep focus on the box so a tap doesn't trigger the blur-save first.
+  const field = (id: string | null, label: string) => {
+    const keep = (e: React.PointerEvent) => { e.preventDefault(); e.stopPropagation(); };
+    return (
+      <span className="pedit" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="pok" aria-label="Save" onPointerDown={keep} onClick={() => document.getElementById("planin")?.blur()}><Icon name="check" size={22} /></button>
+        <button type="button" className="pno" aria-label="Cancel" onPointerDown={keep} onClick={() => { cancelled.current = true; setEditing(null); }}><Icon name="close" size={22} /></button>
+        <span className="planbox"><b aria-hidden="true">{sym}</b>
+          <input id="planin" className="planin" autoFocus inputMode="decimal" placeholder="Amount" aria-label={label}
+            defaultValue={row(id) ? amountText(row(id)!.amount_minor, cur) : ""}
+            onBlur={(e) => { if (cancelled.current) cancelled.current = false; else commit(id, e.target.value); }}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); else if (e.key === "Escape") { cancelled.current = true; setEditing(null); } }} />
+        </span>
+      </span>
+    );
+  };
 
   const goal = plan.savingsTarget ?? 0;
   return (
@@ -102,7 +116,7 @@ export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: stri
       <div className="prow goal" role="button" tabIndex={0} aria-label="Savings goal" onClick={() => setEditing("goal")} onKeyDown={(e) => e.key === "Enter" && setEditing("goal")}>
         {goal > 0 && <i style={{ width: `${pct(plan.saved, goal)}%` }} />}
         <span className="pl"><b>Savings goal</b><small>{goal > 0 ? `${m(plan.saved)} saved${plan.leftToSave! > 0 ? ` · ${m(plan.leftToSave!)} to go` : " · reached"}` : "Tap to set"}</small></span>
-        {editing === "goal" ? field(null, "Savings goal amount", true) : goal > 0 && <b className="pr">{m(goal)}</b>}
+        {editing === "goal" ? field(null, "Savings goal amount") : goal > 0 && <b className="pr">{m(goal)}</b>}
       </div>
 
       {error && <p className="error" role="alert">{error}</p>}

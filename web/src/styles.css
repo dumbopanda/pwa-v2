@@ -620,9 +620,16 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .prow.goal { background: var(--ink); color: var(--on-ink); box-shadow: none; }
 .prow.goal > i { background: rgba(204,242,68,.28); }
 .prow.goal .pl small { color: var(--on-ink-muted); } .prow.goal .pr { color: var(--lime); }
-.planin { width: 112px; height: 40px; padding: 0 var(--sp-3); border: 1.5px solid var(--green); border-radius: var(--r-ctl); background: var(--surface); text-align: right;
+.pedit { display: flex; align-items: center; gap: var(--sp-2); }
+.pedit button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.pedit button svg { stroke-width: 1.5; }   /* thin */
+.pedit .pok { color: var(--green); } .pedit .pno { color: var(--red); }
+.planbox { display: flex; align-items: center; width: 128px; height: 40px; padding: 0 var(--sp-3); border: 1.5px solid var(--green); border-radius: var(--r-ctl); background: var(--surface); color: var(--text);
   font-size: var(--fs-input); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
-.planin:focus { outline: none; box-shadow: var(--ring); }
+.planbox .planin:focus { border: 0; box-shadow: none; background: transparent; }
+.planbox:focus-within { box-shadow: var(--ring); }
+.planbox b { flex: none; color: var(--text-2); }
+.planbox .planin { flex: 1; min-width: 0; width: 100%; height: 100%; padding: 0 0 0 var(--sp-2); border: 0; background: transparent; box-shadow: none; color: inherit; text-align: right; font: inherit; }
 .padd { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-3); }
 .padd > span { font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text-muted); }
 
