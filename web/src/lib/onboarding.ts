@@ -23,7 +23,6 @@ export const DEFAULT_CATEGORIES: { name: string; on: boolean }[] = [
   { name: "Salary", on: true },
   { name: "Refund", on: false },
   { name: "Other income", on: false },
-  { name: "Other", on: true },
 ];
 
 export type AccountDraft = {
