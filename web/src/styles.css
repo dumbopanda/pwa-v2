@@ -70,6 +70,9 @@
 html, body { margin: 0; background: var(--canvas); color: var(--text); font-family: var(--font);
   font-size: var(--fs-md); font-weight: var(--fw-regular); line-height: 1.5; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; }
+/* An app, not a page: no text selection or long-press search. Typing fields stay selectable. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
 
 .screen { max-width: var(--maxw); margin: 0 auto; padding: var(--sp-6) var(--sp-4) calc(var(--sp-8) + env(safe-area-inset-bottom)); }
 .stack { display: flex; flex-direction: column; gap: var(--sp-3); }
