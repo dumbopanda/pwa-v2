@@ -205,7 +205,9 @@ select.field { padding-right: var(--sp-2); }
   background: var(--ink); border-radius: var(--r-pill); padding: 5px; box-shadow: var(--shadow-float); }
 .navpill .tab { height: 48px; border-radius: var(--r-pill); color: var(--on-ink-muted); flex-direction: row; gap: 6px; font-size: var(--fs-sm); box-shadow: none; }
 .navpill .tab[aria-current="page"] { background: var(--lime); color: var(--on-lime); box-shadow: none; }
-.app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+/* The page ends 1.5 gaps above the dock (dock = 48px + 12px below it + the safe area), so there is no blank scroll below. */
+.app { padding-bottom: calc(60px + 1.5 * var(--sp-3) + env(safe-area-inset-bottom)); }
+.app .screen { padding-bottom: 0; }
 .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 
 /* Dark amount hero. */

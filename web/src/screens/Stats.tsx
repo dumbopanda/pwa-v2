@@ -140,7 +140,6 @@ export default function Stats({ ym }: { ym: string }) {
         <div className="fact"><span className="k">Closed as no spend</span><span className="v">{noSpend}</span></div>
         <div className="fact"><span className="k">Average a day</span><span className="v">{m(lastDay ? Math.floor(t.spent / lastDay) : 0)}</span></div>
       </section>
-      <p className="muted small" style={{ margin: 0, textAlign: "center" }}>Transfers between your accounts and opening balances aren't spending or income.</p>
     </main>
   );
 }
