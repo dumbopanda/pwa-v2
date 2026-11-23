@@ -157,7 +157,6 @@ select.field { padding-right: var(--sp-2); }
   background: var(--ink); border-radius: var(--r-pill); padding: 5px; box-shadow: 0 10px 28px -12px rgba(18, 22, 20, .55); }
 .navpill .tab { height: 48px; border-radius: var(--r-pill); color: var(--on-ink-muted); flex-direction: row; gap: 6px; font-size: var(--fs-sm); box-shadow: none; }
 .navpill .tab[aria-current="page"] { background: var(--lime); color: var(--ink); box-shadow: none; }
-@media (max-width: 380px) { .navpill .tab:not([aria-current="page"]) span { display: none; } .navpill .tab[aria-current="page"] { flex: 2.2; } }
 .app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 
@@ -393,13 +392,18 @@ body { zoom: .9; min-height: calc(100dvh / .9); }
 .navwrap { background: linear-gradient(to top, var(--canvas) 55%, transparent); padding-top: var(--sp-8); }
 .dock { pointer-events: auto; display: flex; gap: var(--sp-2); width: 100%; max-width: calc(var(--maxw) - 2 * var(--sp-4)); }
 .dock .navpill { width: auto; max-width: none; padding: 4px; gap: 4px; box-shadow: 0 1px 2px rgba(24,28,26,.05), 0 10px 28px -14px rgba(24,28,26,.28); }
-.dock .navpill .tab { flex: none; height: 40px; padding: 0 var(--sp-3); font-size: var(--fs-md); }
+.dock .navpill { --tab-w: 96px; position: relative; }
+.dock .navpill .tab { position: relative; z-index: 1; flex: none; width: var(--tab-w); height: 40px; padding: 0; font-size: var(--fs-md); }
+/* Both names always show, at fixed widths, so nothing shifts; only the lime blob slides to the open tab. */
+.dock .navpill .tab[aria-current="page"] { background: transparent; }
+.navblob { position: absolute; z-index: 0; top: 4px; left: 4px; width: var(--tab-w); height: 40px; border-radius: var(--r-pill); background: var(--lime);
+  transform: translateX(calc(var(--i, 0) * (var(--tab-w) + 4px))); transition: transform .22s var(--ease); }
+@media (prefers-reduced-motion: reduce) { .navblob { transition: none; } }
 .dockadd { flex: 1; min-width: 0; height: var(--h-md); display: flex; align-items: center; justify-content: center; gap: var(--sp-2); border: 0;
   border-radius: var(--r-pill); background: var(--green); color: var(--on-ink); font-size: var(--fs-lg); font-weight: var(--fw-heavy);
   box-shadow: var(--shadow-cta); cursor: pointer; white-space: nowrap; }
 .dockadd:hover:not(:disabled) { background: var(--green-hover); }
 .dockadd:disabled { opacity: .5; }
-@media (max-width: 380px) { .dock .navpill .tab[aria-current="page"] { flex: none; } }
 .apphead .narrow { display: none; }
 @media (max-width: 360px) { .apphead .wide { display: none; } .apphead .narrow { display: inline; } }
 

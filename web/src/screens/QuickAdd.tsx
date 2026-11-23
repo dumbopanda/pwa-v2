@@ -9,7 +9,6 @@ import { useLedger, useToday } from "../lib/hooks";
 import { formatMoney } from "../lib/money";
 import EntrySheet, { LAST_ACCOUNT } from "./EntrySheet";
 import { readCheckProps } from "../lib/readCheck";
-import { supabase } from "../supabase";
 
 type Pending = { draft: Draft; hint?: string; assumed: boolean; source: "rules" | "ai"; said: string };
 type Form = { draft: Draft; via: "manual" | "ai"; original?: Draft; hint?: string; source?: "rules" | "ai"; said?: string };
@@ -38,13 +37,9 @@ export default function QuickAdd() {
 
   useEffect(() => () => rec.current?.stop(), []);
 
-  // Quick log (speak/type -> read) is switched per database: app_config key "quick_log" = true.
-  // Off, missing or unreadable means off, so "Add payment" opens the manual form.
-  const [quickLog, setQuickLog] = useState(false);
-  useEffect(() => {
-    supabase.from("app_config").select("value").eq("key", "quick_log").maybeSingle()
-      .then(({ data }) => setQuickLog(data?.value === true), () => undefined);
-  }, []);
+  // Quick log (speak/type -> read) is parked: "Add payment" opens the manual form at once, with no menu.
+  // ponytail: flip to true to bring the Speak option back; the code below still works.
+  const quickLog: boolean = false;
 
   function manual() {
     setMenu(false);

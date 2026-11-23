@@ -20,8 +20,8 @@ import Stats from "./Stats";
 
 type Tab = "stats" | "history";
 type Overlay = { k: "profile" } | { k: "metrics" } | { k: "review"; ym: string } | null;
-// The old app's layout: the month pill on top, a dark dock with Dashboard and History, and the green Add payment button.
-const TABS: [Tab, string][] = [["stats", "Dashboard"], ["history", "History"]];  // the tab key is also its icon name
+// The old app's layout: the month pill on top, a dark dock with Stats and History, and the green Add payment button.
+const TABS: [Tab, string][] = [["stats", "Stats"], ["history", "History"]];  // the tab key is also its icon name
 
 export default function Shell({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("stats");
@@ -85,7 +85,8 @@ export default function Shell({ userId }: { userId: string }) {
       </>}
       <ToastHost />
       <div className="navwrap"><div className="dock">
-        <nav className="navpill" aria-label={APP_NAME}>
+        <nav className="navpill" aria-label={APP_NAME} style={{ "--i": TABS.findIndex(([k]) => k === tab) } as React.CSSProperties}>
+          <span className="navblob" aria-hidden="true" />
           {TABS.map(([k, label]) => <button key={k} className="tab" aria-label={label} aria-current={tab === k ? "page" : undefined} onClick={() => setTab(k)}><Icon name={k} size={20} /><span>{label}</span></button>)}
         </nav>
         <QuickAdd />
