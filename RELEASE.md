@@ -10,7 +10,7 @@ Dev Supabase project: `pwa-v2-dev` (`siarjxgxpbpyxfwrdptn`), `app_config.env = '
 1. **Checks green.** The `checks` workflow passes on the branch. It runs:
    - `scripts/migration-guard.sh`: any delete, update, drop, rename or type change in a new migration needs a `-- data-safe: <reason>` note.
    - `scripts/upgrade-test.sh $(cat supabase/PROD_AT)`: builds prod's schema, loads real-shaped data, applies the new migrations. It fails if any table loses rows or columns. `CHANGED` means rows were edited, and someone must read why before release.
-2. **No drift.** Prod's applied migration list must equal `supabase/PROD_AT` and everything before it. If prod has anything the repo doesn't, stop and find out why.
+2. **No drift.** Prod's applied migration list must equal `supabase/PROD_AT` and everything before it. Then run `scripts/schema-hash.sql` on dev and prod. Every row must match, except objects from migrations not yet on prod. `rls_auto_enable` is a Supabase built-in that exists only on prod. If anything else differs, someone changed a database by hand: stop and find out why.
 3. **Owner says "ship it"** after testing on dev.
 
 ## Release (in this order)
@@ -18,7 +18,7 @@ Dev Supabase project: `pwa-v2-dev` (`siarjxgxpbpyxfwrdptn`), `app_config.env = '
 4. **Fingerprint prod.** Run `scripts/fingerprint.sql` and save the output in the release notes.
 5. **Back up prod.** Run `scripts/backup.sql`. Every row must show `copied = live`.
 6. **Migrations.** Apply each new migration to prod, one at a time, oldest first.
-7. **Fingerprint again.** No table may have fewer rows or columns than in step 4. If one does, restore it from the backup (see below) and stop.
+7. **Fingerprint again.** No table may have fewer rows or columns than in step 4. If one does, restore it from the backup (see below) and stop. Then run `scripts/schema-hash.sql` on prod. It must now match dev.
 8. **Server functions.** Redeploy only the functions that changed.
 9. **Web app.** Merge into `main`. Cloudflare deploys prod by itself. Migrations go first, so the new app never runs against an old database.
 10. **Smoke test.** On prod: sign in, the dashboard shows the same totals as before, add one entry, then delete it.
@@ -27,7 +27,8 @@ Dev Supabase project: `pwa-v2-dev` (`siarjxgxpbpyxfwrdptn`), `app_config.env = '
 ## Rollback
 
 - **Web app:** redeploy the previous build from Cloudflare or revert the merge. Data is not touched.
-- **Lost or broken rows:** `insert into public.<table> select * from backup_<time>.public__<table> on conflict do nothing;`
+- **Lost or broken rows:** restore with triggers off, or the app's triggers re-stamp timestamps and the copy is no longer exact:
+  `begin; set local session_replication_role = replica; insert into public.<table> select * from backup_<time>.public__<table> on conflict do nothing; commit;`
 - **Bad migration:** write a new migration that undoes it. Never edit one that is already applied.
 
 ## Never

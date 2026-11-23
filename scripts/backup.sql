@@ -1,7 +1,9 @@
 -- Run on prod right before a release (also fine on dev). Copies every user-data table
 -- (public schema + auth.users) into a new private schema backup_YYYYMMDD_HHMMSS in the same database,
 -- then prints rows copied per table. Keeps the newest 5 backups.
--- Restore one table:  insert into public.entries select * from backup_X.public__entries on conflict do nothing;
+-- Restore one table exactly (triggers off, or they re-stamp timestamps and the copy is no longer exact):
+--   begin; set local session_replication_role = replica;
+--   insert into public.entries select * from backup_X.public__entries on conflict do nothing; commit;
 do $$
 declare s text := 'backup_' || to_char(now() at time zone 'UTC', 'YYYYMMDD_HH24MISS'); r record;
 begin

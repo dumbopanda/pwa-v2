@@ -29,3 +29,5 @@ insert into public.budgets (user_id, month, category_id, amount_minor)
 select c.user_id, date_trunc('month', current_date)::date, c.id, 500000 from public.categories c where c.client_uid = 'cat-Food & dining';
 insert into public.day_status (user_id, date) select u.id, current_date - g from auth.users u, generate_series(2, 6) g;
 insert into public.events (user_id, name, props) select u.id, 'entry_saved', '{"n":1}' from auth.users u, generate_series(1, 5);
+insert into public.email_otps (email, code_hash, ip, created_at, expires_at)
+select 'a@seed.local', md5(g::text), '1.1.1.1', now() - g * interval '1 minute', now() + interval '3 minutes' from generate_series(1, 3) g;

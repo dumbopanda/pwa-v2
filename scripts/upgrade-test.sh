@@ -25,7 +25,7 @@ done
 "${PSQL[@]}" -f "$ROOT/scripts/seed-upgrade.sql" >/dev/null || { echo "FAIL: seed no longer loads on the $FROM schema; update scripts/seed-upgrade.sql"; exit 1; }
 before="$("${PSQL[@]}" -t -A -F'|' -f "$ROOT/scripts/fingerprint.sql")"
 for f in "${new[@]}"; do
-  "${PSQL[@]}" -f "$f" >/dev/null || { echo "FAIL: new migration $(basename "$f") errors on real data"; exit 1; }
+  "${PSQL[@]}" --single-transaction -f "$f" >/dev/null || { echo "FAIL: new migration $(basename "$f") errors on real data"; exit 1; }
   echo "applied $(basename "$f")"
 done
 after="$("${PSQL[@]}" -t -A -F'|' -f "$ROOT/scripts/fingerprint.sql")"
@@ -35,7 +35,8 @@ while IFS='|' read -r t r c h; do
   a="$(grep "^$t|" <<<"$after" || true)"
   if [[ -z "$a" ]]; then echo "FAIL $t: table gone ($r rows)"; fail=1; continue; fi
   ar="$(cut -d'|' -f2 <<<"$a")"; ac="$(cut -d'|' -f3 <<<"$a")"; ah="$(cut -d'|' -f4 <<<"$a")"
-  if (( ar < r )); then echo "FAIL $t: $r -> $ar rows"; fail=1
+  if (( r == 0 )); then echo "FAIL $t: no test data, so loss can't be seen; add rows to seed-upgrade.sql"; fail=1
+  elif (( ar < r )); then echo "FAIL $t: $r -> $ar rows"; fail=1
   elif (( ac < c )); then echo "FAIL $t: a column was dropped ($c -> $ac)"; fail=1
   elif [[ "$ah" != "$h" ]]; then echo "CHANGED $t: $r -> $ar rows, content edited"
   else echo "ok   $t: $r rows"; fi
