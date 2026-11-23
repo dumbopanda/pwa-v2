@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Icon from "../Icon";
 import { reopenDay } from "../lib/actions";
 import { toast, useAction } from "../components";
@@ -14,7 +14,9 @@ import EntrySheet from "./EntrySheet";
 import { buildLines, Lines } from "./EntryRow";
 
 type Kind = "all" | "out" | "in" | "move";
-const KINDS: [Kind, string][] = [["all", "All"], ["out", "Money out"], ["in", "Money in"], ["move", "Transfers"]];
+type View = Kind | "open";
+// One choice at a time: every entry is in exactly one of these, and Open days is its own view.
+const VIEWS: [View, string][] = [["all", "All"], ["out", "Money out"], ["in", "Money in"], ["move", "Transfers"], ["open", "Open days"]];
 const dayFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 const wdFmt = new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "UTC" });
 const closedFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
@@ -24,13 +26,14 @@ export default function History({ ym, openOnly, onOpenOnly }: { ym: string; open
   const L = useLedger(); const today = useToday();
   const [kind, setKind] = useState<Kind>("all");
   const [account, setAccount] = useState(""); const [category, setCategory] = useState("");
-  const [q, setQ] = useState(""); const [searching, setSearching] = useState(false);
+  const [q, setQ] = useState("");
   const [detail, setDetail] = useState<Entry | null>(null); const [edit, setEdit] = useState<Entry | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([today]));
   const [closing, setClosing] = useState<string | null>(null);
   const { busy, run } = useAction();
   const needle = q.trim().toLowerCase();
+  const view: View = openOnly ? "open" : kind;
+  const pick = (v: View) => { setKind(v === "open" ? "all" : v); onOpenOnly(v === "open"); };
 
   const filtered = kind !== "all" || !!account || !!category;
   const cross = !!needle || openOnly;                                          // a search or "Open days" covers every month
@@ -76,25 +79,23 @@ export default function History({ ym, openOnly, onOpenOnly }: { ym: string; open
   return (
     <main className="screen stack" style={{ gap: "var(--sp-3)" }}>
       <div className="histbar">
-        <div className="fchips" role="toolbar" aria-label="Filters">
-          <div className={`fsearch${searching || q ? " open" : ""}`}>
-            <button type="button" className="fs-btn" aria-label="Search" onClick={() => { setSearching(true); setTimeout(() => searchRef.current?.focus(), 0); }}><Icon name="search" size={16} /></button>
-            <input ref={searchRef} type="search" tabIndex={searching || q ? 0 : -1} placeholder="Name, note or amount" aria-label="Search all months" value={q}
-              onChange={(e) => setQ(e.target.value)} onBlur={() => !q && setSearching(false)} />
-            {(searching || q) && <button type="button" className="fs-clear" aria-label="Clear search" onClick={() => { setQ(""); setSearching(false); }}><Icon name="close" size={14} /></button>}
-          </div>
-          <span className="fs-div" aria-hidden="true" />
-          <button type="button" className="fchip" aria-pressed={kind === "all" && !openOnly} onClick={() => { setKind("all"); onOpenOnly(false); }}>All</button>
-          <button type="button" className="fchip" aria-pressed={openOnly} onClick={() => onOpenOnly(!openOnly)}>Open days</button>
-          {KINDS.filter(([k]) => k !== "all").map(([k, label]) => <button key={k} type="button" className="fchip" aria-pressed={kind === k} onClick={() => setKind(k)}>{label}</button>)}
-          <label className={`fchip select${account ? " on" : ""}`}>
-            <span>{account ? L.accountById.get(account)?.name : "Account"}</span><Icon name="down" size={14} />
+        <label className="hsearch">
+          <Icon name="search" size={18} />
+          <input type="search" placeholder="Search name, note or amount" aria-label="Search all months" value={q} onChange={(e) => setQ(e.target.value)} />
+          {q && <button type="button" className="fs-clear" aria-label="Clear search" onClick={() => setQ("")}><Icon name="close" size={14} /></button>}
+        </label>
+        <div className="seg hseg" role="group" aria-label="Show">
+          {VIEWS.map(([v, label]) => <button key={v} type="button" aria-pressed={view === v} onClick={() => pick(v)}>{label}</button>)}
+        </div>
+        <div className="hpick">
+          <label className={account ? "on" : ""}>
+            <span>Account</span><b>{account ? L.accountById.get(account)?.name : "All accounts"}</b><Icon name="down" size={16} />
             <select aria-label="Filter by account" value={account} onChange={(e) => setAccount(e.target.value)}>
               <option value="">All accounts</option>{L.accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </label>
-          <label className={`fchip select${category ? " on" : ""}`}>
-            <span>{category ? L.categoryById.get(category)?.name : "Category"}</span><Icon name="down" size={14} />
+          <label className={category ? "on" : ""}>
+            <span>Category</span><b>{category ? L.categoryById.get(category)?.name : "All categories"}</b><Icon name="down" size={16} />
             <select aria-label="Filter by category" value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">All categories</option>{L.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -110,7 +111,7 @@ export default function History({ ym, openOnly, onOpenOnly }: { ym: string; open
         <div className="emptystate">
           <h2>{openOnly ? "No open days" : needle || filtered ? "Nothing matches" : L.entries.some(isLogged) ? `Nothing in ${monthLabel(ym)}` : "Nothing here yet"}</h2>
           <p>{openOnly ? "Every past day is closed." : needle || filtered ? "Try another word, or clear the filters." : "Entries you log show up here, one card per day."}</p>
-          {(needle || filtered || openOnly) && <button className="showmore" onClick={() => { setQ(""); setSearching(false); setKind("all"); setAccount(""); setCategory(""); onOpenOnly(false); }}>Clear filters</button>}
+          {(needle || filtered || openOnly) && <button className="showmore" onClick={() => { setQ(""); setKind("all"); setAccount(""); setCategory(""); onOpenOnly(false); }}>Clear filters</button>}
         </div>
       ) : (
         <div className="daylist">

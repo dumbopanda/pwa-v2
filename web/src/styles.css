@@ -261,10 +261,8 @@ select.field { padding-right: var(--sp-2); }
 .dnet { flex: none; font-size: var(--fs-md); font-weight: var(--fw-heavy); color: var(--text-2); font-variant-numeric: tabular-nums; }
 .dnet.out { color: var(--text); } .dnet.in { color: var(--green); }
 
-/* THE HISTORY BAR — month, then one scrolling row: search, then filters. Sticks while you scroll. */
-.histbar { position: sticky; top: 0; z-index: 4; display: flex; flex-direction: column; gap: var(--sp-2);
-  margin: calc(-1 * var(--sp-3)) calc(-1 * var(--sp-4)) 0; padding: var(--sp-4) var(--sp-4) var(--sp-3);   /* sp-3 = the .screen top padding under .apphead; any more and the bar covers the header */
-  background: linear-gradient(to bottom, var(--canvas) calc(100% - 14px), transparent); }
+/* THE HISTORY BAR — search, one view at a time, then account and category. */
+.histbar { display: flex; flex-direction: column; gap: var(--sp-2); }
 .histbar .dim { opacity: .35; transition: opacity var(--t-fast) var(--ease); }
 .fchips { display: flex; align-items: center; gap: var(--sp-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--sp-4)); padding: 4px var(--sp-4); }
 .fchips::-webkit-scrollbar { display: none; }
@@ -644,3 +642,22 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
   font-size: var(--fs-md); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 .planin::placeholder { color: var(--text-faint); font-weight: var(--fw-medium); }
 .planin:focus { outline: none; border-color: var(--green); box-shadow: var(--ring); background: var(--surface); }
+
+/* HISTORY bar: a real search box, one-at-a-time views, labelled account and category pickers. */
+.hsearch { display: flex; align-items: center; gap: var(--sp-2); height: var(--h-md); padding: 0 var(--sp-3); border: 1.5px solid var(--line-strong); border-radius: var(--r-input);
+  background: var(--surface); color: var(--text-muted); }
+.hsearch:focus-within { border-color: var(--green); box-shadow: var(--ring); color: var(--green-ink); }
+.hsearch input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; outline: none; color: var(--text); font-size: var(--fs-input); }
+.hsearch input::placeholder { color: var(--text-faint); }
+.hsearch input::-webkit-search-cancel-button { display: none; }
+.hseg { gap: 2px; }
+.hseg button { height: 36px; padding: 0 2px; font-size: var(--fs-xs); white-space: nowrap; }
+.hpick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.hpick label { position: relative; display: grid; grid-template-columns: 1fr auto; column-gap: var(--sp-2); align-items: center; min-height: 56px; padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-input); background: var(--surface); box-shadow: var(--shadow-1); color: var(--text-muted); cursor: pointer; }
+.hpick label span { grid-column: 1 / -1; font-size: var(--fs-2xs); font-weight: var(--fw-bold); color: var(--text-muted); line-height: 1.2; }
+.hpick label b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-md); color: var(--text); }
+.hpick label.on { background: var(--ink); color: var(--lime); box-shadow: none; }
+.hpick label.on span { color: var(--on-ink-muted); } .hpick label.on b { color: var(--lime); }
+.hpick select { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: 16px; cursor: pointer; }
+.hpick label:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
