@@ -1,0 +1,36 @@
+metric,db,all_time,last_24h,projected_137_using_all_time_rate,projected_137_using_24h_rate,confidence,basis_or_note
+snapshot_ist,dev,2026-11-24 00:12:31,2026-11-24 00:12:31,,,,counts only; no names/emails/entry text
+window_24h_ist,dev,since first signup 2026-11-22 16:28,2026-11-23 00:12:31 to 2026-11-24 00:12:31,,,,
+snapshot_ist,prod,2026-11-24 00:13:31,2026-11-24 00:13:31,,,,prod window = 2026-11-23 00:13:31 to 2026-11-24 00:13:31 IST
+users_signed_up,dev,2,1,,,,signups by IST day: 2026-11-22=1; 2026-11-23=1
+users_signed_up,prod,1,0,,,,first signup 2026-11-21 01:17 IST
+current_users_pct_of_137,dev,1.5%,,,,,2/137
+current_users_pct_of_137,prod,0.7%,,,,,1/137
+entries_saved,dev,7,3,,,,by IST day: 2026-11-22=4; 2026-11-23=3
+entries_saved,prod,0,0,,,,prod has no entries and no events
+entries_per_user_median,dev,3.5,3,,,low,n=2 users (all-time); n=1 active user (24h)
+entries_per_day,dev,3.5,3,240,206,low,PROJECTED = rate x 137; assumes every user behaves like these 1-2 users every day
+entries_30_days,dev,,,7193,6165,low,PROJECTED = entries_per_day x 30
+ai_calls_parse_model,dev,0,0,33,28,low,PROJECTED = entries_per_day x 13.6% (11 of 81 eval sentences reached the AI); live model parse calls observed = 0
+ai_calls_review,dev,2,2,69,137,low,PROJECTED = reviews per user per day (0.5 all-time; 1.0 in 24h) x 137; both reviews came from one user in one minute
+ai_results_accepted,dev,1,0,,,,both results came from the phone rules parser (source=rules); none from the model
+ai_results_edited,dev,0,0,,,,
+ai_results_rejected,dev,1,0,,,,
+ai_results_accepted_pct,dev,50%,n/a,,,none,n=2; not usable
+ai_results_from_model,dev,0,0,,,,
+fallback_to_phone_parser_logged,dev,not logged,not logged,,,,no event written when the AI is skipped or fails
+entry_saved_via_ai_label,dev,1,0,,,,label "ai" = confirm-card flow; its source was the rules parser
+entry_saved_via_manual,dev,2,1,,,,
+median_ms_open_to_saved_manual,dev,140104,255543,,,none,n=2 and n=1; app-open to save includes idle time
+median_ms_open_to_saved_ai,dev,1051895,n/a,,,none,n=1 (about 17.5 min; app was left open)
+users_with_entries_on_2plus_days,dev,0,n/a,,,,
+day1_return,dev,1 of 2,n/a,,,none,"users with an event the day after signup, IST"
+failed_saves,dev,not logged,not logged,,,,
+ai_errors_429_503,dev,not logged,not logged,,,,quota 429 and AI 503 are not written as events
+active_users,dev,2,1,,,,all-time = users with any event; 24h = distinct users with events
+app_opens,dev,35,30,,,,30 opens in 24h from one user: likely logged on every resume
+ai_neurons_per_day_free_allowance,dev,,,10000,10000,medium,Workers AI free allowance (evals/RESULTS.md)
+ai_neurons_per_day_used,dev,,,2828,4620,low,PROJECTED = calls/day x 28 neurons; assumes review costs the same as a parse
+users_where_ai_allowance_breaks,dev,,,484,297,low,PROJECTED = 357 calls/day / calls per user per day (0.738 or 1.204)
+monthly_cost_usd,dev,,,0,25,low,PROJECTED: 0 on free tiers; 25 if Supabase Pro; billing not visible to this report
+monthly_cost_per_user_usd,dev,,,0,0.18,low,PROJECTED = monthly cost / 137
