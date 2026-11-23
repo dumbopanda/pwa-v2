@@ -5,6 +5,8 @@ import { MonthPill, ToastHost } from "../components";
 import { APP_NAME } from "../config";
 import { useLedger, useToday } from "../lib/hooks";
 import { addMonths, monthOf, openPastDays } from "../lib/ledger";
+import { Avatar } from "../lib/avatars";
+import { useProfile } from "../lib/profile";
 import { supabase } from "../supabase";
 import { openUser, sync, useStore } from "../lib/store";
 import History from "./History";
@@ -13,11 +15,11 @@ import OpenDays from "./OpenDays";
 import Plan from "./Plan";
 import QuickAdd from "./QuickAdd";
 import Review from "./Review";
-import Settings from "./Settings";
+import Profile from "./Profile";
 import Stats from "./Stats";
 
 type Tab = "stats" | "history";
-type Overlay = { k: "settings" } | { k: "metrics" } | { k: "review"; ym: string } | null;
+type Overlay = { k: "profile" } | { k: "metrics" } | { k: "review"; ym: string } | null;
 // The old app's layout: the month pill on top, a dark dock with Dashboard and History, and the green Add payment button.
 const TABS: [Tab, string][] = [["stats", "Dashboard"], ["history", "History"]];  // the tab key is also its icon name
 
@@ -29,6 +31,7 @@ export default function Shell({ userId }: { userId: string }) {
   const [pickedYm, setYm] = useState(monthOf(today));
   const s = useStore();
   const L = useLedger();
+  const { profile, save } = useProfile(userId);
   const opened = useRef(false);
   const [histOpen, setHistOpen] = useState(false);     // History: only open days
   // Only Plan can look a month ahead.
@@ -55,8 +58,8 @@ export default function Shell({ userId }: { userId: string }) {
 
   if (!s.ready) return <main className="screen"><p className="muted" role="status">{s.status === "offline" ? "You're offline and there's nothing saved on this device yet." : "Loading your ledger…"}</p></main>;
 
-  if (overlay?.k === "settings") return <><Settings onBack={() => setOverlay(null)} onMetrics={() => setOverlay({ k: "metrics" })} /><ToastHost /></>;
-  if (overlay?.k === "metrics") return <Metrics onBack={() => setOverlay({ k: "settings" })} />;
+  if (overlay?.k === "profile") return <><Profile profile={profile} save={save} onClose={() => setOverlay(null)} onMetrics={() => setOverlay({ k: "metrics" })} /><ToastHost /></>;
+  if (overlay?.k === "metrics") return <Metrics onBack={() => setOverlay({ k: "profile" })} />;
   if (overlay?.k === "review") return <><Review ym={overlay.ym} onClose={() => setOverlay(null)} onPlan={() => { setOverlay(null); setTab("stats"); setPlan(true); setYm(overlay.ym); }} /><ToastHost /></>;
 
   return (
@@ -65,7 +68,7 @@ export default function Shell({ userId }: { userId: string }) {
       <header className="apphead">
         <MonthPill ym={ym} max={max} onChange={setYm} />
         <div className="row">
-          <button className="iconbtn" aria-label="Settings" onClick={() => setOverlay({ k: "settings" })}><Icon name="user" /></button>
+          <button className="avbtn" aria-label="Your profile" onClick={() => setOverlay({ k: "profile" })}><Avatar avatar={profile?.avatar} name={profile?.display_name || profile?.email} size={44} /></button>
         </div>
       </header>
       {tab === "history" && <History ym={ym} openOnly={histOpen} onOpenOnly={setHistOpen} />}

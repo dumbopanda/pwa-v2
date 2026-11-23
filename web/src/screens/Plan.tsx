@@ -54,7 +54,7 @@ export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: stri
         <div className="row"><b className="grow">Budgets by category</b>
           {prevHas && !plan.rows.length && <button className="btn quiet" disabled={busy} onClick={() => run(() => copyBudgets(`${addMonths(ym, -1)}-01`, `${ym}-01`))}>Copy last month</button>}
         </div>
-        {L.activeCategories.length === 0 && <Empty>Add categories in Settings.</Empty>}
+        {L.activeCategories.length === 0 && <Empty>Add categories in your Profile.</Empty>}
         {L.activeCategories.map((c) => {
           const r = plan.rows.find((x) => x.category_id === c.id); const b = row(c.id);
           return (

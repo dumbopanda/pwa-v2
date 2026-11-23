@@ -1,4 +1,5 @@
-import Icon from "./Icon";
+import Icon, { type IconName } from "./Icon";
+import { OCCUPATIONS, type ProfForm } from "./lib/profile";
 import { addMonths, toneOf } from "./lib/ledger";
 import { monthLabel } from "./lib/reviewFacts";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -147,5 +148,60 @@ export function BalanceDate({ today, bd }: { today: string; bd: ReturnType<typeo
         {bd.value < today && bd.kept ? `Days since ${label} stay open until you close them.` : "Payments can't be dated before this."}
       </p>
     </div>
+  );
+}
+
+// ---- Profile screens: a page with a back arrow, grouped lists, and their rows ----
+export function Page({ title, onBack, children }: { title: string; onBack: () => void; children: ReactNode }) {
+  return (
+    <main className="screen stack" style={{ gap: "var(--sp-4)" }}>
+      <div className="row"><button className="iconbtn" aria-label="Back" onClick={onBack}><Icon name="back" /></button><h1>{title}</h1></div>
+      {children}
+    </main>
+  );
+}
+
+export function Group({ label, children }: { label?: string; children: ReactNode }) {
+  return (
+    <section className="stack" style={{ gap: "var(--sp-2)" }} aria-label={label}>
+      {label && <span className="caps" style={{ paddingLeft: "var(--sp-2)" }}>{label}</span>}
+      <div className="glist">{children}</div>
+    </section>
+  );
+}
+
+/** One line of a list: icon (or a custom lead), label, optional value, chevron. A button, or a link when `href` is set. */
+export function Row({ icon, lead, label, value, onClick, href, danger, dim, disabled }:
+  { icon?: IconName; lead?: ReactNode; label: string; value?: string; onClick?: () => void; href?: string; danger?: boolean; dim?: boolean; disabled?: boolean }) {
+  const cls = `lrow${danger ? " danger" : ""}${dim ? " dim" : ""}`;
+  const inner = (
+    <>
+      {(lead || icon) && <span className="lead">{lead ?? <Icon name={icon!} />}</span>}
+      <span className="lbl2">{label}</span>
+      {value && <span className="val">{value}</span>}
+      <span className="chev" aria-hidden="true"><Icon name="next" size={18} /></span>
+    </>
+  );
+  return href ? <a className={cls} href={href} target="_blank" rel="noopener">{inner}</a>
+    : <button type="button" className={cls} onClick={onClick} disabled={disabled}>{inner}</button>;
+}
+
+/** Name, age, city and "what you do": the same four fields in onboarding and on Edit profile. */
+export function ProfileFields({ f, set }: { f: ProfForm; set: (p: Partial<ProfForm>) => void }) {
+  return (
+    <>
+      <label className="stack" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>Name</span>
+        <input className="field" maxLength={80} autoComplete="name" value={f.display_name} onChange={(e) => set({ display_name: e.target.value })} /></label>
+      <div className="row">
+        <label className="stack" style={{ gap: 4, width: 96 }}><span className="lbl" style={{ margin: 0 }}>Age</span>
+          <input className="field" inputMode="numeric" maxLength={3} value={f.age} onChange={(e) => set({ age: e.target.value.replace(/\D/g, "") })} /></label>
+        <label className="stack grow" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>City</span>
+          <input className="field" maxLength={80} autoComplete="address-level2" value={f.location} onChange={(e) => set({ location: e.target.value })} /></label>
+      </div>
+      <label className="stack" style={{ gap: 4 }}><span className="lbl" style={{ margin: 0 }}>What you do</span>
+        <select className="field" value={f.occupation} onChange={(e) => set({ occupation: e.target.value })}>
+          <option value="">Not set</option>{OCCUPATIONS.map((o) => <option key={o}>{o}</option>)}
+        </select></label>
+    </>
   );
 }
