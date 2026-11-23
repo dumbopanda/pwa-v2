@@ -80,7 +80,7 @@ export default function Plan({ ym, onReview }: { ym: string; onReview: (ym: stri
 
       {/* Budgets: each row fills as the money goes. Tap to change. */}
       <section className="stack" style={{ gap: "var(--sp-2)" }} aria-label="Budgets">
-        {L.activeCategories.length === 0 && <Empty>Add categories in Settings.</Empty>}
+        {L.activeCategories.length === 0 && <Empty>Add categories in your Profile.</Empty>}
         {shown.map((c) => {
           const r = rowOf(c.id); const used = r ? r.spent / r.budget : 0;
           return (

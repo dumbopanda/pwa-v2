@@ -37,3 +37,8 @@ export function useLedger() {
     };
   }, [s.accounts, s.categories, s.entries, s.closed, s]);
 }
+
+/** A new screen starts at the top, not wherever the last one was scrolled to. */
+export function useScrollTop(...deps: unknown[]) {
+  useEffect(() => { window.scrollTo(0, 0); }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}

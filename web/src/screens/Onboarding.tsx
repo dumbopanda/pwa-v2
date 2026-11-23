@@ -2,9 +2,12 @@ import Icon from "../Icon";
 import { useEffect, useMemo, useState } from "react";
 import { APP_NAME, DEFAULT_CURRENCY, currencyList } from "../config";
 import { newUid, todayLocal } from "../lib/ids";
-import { BalanceDate, useBalanceDate } from "../components";
+import { BalanceDate, ProfileFields, useBalanceDate } from "../components";
+import { Avatar, AvatarGrid } from "../lib/avatars";
+import { formToPatch, type ProfForm, type ProfPatch } from "../lib/profile";
 import { DEFAULT_CATEGORIES, SUGGESTED_ACCOUNTS, openingBalanceRows, validateAccounts, type AccountDraft } from "../lib/onboarding";
 import { supabase } from "../supabase";
+import { useScrollTop } from "../lib/hooks";
 
 const symbol = (cur: string) => {
   try { return new Intl.NumberFormat("en", { style: "currency", currency: cur, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((p) => p.type === "currency")?.value ?? cur; }
@@ -71,8 +74,19 @@ const newDraft = (name = ""): AccountDraft =>
 type Cat = { uid: string; name: string; on: boolean };
 
 export default function Onboarding({ userId, onDone }: { userId: string; onDone: () => void }) {
-  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  // Step 1, About you: optional. `about` is what gets saved at the end; null when skipped.
+  const [pf, setPf] = useState<ProfForm>({ display_name: "", age: "", location: "", occupation: "" });
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [about, setAbout] = useState<ProfPatch | null>(null);
+  const [aboutErr, setAboutErr] = useState<string | null>(null);
+  // A Google sign-in already carries a name: start from it.
+  useEffect(() => {
+    supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle()
+      .then((r) => { const n = r.data?.display_name; if (n) setPf((f) => (f.display_name ? f : { ...f, display_name: n })); }, () => undefined);
+  }, [userId]);
   const [slide, setSlide] = useState(0);
+  useScrollTop(step, slide);
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [cats, setCats] = useState<Cat[]>(() => DEFAULT_CATEGORIES.map((c) => ({ uid: newUid(), ...c })));
   const [custom, setCustom] = useState("");
@@ -100,7 +114,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
 
   function next() {
     setTried(true);
-    if (!check.form && check.rows.every((r) => !r) && !(hasBalance && bd.needsConfirm)) { setStep(2); setError(null); }
+    if (!check.form && check.rows.every((r) => !r) && !(hasBalance && bd.needsConfirm)) { setStep(3); setError(null); }
   }
 
   function addCustom(e: React.FormEvent) {
@@ -138,7 +152,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
 
       const now = new Date().toISOString();
       const prof = await supabase.from("profiles")
-        .update({ onboarded_at: now, consent_version: 1, consent_at: now }).eq("user_id", userId);
+        .update({ ...(about ?? {}), onboarded_at: now, consent_version: 1, consent_at: now }).eq("user_id", userId);
       if (prof.error) throw prof.error;
       onDone();
     } catch {
@@ -175,12 +189,31 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
 
   return (
     <main className="screen stack onb" style={{ gap: "var(--sp-5)" }}>
-      <div className="steps" aria-label={`Step ${step} of 2`}><span className="on" /><span className={step === 2 ? "on" : ""} /></div>
+      <div className="steps" aria-label={`Step ${step} of 3`}><span className="on" /><span className={step >= 2 ? "on" : ""} /><span className={step === 3 ? "on" : ""} /></div>
 
       {step === 1 && (
         <>
           <div className="stack" style={{ gap: "var(--sp-1)" }}>
-            <span className="caps">Step 1 of 2</span>
+            <span className="caps">Step 1 of 3</span>
+            <h1 className="bigtitle">Make it yours.</h1>
+            <p className="muted lead">Pick an icon and add your name. All optional.</p>
+          </div>
+          <div className="row" style={{ justifyContent: "center" }}><Avatar avatar={avatar} name={pf.display_name} size={96} /></div>
+          <AvatarGrid value={avatar} onPick={setAvatar} />
+          <section className="card stack"><ProfileFields f={pf} set={(p) => setPf({ ...pf, ...p })} /></section>
+          {aboutErr && <p className="error" role="alert">{aboutErr}</p>}
+          {pageFoot("Next", () => {
+            const r = formToPatch(pf);
+            if ("error" in r) return setAboutErr(r.error);
+            setAboutErr(null); setAbout({ ...r.patch, avatar }); setStep(2);
+          }, <button className="btn quiet" onClick={() => { setAbout(null); setAboutErr(null); setStep(2); }}>Skip</button>)}
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <div className="stack" style={{ gap: "var(--sp-1)" }}>
+            <span className="caps">Step 2 of 3</span>
             <h1 className="bigtitle">Where does your money sit?</h1>
             <p className="muted lead">Add your accounts. You can change them later.</p>
           </div>
@@ -236,10 +269,10 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
         </>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <>
           <div className="stack" style={{ gap: "var(--sp-1)" }}>
-            <span className="caps">Step 2 of 2</span>
+            <span className="caps">Step 3 of 3</span>
             <h1 className="bigtitle">What do you spend on?</h1>
             <p className="muted lead">Pick what fits. Add your own.</p>
           </div>
@@ -264,7 +297,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
             <ul>
               <li>Private to your account.</li>
               <li>Most entries are read on your phone. When AI helps, it sees only your words and category names, and keeps nothing.</li>
-              <li>We keep what you typed (never audio) to improve reading. Export or delete it all in Settings.</li>
+              <li>We keep what you typed (never audio) to improve reading. Export or delete it all in your Profile.</li>
             </ul>
             <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a>
           </div>
@@ -272,7 +305,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
           {error && <p className="error" role="alert">{error}</p>}
           <div className="pagefoot stack" style={{ gap: "var(--sp-2)" }}>
             <button className="btn primary" style={{ width: "100%" }} onClick={finish} disabled={busy}>{busy ? "Saving…" : `Start using ${APP_NAME}`}</button>
-            <button className="btn quiet" onClick={() => setStep(1)} disabled={busy}>Back</button>
+            <button className="btn quiet" onClick={() => setStep(2)} disabled={busy}>Back</button>
           </div>
         </>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { APP_NAME } from "../config";
 import { emailOtp, supabase } from "../supabase";
+import { useScrollTop } from "../lib/hooks";
 
 /** Version of /privacy.html the person agrees to. Bump when the page changes. */
 export const POLICY_VERSION = 1;
@@ -59,6 +60,7 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentAt, setSentAt] = useState(0);
+  useScrollTop(mode);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (mode !== "code") return;
