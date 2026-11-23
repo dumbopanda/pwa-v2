@@ -129,7 +129,10 @@ export function BalanceDate({ today, bd }: { today: string; bd: ReturnType<typeo
     <div className="stack" style={{ gap: "var(--sp-2)" }}>
       <label className="lbl" htmlFor="asof">Balance as of</label>
       <div className="row">
-        <input id="asof" type="date" className="field grow" max={today} value={bd.value} onChange={(e) => bd.setValue(e.target.value)} />
+        <div className="datefield grow">
+          <input id="asof" type="date" className="field" max={today} value={bd.value} onChange={(e) => bd.setValue(e.target.value)} />
+          <Icon name="calendar" size={18} />
+        </div>
         <button type="button" className="qchip" aria-pressed={bd.value === today} onClick={() => bd.setValue(today)}>Today</button>
       </div>
       {bd.value < today && !bd.kept && (

@@ -4,8 +4,7 @@ import { emailOtp, supabase } from "../supabase";
 
 /** Version of /privacy.html the person agrees to. Bump when the page changes. */
 export const POLICY_VERSION = 1;
-const CODE_LIFE_S = 180, RESEND_AFTER_S = 150;
-const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+const RESEND_AFTER_S = 120; // a code lives 3 min; "ask again" shows for the last minute (matches otp_issue, 0023)
 export const CONSENT_KEY = "consent_pending";
 /** Kept until App logs it after sign-in (survives the Google redirect). */
 function markConsent() {
@@ -53,6 +52,8 @@ const Hero = () => (
 
 export default function SignIn() {
   const [mode, setMode] = useState<"start" | "code">("start");
+  // Everyone lands on sign up; returning people switch at the bottom.
+  const [intent, setIntent] = useState<"up" | "in">("up");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -104,78 +105,81 @@ export default function SignIn() {
     if (was === "start") setMode("start"); else setSentAt(at);
   }
 
-  async function verify(e: React.FormEvent) {
-    e.preventDefault();
-    if (!/^\d{6}$/.test(code)) return setError("The code is 6 digits.");
-    setBusy(true); setError(null);
-    const r = await emailOtp({ action: "verify", email: email.trim().toLowerCase(), code });
+  // Runs by itself when the sixth digit lands: no Log in button.
+  const verifying = useRef(false);
+  async function verify(c: string) {
+    if (verifying.current) return;
+    verifying.current = true; setBusy(true); setError(null);
+    const r = await emailOtp({ action: "verify", email: email.trim().toLowerCase(), code: c });
     if (r.ok && r.access_token && r.refresh_token) {
       const { error } = await supabase.auth.setSession({ access_token: r.access_token, refresh_token: r.refresh_token });
       if (!error) return; // App switches screens on the auth event
     }
-    setBusy(false);
+    verifying.current = false; setBusy(false);
+    setCode("");
     setError(otpMessage(r));
   }
 
   if (mode === "code") {
-    const left = Math.max(0, Math.ceil((sentAt + CODE_LIFE_S * 1000 - now) / 1000));
-    const canResend = left <= CODE_LIFE_S - RESEND_AFTER_S; // matches otp_issue (0022)
+    // Nothing moves: the ask-again line always takes its space, and shows after 2 minutes.
+    const canResend = now - sentAt >= RESEND_AFTER_S * 1000;
     return (
       <main className="screen signin top">
         <div className="stack" style={{ gap: "var(--sp-2)" }}>
           <h1 className="signin-title">Check your email</h1>
-          <p className="muted" style={{ margin: 0 }}>We sent a 6-digit code to <b>{email.trim().toLowerCase()}</b>. Enter it below.</p>
+          <p className="muted" style={{ margin: 0 }}>We sent a 6-digit code to <b>{email.trim().toLowerCase()}</b>.</p>
         </div>
-        <form className="stack" onSubmit={verify} style={{ gap: "var(--sp-4)" }}>
+        <div className="stack" style={{ gap: "var(--sp-4)" }}>
           {/* One real input (paste and SMS/email autofill work), drawn as 6 boxes. */}
           <div className="otp">
             {Array.from({ length: 6 }, (_, i) => (
               <span key={i} className={i === Math.min(code.length, 5) ? "on" : ""}>{code[i] ?? ""}</span>
             ))}
             <input aria-label="6-digit code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus
-              value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(null); }} />
+              value={code} onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setCode(v); setError(null);
+                if (v.length === 6) verify(v);
+              }} />
           </div>
-          <p className="otp-timer" aria-live="polite">
-            {left > 0 ? <>Code expires in <b>{mmss(left)}</b></> : "Code expired"}
-          </p>
-          <p className="muted small" style={{ margin: 0, textAlign: "center" }}>
+          <p className="error slot" role="alert">{error}</p>
+          <p className="muted small slot" style={{ margin: 0, textAlign: "center", visibility: canResend ? "visible" : "hidden" }}>
             Didn't get it?{" "}
-            <button type="button" className="linkbtn" disabled={busy || !canResend} onClick={() => sendCode()}>
-              {canResend ? "Send a new code" : `Send a new code in ${mmss(left - (CODE_LIFE_S - RESEND_AFTER_S))}`}
-            </button>
+            <button type="button" className="linkbtn" disabled={busy || !canResend} onClick={() => sendCode()}>Request another code</button>
           </p>
-          <button className="btn primary" disabled={busy || code.length < 6 || left === 0}>Log in</button>
-          {error && <p className="error" role="alert">{error}</p>}
           <button type="button" className="btn quiet" onClick={() => { setMode("start"); setCode(""); setError(null); }}>Use a different email</button>
-        </form>
+        </div>
       </main>
     );
   }
 
+  const up = intent === "up";
   return (
     <main className="screen signin">
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
         <h1 className="signin-title">{APP_NAME}</h1>
-        <p className="muted" style={{ margin: 0, fontSize: "var(--fs-lg)" }}>Say it once. Know where every rupee went.</p>
+        <p className="muted" style={{ margin: 0, fontSize: "var(--fs-lg)" }}>Know where your pay went.</p>
         <Hero />
       </div>
 
       <div className="stack">
-        <div className="stack" style={{ gap: 0 }}>
-          <label className="toggle">
-            <input ref={agreeRef} type="checkbox" autoComplete="off" onChange={() => setError(null)} />
-            <span>I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a></span>
-          </label>
-        </div>
-        <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> Continue with Google</button>
+        <label className="toggle">
+          <input ref={agreeRef} type="checkbox" autoComplete="off" onChange={() => setError(null)} />
+          <span>I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a></span>
+        </label>
+        <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> {up ? "Sign up" : "Sign in"} with Google</button>
         <div className="divider">or</div>
         <form className="stack" onSubmit={sendCode}>
           <label className="lbl" htmlFor="email" style={{ margin: 0 }}>Email</label>
           <input id="email" className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com"
             value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="btn" disabled={busy}>Log in with email</button>
+          <button className="btn" disabled={busy}>{up ? "Sign up" : "Sign in"} with email</button>
         </form>
-        {error && <p className="error" role="alert">{error}</p>}
+        <p className="error slot" role="alert">{error}</p>
+        <p className="muted small" style={{ margin: 0, textAlign: "center" }}>
+          {up ? "Already have an account?" : "New here?"}{" "}
+          <button type="button" className="linkbtn" onClick={() => { setIntent(up ? "in" : "up"); setError(null); }}>{up ? "Sign in" : "Sign up"}</button>
+        </p>
       </div>
     </main>
   );

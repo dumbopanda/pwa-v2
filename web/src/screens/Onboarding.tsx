@@ -1,5 +1,5 @@
 import Icon from "../Icon";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { APP_NAME, DEFAULT_CURRENCY, currencyList } from "../config";
 import { newUid, todayLocal } from "../lib/ids";
 import { BalanceDate, useBalanceDate } from "../components";
@@ -18,22 +18,50 @@ const INTRO = [
   { title: "See where it went.", body: "Spending by category, month by month.", art: "bars" },
 ] as const;
 
+const tx = (n: string, meta: string, amt: string, tone: number) => (
+  <div className="txn" key={n}>
+    <span className={`ttile acc${tone}`}>{n.charAt(0)}</span>
+    <div className="tbody"><div className="tline1"><span className="tname">{n}</span><span className="tamt out">{amt}</span></div><span className="tmeta">{meta}</span></div>
+  </div>
+);
+
+// Small copies of the real screens (History, Close day, Stats), with plausible numbers.
 function IntroArt({ kind }: { kind: (typeof INTRO)[number]["art"] }) {
   if (kind === "say") return (
     <div className="iart" aria-hidden="true">
       <div className="say">“Chai 20, auto 80 from UPI”</div>
-      <div className="card rows"><div className="r"><span>Chai</span><b className="amt">₹20</b></div><div className="r"><span>Auto</span><b className="amt">₹80</b></div></div>
+      <div className="daycard">
+        <div className="dayhead2 today"><div className="dname"><b>Today</b></div><span className="dnet out">₹100</span></div>
+        <div className="txns">{tx("Chai", "UPI bank · Food & dining", "₹20", 0)}{tx("Auto", "UPI bank · Transport", "₹80", 0)}</div>
+      </div>
     </div>
   );
   if (kind === "days") return (
     <div className="iart" aria-hidden="true">
-      <div className="daysrow">{["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i} className={i < 5 ? "closed" : i === 5 ? "open" : ""}>{i < 5 ? <Icon name="check" size={16} /> : d}</span>)}</div>
-      <div className="card"><b>Saturday</b><span className="muted small"> · open</span></div>
+      <div className="daycard">
+        <div className="dayhead2"><div className="dname2"><b>Saturday<small>22 Nov</small></b></div><span className="status open">Open</span></div>
+        <div className="txns">{tx("Lunch", "Cash · Food & dining", "₹180", 2)}</div>
+        <div className="dayfoot"><span className="lockline">All payments in?</span><span className="btn primary">Close day</span></div>
+      </div>
+      <div className="daycard collapsed">
+        <div className="dayhead2"><div className="dname2"><b>Friday<small>21 Nov</small></b></div><span className="status closed"><Icon name="lock" size={12} />Closed</span></div>
+      </div>
     </div>
   );
   return (
     <div className="iart" aria-hidden="true">
-      <div className="card barsart">{[["Food", 78], ["Transport", 46], ["Bills", 30]].map(([n, w]) => <div key={n} className="r"><span>{n}</span><i style={{ width: `${w}%` }} /></div>)}</div>
+      <div className="card panel">
+        <div className="phead"><span className="ptitle">Where it went</span><span className="pnote">November</span></div>
+        <div className="brk">
+          {[["Food & dining", "₹6,240", 78], ["Transport", "₹3,680", 46], ["Bills & utilities", "₹2,400", 30]].map(([n, v, w], i) => (
+            <div key={n} className="brow">
+              <span className="brank">{i + 1}</span>
+              <div className="btop"><span className="bname">{n}</span><b className="bval">{v}</b></div>
+              <div className="bbar"><span className={i === 0 ? "strong" : ""} style={{ width: `${w}%` }} /></div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -52,6 +80,17 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
   const bd = useBalanceDate(todayLocal());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // A new account scrolls into view and takes focus: the name if empty, else the balance.
+  const [added, setAdded] = useState<string | null>(null);
+  useEffect(() => {
+    if (!added) return;
+    const card = document.getElementById(`acct-${added}`);
+    card?.scrollIntoView({ block: "center", behavior: "smooth" });
+    card?.querySelector<HTMLInputElement>("input.bare:placeholder-shown, input.amountin")?.focus({ preventScroll: true });
+    setAdded(null);
+  }, [added]);
+  const addAccount = (name = "") => { const d = newDraft(name); setAccounts((xs) => [...xs, d]); setAdded(d.uid); };
 
   const check = useMemo(() => validateAccounts(accounts), [accounts]);
   const hasBalance = accounts.some((a) => a.balance.trim() && a.balance.trim() !== "0");
@@ -149,11 +188,14 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
           {accounts.map((a, i) => {
             const err = tried ? check.rows[i] : null;
             return (
-              <div key={a.uid} className="card onbacct">
+              <div key={a.uid} id={`acct-${a.uid}`} className="card onbacct">
                 <div className="acchead">
                   <span className={`ttile acc${i % 4}`} aria-hidden="true">{a.name.trim().charAt(0).toUpperCase() || "?"}</span>
-                  <input className="bare grow" placeholder="Account name" aria-label="Account name" maxLength={40}
-                    value={a.name} onChange={(e) => edit(a.uid, { name: e.target.value })} />
+                  <label className="namefield grow">
+                    <input className="bare" placeholder="Account name" aria-label="Account name" maxLength={40}
+                      value={a.name} onChange={(e) => edit(a.uid, { name: e.target.value })} />
+                    <Icon name="edit" size={16} />
+                  </label>
                   <button className="iconbtn flat sm" aria-label={`Remove ${a.name || "account"}`}
                     onClick={() => setAccounts((xs) => xs.filter((x) => x.uid !== a.uid))}><Icon name="close" size={18} /></button>
                 </div>
@@ -177,10 +219,15 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
             );
           })}
 
-          <div className="chips">
-            {unused.map((s) => <button key={s} className="fchip add" onClick={() => setAccounts((xs) => [...xs, newDraft(s)])}><Icon name="plus" size={16} />{s}</button>)}
-            <button className="fchip add" onClick={() => setAccounts((xs) => [...xs, newDraft()])}><Icon name="plus" size={16} />Other</button>
-          </div>
+          {unused.length > 0 && (
+            <div className="stack" style={{ gap: "var(--sp-2)" }}>
+              <span className="caps">Quick add</span>
+              <div className="chips">
+                {unused.map((s) => <button key={s} className="fchip add" onClick={() => addAccount(s)}><Icon name="plus" size={16} />{s}</button>)}
+              </div>
+            </div>
+          )}
+          <button className="addown" onClick={() => addAccount()}><Icon name="plus" size={18} />Add your own account</button>
 
           {hasBalance && <section className="card"><BalanceDate today={todayLocal()} bd={bd} /></section>}
           {tried && check.form && <p className="error">{check.form}</p>}
@@ -203,10 +250,13 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
                 onClick={() => setCats((xs) => xs.map((x) => (x.uid === c.uid ? { ...x, on: !x.on } : x)))}>{c.on && <Icon name="check" size={14} />}{c.name}</button>
             ))}
           </div>
-          <form className="row" onSubmit={addCustom}>
-            <input className="field grow" placeholder="Add a category" aria-label="Add a category" maxLength={40}
-              value={custom} onChange={(e) => setCustom(e.target.value)} />
-            <button className="btn">Add</button>
+          <form className="addowncat" onSubmit={addCustom}>
+            <span className="caps">Your own</span>
+            <div className="row">
+              <input className="field grow" placeholder="Category name" aria-label="Category name" maxLength={40}
+                value={custom} onChange={(e) => setCustom(e.target.value)} />
+              <button className="btn" disabled={!custom.trim()}>Add</button>
+            </div>
           </form>
 
           <div className="notice privacy">
