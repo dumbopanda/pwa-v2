@@ -67,16 +67,8 @@ export default function SignIn() {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [mode]);
-  // Read straight from the boxes, not React state: a browser that restores a
-  // ticked box after reload would otherwise leave the buttons blocked.
-  const agreeRef = useRef<HTMLInputElement>(null);
-
-  function agreed(): boolean {
-    if (agreeRef.current?.checked) { markConsent(); return true; }
-    setError("Tick “I agree to the privacy policy and terms” first.");
-    agreeRef.current?.focus();
-    return false;
-  }
+  // Continuing counts as agreeing; the consent is logged after sign-in.
+  function agreed(): boolean { markConsent(); return true; }
 
   async function google() {
     setError(null);
@@ -145,6 +137,9 @@ export default function SignIn() {
               }} />
           </div>
           <p className="error slot" role="alert">{error}</p>
+        <p className="muted small" style={{ margin: 0, textAlign: "center" }}>
+          By continuing, I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a>
+        </p>
           <p className="muted small slot" style={{ margin: 0, textAlign: "center", visibility: canResend ? "visible" : "hidden" }}>
             Didn't get it?{" "}
             <button type="button" className="linkbtn" disabled={busy || !canResend} onClick={() => sendCode()}>Request another code</button>
@@ -165,10 +160,6 @@ export default function SignIn() {
       </div>
 
       <div className="stack">
-        <label className="toggle">
-          <input ref={agreeRef} type="checkbox" autoComplete="off" onChange={() => setError(null)} />
-          <span>I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a></span>
-        </label>
         <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> {up ? "Sign up" : "Sign in"} with Google</button>
         <div className="divider">or</div>
         <form className="stack" onSubmit={sendCode}>
