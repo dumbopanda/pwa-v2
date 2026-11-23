@@ -11,7 +11,7 @@
   --amber-soft:#FFF1BF; --amber-ink:#6E571A;
   --red:#C62828; --red-soft:#FBE3E3;   /* #C62828: AA on white and canvas (plan §6.3) */
   --line:#E9E6DE; --line-strong:#D4D0C4;
-  --pick:#121614; --emph:#121614; --on-lime:#121614;   /* selected control fill, max-contrast mark, text on lime */
+  --pick:#121614; --on-pick:#CCF244; --on-pick-w:#FFFFFF; --emph:#121614; --on-lime:#121614;   /* selected control fill, max-contrast mark, text on lime */
   --green-fg:#0E7955;   /* the brand green when it is drawn as text or a thin mark */
   --toast-bg:#121614; --on-ink-faint:#4A514D;
   --red-line:#F2B8B8; --red-bar:#E8A0A0;
@@ -37,18 +37,19 @@
   color-scheme: light;
 }
 
-/* DARK: light falls from above, so every layer stacked on another is brighter. Deep brand-green steps, no grey.
-   canvas #070B09 < card #111D17 < well/hover #182A21 < track #203529 < ink panel #0F4234 < pick #1F6B52. */
+/* DARK: light falls from above, so every layer stacked on another is brighter. Near-black neutrals, close to the canvas;
+   the colour and the controls are what punch out (selected = lime, buttons = brand green, bright text).
+   canvas #080808 < card #111111 < well/hover #181818 < track #222222 < ink panel #1C1C1C/#262626. */
 :root[data-theme="dark"] {
-  --canvas:#070B09; --surface:#111D17; --inset:#182A21; --hover:#182A21; --track:#203529;
-  --ink:#0F4234; --ink-2:#175A47; --pick:#1F6B52; --toast-bg:#1F6B52;
-  --text:#F2F7F4; --text-2:#CBD6CF; --text-muted:#9FB0A6; --text-faint:#8DA096;
-  --on-ink-muted:#B5D3C3; --on-ink-faint:#6F9684;
-  --green-ink:#7FE8B5; --green-fg:#3DDC97; --mint:#0F4A35;
+  --canvas:#080808; --surface:#111111; --inset:#181818; --hover:#181818; --track:#222222;
+  --ink:#1C1C1C; --ink-2:#262626; --pick:#CCF244; --on-pick:#121614; --on-pick-w:#121614; --toast-bg:#333333;
+  --text:#FFFFFF; --text-2:#DADAD6; --text-muted:#A8A8A4; --text-faint:#96968F;
+  --on-ink-muted:#C4C4BF; --on-ink-faint:#6E6E6A;
+  --green-ink:#8FF0C0; --green-fg:#3DDC97; --mint:#0F4A35;
   --amber-soft:#4A3A10; --amber-ink:#FFD97A; --note-bg:#4A3A10; --note-ink:#FFD97A;
   --red:#FF6F6F; --red-soft:#4D1F24; --red-line:#7A2F36; --red-bar:#A04448;
-  --line:#1E3328; --line-strong:#2B4538; --emph:#F2F7F4;
-  --day-band:#182A21; --day-band-line:#203529; --green-bar:#1F6B52;
+  --line:#1F1F1F; --line-strong:#3C3C3C; --emph:#FFFFFF;
+  --day-band:#181818; --day-band-line:#222222; --green-bar:#2A7F62;
   --acc2-bg:#302B1E; --acc2-fg:#E6DAB0; --acc3-bg:#17304A; --acc3-fg:#A8D0F5;
   --shadow-1:0 1px 2px rgba(0,0,0,.5), 0 2px 10px -4px rgba(0,0,0,.6);
   --shadow-2:0 1px 2px rgba(0,0,0,.45), 0 10px 28px -14px rgba(0,0,0,.75);
@@ -59,10 +60,10 @@
 }
 /* A sheet floats above the page, so everything inside it steps up one more layer. */
 :root[data-theme="dark"] .sheet {
-  --canvas:#13211A; --surface:#1A2B23; --inset:#223A2F; --hover:#223A2F; --track:#2B4538;
-  --ink:#1B5A46; --ink-2:#236B54; --pick:#2A7A5F;
-  --line:#223A2F; --line-strong:#34503F; --day-band:#223A2F; --day-band-line:#2B4538;
-  --text-muted:#AABDB2; --text-faint:#9AAFA4;
+  --canvas:#151515; --surface:#1D1D1D; --inset:#262626; --hover:#262626; --track:#303030;
+  --ink:#2A2A2A; --ink-2:#343434;
+  --line:#262626; --line-strong:#444444; --day-band:#262626; --day-band-line:#303030;
+  --text-muted:#B0B0AC; --text-faint:#9E9E98;
   --mint:#14573F; --amber-soft:#574414; --red-soft:#5A2429;
 }
 
@@ -116,7 +117,7 @@ select.field { padding-right: var(--sp-2); }
 .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .chip { min-height: var(--h-sm); padding: 0 var(--sp-4); border-radius: var(--r-pill); border: 1px solid var(--line-strong);
   background: var(--surface); font-weight: var(--fw-medium); cursor: pointer; }
-.chip[aria-pressed="true"] { background: var(--pick); border-color: var(--pick); color: var(--on-ink); }
+.chip[aria-pressed="true"] { background: var(--pick); border-color: var(--pick); color: var(--on-pick-w); }
 
 .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-2); cursor: pointer; min-height: var(--h-sm); }
 .toggle input { width: 18px; height: 18px; accent-color: var(--green); }
@@ -163,7 +164,7 @@ select.field { padding-right: var(--sp-2); }
 .big { font-size: var(--fs-3xl); font-weight: var(--fw-heavy); letter-spacing: var(--ls-title); line-height: 1.1; }
 .seg { display: flex; background: var(--track); border-radius: var(--r-input); padding: 3px; gap: 3px; }
 .seg button { flex: 1; height: var(--h-sm); border: 0; border-radius: var(--r-ctl); background: transparent; font-weight: var(--fw-bold); color: var(--text-muted); cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--pick); color: var(--lime); }
+.seg button[aria-pressed="true"] { background: var(--pick); color: var(--on-pick); }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
 .stat { background: var(--surface); border-radius: var(--r-panel); padding: var(--sp-3); box-shadow: var(--shadow-1); }
 .stat b { display: block; font-size: var(--fs-lg); font-weight: var(--fw-heavy); margin-top: 2px; overflow-wrap: anywhere; }
@@ -315,12 +316,12 @@ select.field { padding-right: var(--sp-2); }
 .fchip { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; height: var(--h-xs); padding: 0 var(--sp-3); border: 0; border-radius: var(--r-pill);
   background: var(--surface); color: var(--text-muted); box-shadow: var(--shadow-1); font-size: var(--fs-xs); font-weight: var(--fw-bold); cursor: pointer; white-space: nowrap; }
 .fchip::after { content: ""; position: absolute; inset: -6px 0; }           /* 44px tap area around a 32px chip */
-.fchip[aria-pressed="true"], .fchip.on { background: var(--pick); color: var(--lime); box-shadow: none; }
+.fchip[aria-pressed="true"], .fchip.on { background: var(--pick); color: var(--on-pick); box-shadow: none; }
 .fchip.select { padding-right: var(--sp-2); }
 .fchip.select select { position: absolute; inset: 0; z-index: 1; opacity: 0; width: 100%; cursor: pointer; font-size: 16px; }
 .fchip.big { height: var(--h-sm); padding: 0 var(--sp-4); font-size: var(--fs-md); color: var(--text); }
 .fchip.big::after { inset: 0; }
-.fchip.big[aria-pressed="true"] { color: var(--lime); }
+.fchip.big[aria-pressed="true"] { color: var(--on-pick); }
 .fsearch { position: relative; flex: none; display: flex; align-items: center; gap: var(--sp-2); width: 132px; height: var(--h-xs); padding: 0 0 0 var(--sp-3); border: 1.5px solid var(--line-strong); border-radius: var(--r-pill);
   color: var(--text-2); overflow: hidden; transition: width .28s var(--ease), border-color var(--t-fast) var(--ease); }
 .fsearch.open { width: min(230px, 62vw); background: var(--surface); color: var(--text); }
@@ -374,7 +375,7 @@ select.field { padding-right: var(--sp-2); }
   transform: translateX(calc(var(--i) * (100% + 4px))); transition: transform var(--t-med) var(--ease); }
 .slideseg button { position: relative; z-index: 1; flex: 1; height: 36px; border: 0; border-radius: var(--r-ctl); background: transparent; font-size: var(--fs-xs); font-weight: var(--fw-bold); color: var(--text-muted); cursor: pointer; }
 .slideseg button::after { content: ""; position: absolute; inset: -4px 0; }
-.slideseg button[aria-pressed="true"] { color: var(--lime); }
+.slideseg button[aria-pressed="true"] { color: var(--on-pick); }
 .brk { display: flex; flex-direction: column; gap: var(--sp-3); padding: 0 var(--sp-4); }
 .brow { display: grid; grid-template-columns: 24px 1fr; column-gap: var(--sp-2); row-gap: 6px; align-items: baseline; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
 .brow.others { cursor: pointer; }
@@ -550,7 +551,7 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .seg.quiet { background: transparent; padding: 0; gap: var(--sp-2); }
 .seg.quiet button { flex: none; height: 32px; padding: 0 var(--sp-4); border-radius: var(--r-pill); background: transparent; border: 1px solid var(--line-strong); font-size: var(--fs-sm); position: relative; }
 .seg.quiet button::after { content: ""; position: absolute; inset: -6px -2px; }
-.seg.quiet button[aria-pressed="true"] { background: var(--pick); border-color: var(--pick); color: var(--lime); }
+.seg.quiet button[aria-pressed="true"] { background: var(--pick); border-color: var(--pick); color: var(--on-pick); }
 .fchip.add { height: var(--h-sm); padding: 0 var(--sp-4); font-size: var(--fs-md); color: var(--green-ink); background: transparent; box-shadow: none; border: 1.5px dashed var(--line-strong); }
 .fchip.add::after { inset: 0; }
 .notice.privacy { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); }
