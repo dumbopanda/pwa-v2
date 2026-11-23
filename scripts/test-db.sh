@@ -17,25 +17,8 @@ trap '"$PG_BIN/pg_ctl" -D "$DATA" -m immediate stop >/dev/null 2>&1 || true; rm 
 "$PG_BIN/pg_ctl" -D "$DATA" -o "-p $PORT -k $DATA -c listen_addresses=''" -l "$DATA/log" -w start >/dev/null
 PSQL=(psql -h "$DATA" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q -X)
 
-"${PSQL[@]}" <<'SQL'
-create role anon nologin;
-create role authenticated nologin;
-create role service_role nologin bypassrls;
-create schema extensions;
-create extension pgcrypto with schema extensions;
-create extension pgtap    with schema extensions;
-alter database postgres set search_path = public, extensions;
-create schema auth;
-create table auth.users (
-  instance_id uuid, id uuid primary key, aud text, role text, email text,
-  encrypted_password text, email_confirmed_at timestamptz,
-  created_at timestamptz, updated_at timestamptz,
-  raw_app_meta_data jsonb, raw_user_meta_data jsonb);
-create function auth.uid() returns uuid language sql stable as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'sub', '')::uuid $$;
-grant usage on schema auth, public, extensions to anon, authenticated, service_role;
-grant execute on function auth.uid() to anon, authenticated, service_role;
-SQL
+"${PSQL[@]}" -f "$ROOT/scripts/standin.sql"
+"${PSQL[@]}" -c 'create extension pgtap with schema extensions;'
 
 for f in "$ROOT"/supabase/migrations/*.sql; do
   "${PSQL[@]}" -f "$f" || { echo "MIGRATION FAILED: $(basename "$f")"; exit 1; }

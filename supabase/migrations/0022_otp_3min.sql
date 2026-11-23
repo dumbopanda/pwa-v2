@@ -42,14 +42,14 @@ begin
     end if;
   end if;
 
-  update email_otps set invalidated_at = v_now
+  update email_otps set invalidated_at = v_now   -- data-safe: retires older sign-in codes only
    where email = v_email and consumed_at is null and invalidated_at is null;
 
   insert into email_otps (email, code_hash, ip, created_at, expires_at)
   values (v_email, p_code_hash, p_ip, v_now, v_now + interval '3 minutes')
   returning id into v_id;
 
-  delete from email_otps where created_at < v_now - interval '2 days';
+  delete from email_otps where created_at < v_now - interval '2 days';   -- data-safe: sign-in codes over 2 days old
 
   return jsonb_build_object('ok', true, 'id', v_id, 'expires_in_s', 180, 'resend_in_s', 150);
 end $$;

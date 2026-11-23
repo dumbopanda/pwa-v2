@@ -41,7 +41,7 @@ export default function App() {
       setOnboarded(true);
       supabase.from("profiles").select("onboarded_at").eq("user_id", userId).maybeSingle()
         .then(({ data, error }) => {
-          if (error || data?.onboarded_at) return;
+          if (error || !data || data.onboarded_at) return; // only an explicit "not onboarded" row resets
           forget(userId); void closeUser(true); setOnboarded(false);
         });
       return;

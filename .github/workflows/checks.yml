@@ -1,0 +1,20 @@
+# Data-safety and build checks on every push and pull request. No secrets used.
+name: checks
+on: [push, pull_request]
+permissions: { contents: read }
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migration guard (risky statements need a reviewed reason)
+        run: scripts/migration-guard.sh
+      - name: Upgrade test (prod schema + real-shaped data, then new migrations; no rows or columns lost)
+        run: scripts/upgrade-test.sh "$(cat supabase/PROD_AT)"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - name: Web tests and build
+        working-directory: web
+        env: { VITE_SUPABASE_URL: "https://example.supabase.co", VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci" }
+        run: npm ci && npm test && npm run build
