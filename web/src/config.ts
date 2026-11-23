@@ -3,7 +3,7 @@
 // (Not ?. -- Vite only swaps in the literal `import.meta.env.VITE_APP_NAME`.)
 export const DEFAULT_APP_NAME = "Spend Roll";
 export const APP_NAME: string = (import.meta.env && import.meta.env.VITE_APP_NAME) || DEFAULT_APP_NAME;
-export const THEME = "#F4F1EA";
+export const THEME = "#070B09";   // manifest colours cannot follow the theme, so they are dark: the phone's nav bar stays dark in both
 export const DEFAULT_CURRENCY = "INR";
 /** A short list so nobody scrolls 160 codes. An account's current currency is always kept. */
 export const COMMON_CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY", "SAR"];

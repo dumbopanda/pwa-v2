@@ -6,7 +6,7 @@
     var t = pref(), d = t === "dark" || (t === "system" && mq.matches);
     document.documentElement.dataset.theme = d ? "dark" : "light";
     var m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.setAttribute("content", d ? "#0D100E" : "#F4F1EA");
+    if (m) m.setAttribute("content", d ? "#070B09" : "#F4F1EA");
   }
   apply();
   mq.addEventListener("change", apply);
