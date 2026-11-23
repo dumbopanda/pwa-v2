@@ -8,6 +8,7 @@ import { closeUser } from "./lib/store";
 
 const KEY = (u: string) => `onboarded:${u}`;
 const remembered = (u: string) => { try { return localStorage.getItem(KEY(u)) === "1"; } catch { return false; } };
+const forget = (u: string) => { try { localStorage.removeItem(KEY(u)); } catch { /* ignore */ } };
 const remember = (u: string) => { try { localStorage.setItem(KEY(u), "1"); } catch { /* ignore */ } };
 
 export default function App() {
@@ -35,7 +36,16 @@ export default function App() {
     if (!userId) { setOnboarded(undefined); return; }
     setLoadError(false);
     // Once onboarded, always onboarded: remember it so the app opens offline.
-    if (remembered(userId)) { setOnboarded(true); return; }
+    // If the server says otherwise (account reset), drop the local copy and start over.
+    if (remembered(userId)) {
+      setOnboarded(true);
+      supabase.from("profiles").select("onboarded_at").eq("user_id", userId).maybeSingle()
+        .then(({ data, error }) => {
+          if (error || data?.onboarded_at) return;
+          forget(userId); void closeUser(true); setOnboarded(false);
+        });
+      return;
+    }
     supabase.from("profiles").select("onboarded_at").eq("user_id", userId).maybeSingle()
       .then(({ data, error }) => {
         if (error) return setLoadError(true);
