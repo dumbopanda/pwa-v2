@@ -37,33 +37,33 @@
   color-scheme: light;
 }
 
-/* DARK: one step up per layer. Steps L0..L7: #0D100E #151A17 #1D231F #262D29 #303833 #3A443E #454F49 #505B54
-   (a faint green tint, the brand ink's hue). canvas=L0, card=L1, well/hover=L2, track/line=L3, ink panels=L4. */
+/* DARK: light falls from above, so every layer stacked on another is brighter. Deep brand-green steps, no grey.
+   canvas #070B09 < card #111D17 < well/hover #182A21 < track #203529 < ink panel #0F4234 < pick #1F6B52. */
 :root[data-theme="dark"] {
-  --canvas:#0D100E; --surface:#151A17; --inset:#1D231F; --hover:#1D231F; --track:#262D29;
-  --ink:#303833; --ink-2:#3A443E; --pick:#4B564F; --toast-bg:#505B54;
-  --text:#E8EDE9; --text-2:#BFC8C2; --text-muted:#9AA49D; --text-faint:#8E9891;
-  --on-ink-muted:#BCC8BA; --on-ink-faint:#7C8881;
-  --green-ink:#6FDBA8; --green-fg:#4CCB97; --mint:#143A2A;
-  --amber-soft:#3A3016; --amber-ink:#F0D283; --note-bg:#3A3016; --note-ink:#F0D283;
-  --red:#F26B6B; --red-soft:#3E1D1E; --red-line:#6E2F31; --red-bar:#8F4144;
-  --line:#262D29; --line-strong:#3A443E; --emph:#E8EDE9;
-  --day-band:#1D231F; --day-band-line:#262D29; --green-bar:#2B6B53;
-  --acc2-bg:#2C2920; --acc2-fg:#DCD2B0; --acc3-bg:#1E2F40; --acc3-fg:#9EC6EC;
-  --shadow-1:0 1px 2px rgba(0,0,0,.45), 0 2px 10px -4px rgba(0,0,0,.55);
-  --shadow-2:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
-  --shadow-float:0 10px 28px -12px rgba(0,0,0,.8); --shadow-mic:0 10px 22px -10px rgba(0,0,0,.8);
-  --ring:0 0 0 3px rgba(76,203,151,.28);
-  --scrim:rgba(0,0,0,.62); --scrim-soft:rgba(0,0,0,.5);
+  --canvas:#070B09; --surface:#111D17; --inset:#182A21; --hover:#182A21; --track:#203529;
+  --ink:#0F4234; --ink-2:#175A47; --pick:#1F6B52; --toast-bg:#1F6B52;
+  --text:#F2F7F4; --text-2:#CBD6CF; --text-muted:#9FB0A6; --text-faint:#8DA096;
+  --on-ink-muted:#B5D3C3; --on-ink-faint:#6F9684;
+  --green-ink:#7FE8B5; --green-fg:#3DDC97; --mint:#0F4A35;
+  --amber-soft:#4A3A10; --amber-ink:#FFD97A; --note-bg:#4A3A10; --note-ink:#FFD97A;
+  --red:#FF6F6F; --red-soft:#4D1F24; --red-line:#7A2F36; --red-bar:#A04448;
+  --line:#1E3328; --line-strong:#2B4538; --emph:#F2F7F4;
+  --day-band:#182A21; --day-band-line:#203529; --green-bar:#1F6B52;
+  --acc2-bg:#302B1E; --acc2-fg:#E6DAB0; --acc3-bg:#17304A; --acc3-fg:#A8D0F5;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5), 0 2px 10px -4px rgba(0,0,0,.6);
+  --shadow-2:0 1px 2px rgba(0,0,0,.45), 0 10px 28px -14px rgba(0,0,0,.75);
+  --shadow-float:0 10px 28px -12px rgba(0,0,0,.85); --shadow-mic:0 10px 22px -10px rgba(0,0,0,.85);
+  --ring:0 0 0 3px rgba(61,220,151,.3);
+  --scrim:rgba(0,0,0,.65); --scrim-soft:rgba(0,0,0,.5);
   color-scheme: dark;
 }
 /* A sheet floats above the page, so everything inside it steps up one more layer. */
 :root[data-theme="dark"] .sheet {
-  --canvas:#1D231F; --surface:#262D29; --inset:#303833; --hover:#303833; --track:#3A443E;
-  --ink:#454F49; --ink-2:#505B54; --pick:#5A665F;
-  --line:#303833; --line-strong:#454F49; --day-band:#303833; --day-band-line:#3A443E;
-  --text-muted:#A8B2AB; --text-faint:#9BA59E;
-  --mint:#1D4A35; --amber-soft:#4A3D1B; --red-soft:#4A2425;
+  --canvas:#13211A; --surface:#1A2B23; --inset:#223A2F; --hover:#223A2F; --track:#2B4538;
+  --ink:#1B5A46; --ink-2:#236B54; --pick:#2A7A5F;
+  --line:#223A2F; --line-strong:#34503F; --day-band:#223A2F; --day-band-line:#2B4538;
+  --text-muted:#AABDB2; --text-faint:#9AAFA4;
+  --mint:#14573F; --amber-soft:#574414; --red-soft:#5A2429;
 }
 
 * { box-sizing: border-box; }
