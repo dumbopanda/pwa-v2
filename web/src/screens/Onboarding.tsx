@@ -5,6 +5,7 @@ import { newUid, todayLocal } from "../lib/ids";
 import { BalanceDate, useBalanceDate } from "../components";
 import { DEFAULT_CATEGORIES, SUGGESTED_ACCOUNTS, openingBalanceRows, validateAccounts, type AccountDraft } from "../lib/onboarding";
 import { supabase } from "../supabase";
+import { useScrollTop } from "../lib/hooks";
 
 const symbol = (cur: string) => {
   try { return new Intl.NumberFormat("en", { style: "currency", currency: cur, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((p) => p.type === "currency")?.value ?? cur; }
@@ -45,6 +46,7 @@ type Cat = { uid: string; name: string; on: boolean };
 export default function Onboarding({ userId, onDone }: { userId: string; onDone: () => void }) {
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [slide, setSlide] = useState(0);
+  useScrollTop(step, slide);
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [cats, setCats] = useState<Cat[]>(() => DEFAULT_CATEGORIES.map((c) => ({ uid: newUid(), ...c })));
   const [custom, setCustom] = useState("");

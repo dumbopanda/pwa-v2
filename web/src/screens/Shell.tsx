@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { logEvent } from "../lib/actions";
 import { MonthPill, ToastHost } from "../components";
 import { APP_NAME } from "../config";
-import { useLedger, useToday } from "../lib/hooks";
+import { useLedger, useScrollTop, useToday } from "../lib/hooks";
 import { addMonths, monthOf, openPastDays } from "../lib/ledger";
 import { supabase } from "../supabase";
 import { openUser, sync, useStore } from "../lib/store";
@@ -34,6 +34,7 @@ export default function Shell({ userId }: { userId: string }) {
   // Only Plan can look a month ahead.
   const max = tab === "stats" && plan ? addMonths(monthOf(today), 1) : monthOf(today);
   const ym = pickedYm > max ? max : pickedYm;
+  useScrollTop(tab, plan, overlay?.k);
 
   useEffect(() => {
     let live = true;
