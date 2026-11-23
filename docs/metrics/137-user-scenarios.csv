@@ -1,0 +1,23 @@
+metric,conservative,base,optimistic,unit,assumption_or_source
+status,PROJECTED,PROJECTED,PROJECTED,,planning model; nothing here is measured
+daily_active_share,30%,45%,60%,% of 137,assumption: invite-only habit app; observed 1 of 2 accounts active in 24h (n too small)
+daily_active_users,41,62,82,users,137 x daily_active_share
+entries_per_active_user_per_day,2,3,4,entries,observed 3 to 3.5 (n=1 to 2); conservative set below it
+entries_per_day,82,185,329,entries,active users x entries per active user
+entries_per_30_days,2460,5550,9870,entries,entries per day x 30
+ai_share_of_entries,14%,14%,14%,%,evals/RESULTS.md: 11 of 81 sentences reached the AI; real text may be messier
+ai_parse_calls_per_day,11,26,46,calls,entries per day x ai share
+month_review_calls_per_day,4,12,33,calls,assumption: 0.1 / 0.2 / 0.4 per active user per day
+ai_calls_per_day_total,15,38,79,calls,parse + review
+ai_neurons_per_day,420,1064,2212,neurons,calls x 28 (parse cost; review cost unmeasured)
+ai_free_allowance_used,4%,11%,22%,% of 10000,Workers AI free allowance in evals/RESULTS.md
+ai_outcome_accepted,60%,75%,85%,% of AI-read entries,assumption; eval holdout amount 100% on 40 sentences is the ceiling
+ai_outcome_edited,30%,18%,12%,% of AI-read entries,assumption
+ai_outcome_rejected,10%,7%,3%,% of AI-read entries,assumption
+ai_errors_per_day,2,1,2,calls,assumption: 2% of AI calls fail (503 or timeout); falls back to phone parser
+quota_429_per_day,0,0,0,calls,caps are 50 per day and 10 per minute per user; projected use is under 2 calls per user per day
+app_open_events_per_day_now,1230,1860,2460,rows,active users x 30 (current behaviour; one event per resume)
+app_open_events_per_day_after_dedupe,205,310,410,rows,active users x 5 (assumed after fix)
+monthly_cost_usd_free_tiers,0,0,0,USD,Supabase free + Workers free + AI allowance; billing not visible
+monthly_cost_usd_supabase_pro,25,25,25,USD,Supabase Pro list price
+monthly_cost_per_user_usd_pro,0.18,0.18,0.18,USD,25 / 137

@@ -1,0 +1,51 @@
+metric,db,all_time,last_24h,conservative,base,optimistic,confidence,basis_or_note
+snapshot_ist,dev,2026-11-24 00:21:54,2026-11-24 00:21:54,,,,,counts only; no names/emails/entry text
+window_24h_ist,dev,since first signup 2026-11-22 16:28,2026-11-23 00:21:54 to 2026-11-24 00:21:54,,,,,
+snapshot_ist,prod,2026-11-24 00:22:01,2026-11-24 00:22:01,,,,,
+window_24h_ist,prod,since first signup 2026-11-21 01:17,2026-11-23 00:22:01 to 2026-11-24 00:22:01,,,,,
+users_signed_up,dev,2,1,,,,,signups by IST day: 2026-11-22=1; 2026-11-23=1
+users_signed_up,prod,1,0,,,,,signups by IST day: 2026-11-21=1
+current_users_pct_of_137,dev,1.5%,,,,,,2 of 137
+current_users_pct_of_137,prod,0.7%,,,,,,1 of 137
+entries_saved,dev,7,3,,,,,by IST day: 2026-11-22=4; 2026-11-23=3
+entries_saved,prod,0,0,,,,,no entries and no events on prod
+entries_per_user_median,dev,3.5,3,,,,low,n=2 users all-time; n=1 active user in 24h
+entries_per_day,dev,3.5,3,,,,low,all-time = 7 entries over 2 IST days
+active_users,dev,2,1,,,,,distinct users with any event
+active_users,prod,0,0,,,,,
+app_opens,dev,39,34,,,,,34 in 24h from one user; likely logged on every resume
+ai_calls_parse_model,dev,0,0,,,,,model has never been called to parse an entry
+ai_calls_review,dev,2,2,,,,,both from one user within one minute
+ai_results_from_model,dev,0,0,,,,,
+ai_results_from_rules_parser_accepted,dev,1,0,,,,none,n=2 total
+ai_results_from_rules_parser_edited,dev,0,0,,,,none,
+ai_results_from_rules_parser_rejected,dev,1,0,,,,none,
+fallback_to_phone_parser,dev,not logged,not logged,,,,,no event when the AI is skipped or fails
+entry_saved_events_manual,dev,2,1,,,,,only 3 of 7 entries have an entry_saved event
+entry_saved_events_ai_label,dev,1,0,,,,,"label ai means confirm-card flow; its source was the rules parser"
+median_ms_open_to_saved_manual,dev,140104,255543,,,,none,n=2 all-time; n=1 in 24h; includes idle time
+median_ms_open_to_saved_ai_label,dev,1051895,n/a,,,,none,n=1; app left open
+users_with_entries_on_2plus_days,dev,0,n/a,,,,,
+day1_return,dev,1 of 2,n/a,,,,none,"users with any event the day after signup, IST"
+failed_saves,dev,not logged,not logged,,,,,
+ai_errors_429_503,dev,not logged,not logged,,,,,
+scenario_status,,,,PROJECTED,PROJECTED,PROJECTED,,planning model; nothing below is measured
+assumption_daily_active_share,,,,30%,45%,60%,low,guess
+assumption_entries_per_active_user_per_day,,,,2,3,4,low,observed 3 to 3.5 with n=1 to 2
+assumption_ai_parse_calls_per_entry,,,,0.14,0.14,0.14,medium,11 of 81 eval sentences reached the AI (eval 2026-11-05)
+assumption_review_calls_per_active_user_per_day,,,,0.1,0.2,0.4,low,guess
+daily_active_users_at_137,,,,41,62,82,low,137 x active share
+entries_per_day_at_137,,,,82,185,329,low,active users x entries per active user
+entries_per_30_days_at_137,,,,2460,5550,9870,low,entries per day x 30
+ai_calls_per_day_at_137,,,,15,38,79,low,parse + review
+ai_neurons_per_day_at_137,,,,420,1064,2212,medium,calls x 28 neurons; review cost unmeasured
+free_ai_allowance_used_at_137,,,,4%,11%,22%,medium,of 10000 neurons per day
+ai_results_accepted_pct_at_137,,,,60%,75%,85%,low,guess; eval holdout amount 100% on 40 sentences is the ceiling
+ai_results_edited_pct_at_137,,,,30%,18%,12%,low,guess
+ai_results_rejected_pct_at_137,,,,10%,7%,3%,low,guess
+ai_errors_503_per_day_at_137,,,,0.3,0.8,1.6,low,assumes 2% of AI calls fail
+quota_429_per_day_at_137,,,,0,0,0,medium,caps 50 per day and 10 per minute per user (migration 0017); projected use under 1 call per user per day
+monthly_cost_usd_at_137,,,,0 or 25,0 or 25,0 or 25,low,0 on free tiers; 25 if Supabase Pro; billing not visible
+cost_per_user_usd_at_137,,,,0 or 0.18,0 or 0.18,0 or 0.18,low,monthly cost / 137
+users_where_ai_allowance_breaks,,,,3260,1290,619,low,357 calls per day / calls per registered user per day
+users_where_events_table_hits_500MB_in_12_months,,,,,about 400,,low,assumes 30 app_open per active user per day and 250 bytes per row
