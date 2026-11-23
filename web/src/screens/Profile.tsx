@@ -5,12 +5,13 @@ import { APP_NAME } from "../config";
 import { useLedger } from "../lib/hooks";
 import { Avatar, AvatarGrid } from "../lib/avatars";
 import { filledCount, formToPatch, isFounder, toForm, type ProfForm, type Profile as P, type ProfPatch } from "../lib/profile";
+import { THEMES, getTheme, setTheme, type Theme } from "../lib/theme";
 import { supabase } from "../supabase";
 import { AccountPage, AccountsPage, AddAccountPage, CategoriesPage, CategoryPage, DataPage, DeletePage } from "./Manage";
 
 // The profile area, like a phone's settings: a hub of a few sections, each opening its own screen.
 type Pg = { p: "hub" } | { p: "edit" } | { p: "avatar" } | { p: "accounts" } | { p: "account"; id: string } | { p: "addaccount" }
-  | { p: "categories" } | { p: "category"; id: string } | { p: "data" } | { p: "delete" };
+  | { p: "theme" } | { p: "categories" } | { p: "category"; id: string } | { p: "data" } | { p: "delete" };
 
 export default function Profile({ profile, save, onClose, onMetrics }:
   { profile: P | null; save: (p: ProfPatch) => Promise<void>; onClose: () => void; onMetrics: () => void }) {
@@ -27,6 +28,7 @@ export default function Profile({ profile, save, onClose, onMetrics }:
     case "addaccount": return <AddAccountPage onBack={back} />;
     case "categories": return <CategoriesPage onOpen={(id) => push({ p: "category", id })} onBack={back} />;
     case "category": return <CategoryPage id={page.id} onBack={back} />;
+    case "theme": return <ThemePage onBack={back} />;
     case "data": return <DataPage onBack={back} />;
     case "delete": return <DeletePage onBack={back} />;
     default: return <Hub profile={profile} onClose={onClose} onMetrics={onMetrics} go={push} />;
@@ -62,6 +64,9 @@ function Hub({ profile, onClose, onMetrics, go }: { profile: P | null; onClose: 
         <Row icon="wallet" label="Accounts" value={String(live(L.accounts))} onClick={() => go({ p: "accounts" })} />
         <Row icon="tag" label="Categories" value={String(live(L.categories))} onClick={() => go({ p: "categories" })} />
       </Group>
+      <Group label="App">
+        <Row icon="theme" label="Theme" value={THEMES.find((t) => t.id === getTheme())!.label} onClick={() => go({ p: "theme" })} />
+      </Group>
       <Group label="Your data">
         <Row icon="shield" label="Data & privacy" onClick={() => go({ p: "data" })} />
         {admin && <Row icon="stats" label="Usage metrics" onClick={onMetrics} />}
@@ -71,6 +76,18 @@ function Hub({ profile, onClose, onMetrics, go }: { profile: P | null; onClose: 
         <Row icon="trash" label="Delete my account" danger onClick={() => go({ p: "delete" })} />
       </Group>
       <p className="muted small" style={{ textAlign: "center", margin: 0 }}>{APP_NAME}</p>
+    </Page>
+  );
+}
+
+function ThemePage({ onBack }: { onBack: () => void }) {
+  const [t, setT] = useState<Theme>(getTheme);
+  return (
+    <Page title="Theme" onBack={onBack}>
+      <div className="seg" role="group" aria-label="Theme">
+        {THEMES.map((x) => <button key={x.id} aria-pressed={t === x.id} onClick={() => { setTheme(x.id); setT(x.id); }}>{x.label}</button>)}
+      </div>
+      <p className="caption">System follows your device.</p>
     </Page>
   );
 }
