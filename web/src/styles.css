@@ -521,12 +521,20 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 /* Sign-in: name and line at the top, everything to act on at the bottom. */
 .signin { min-height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; gap: var(--sp-6); padding-top: calc(var(--sp-8) * 2); }
 .signin-title { font-size: 44px; line-height: 1.02; letter-spacing: -0.035em; }
-.signin-hero { position: relative; align-self: flex-end; width: 72%; margin-top: var(--sp-6); }
-.signin-hero .say { background: var(--ink); color: var(--lime); font-weight: var(--fw-bold); font-size: var(--fs-sm);
-  padding: var(--sp-2) var(--sp-3); border-radius: var(--r-panel) var(--r-panel) var(--sp-1) var(--r-panel); width: max-content; max-width: 100%; margin: 0 0 var(--sp-2) auto; }
-.signin-hero .rows { display: flex; flex-direction: column; gap: var(--sp-2); transform: rotate(-2deg); }
-.signin-hero .r { display: flex; justify-content: space-between; font-weight: var(--fw-medium); }
-.signin-hero .r b { color: var(--green-ink); }
+.signin-title mark { background: var(--lime); color: var(--on-lime); padding: 0 .14em; margin-left: -.04em; border-radius: 10px; }
+.signin-tag { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: var(--ls-title); color: var(--text-2); }
+/* The try-it demo: the hero look, tappable. */
+.demo { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; margin-top: var(--sp-5); border: 0; text-align: left; cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent; }
+.demo:active { transform: scale(.985); }
+.demo { transition: transform var(--t-fast) var(--ease); }
+.demo .hval { display: block; margin-bottom: var(--sp-1); }
+.demo-rows { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-4); min-height: 144px; }
+.demo-row { display: flex; align-items: center; gap: var(--sp-3); animation: pop .35s var(--ease); }
+.demo-name { flex: 1; font-weight: var(--fw-bold); display: flex; flex-direction: column; line-height: 1.25; }
+.demo-name small { font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--on-ink-muted); }
+.demo-row b { font-variant-numeric: tabular-nums; }
+.demo-hint { margin-top: var(--sp-3); text-align: center; font-size: var(--fs-xs); font-weight: var(--fw-bold); color: var(--lime); }
+.demo .planbar span { transition: width .5s var(--ease); }
 .signin.top { justify-content: flex-start; gap: var(--sp-8); }
 .otp { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-2); }
 .otp span { height: 56px; display: grid; place-items: center; border-radius: var(--r-input); border: 1px solid var(--line-strong);

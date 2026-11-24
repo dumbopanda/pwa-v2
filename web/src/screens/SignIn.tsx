@@ -39,17 +39,42 @@ const GoogleLogo = () => (
   </svg>
 );
 
-/** Decorative: what the app does, in one picture. */
-const Hero = () => (
-  <div className="signin-hero" aria-hidden="true">
-    <div className="say">"Chai 20, auto 80 from UPI"</div>
-    <div className="card rows">
-      <div className="caps">Today</div>
-      <div className="r"><span>Chai</span><b className="amt">₹20</b></div>
-      <div className="r"><span>Auto</span><b className="amt">₹80</b></div>
-    </div>
-  </div>
-);
+/** "Spend Roll": the last word sits on a lime highlight. */
+const title = (name: string) => { const w = name.split(" "); return <>{w.slice(0, -1).join(" ")} <mark>{w[w.length - 1]}</mark></>; };
+
+const PAY = 30000;
+const DEMO = [["Chai", "Food", 20, 0], ["Auto", "Transport", 80, 1], ["Lunch", "Food", 180, 2], ["Groceries", "Home", 640, 3], ["Rent", "Home", 12000, 0]] as const;
+const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+/** Try-it demo: a pay balance that drops as payments go in. Plays on its own; a tap adds the next one. */
+function Demo() {
+  const [n, setN] = useState(2);
+  const [touched, setTouched] = useState(false);
+  const next = () => setN((x) => (x >= DEMO.length ? 1 : x + 1));
+  useEffect(() => {
+    if (touched || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(next, 2200);
+    return () => clearInterval(t);
+  }, [touched]);
+  const spent = DEMO.slice(0, n).reduce((sum, d) => sum + d[2], 0);
+  return (
+    <button type="button" className="hero demo" aria-label="Try it: add a payment" onClick={() => { setTouched(true); next(); }}>
+      <span className="hkey"><span>Left from your pay</span><span className="hchip">{inr(PAY)} pay</span></span>
+      <span className="hval">{inr(PAY - spent)}</span>
+      <span className="planbar"><span style={{ width: `${Math.max(2, (spent / PAY) * 100)}%` }} /></span>
+      <span className="demo-rows">
+        {DEMO.slice(Math.max(0, n - 3), n).reverse().map(([name, cat, amt, tone]) => (
+          <span className="demo-row" key={name}>
+            <span className={`ttile acc${tone}`}>{name.charAt(0)}</span>
+            <span className="demo-name">{name}<small>{cat}</small></span>
+            <b>-{inr(amt)}</b>
+          </span>
+        ))}
+      </span>
+      <span className="demo-hint">Tap to add a payment</span>
+    </button>
+  );
+}
 
 export default function SignIn() {
   const [mode, setMode] = useState<"start" | "code">("start");
@@ -154,9 +179,9 @@ export default function SignIn() {
   return (
     <main className="screen signin">
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
-        <h1 className="signin-title">{APP_NAME}</h1>
-        <p className="muted" style={{ margin: 0, fontSize: "var(--fs-lg)" }}>Know where your pay went.</p>
-        <Hero />
+        <h1 className="signin-title">{title(APP_NAME)}</h1>
+        <p className="signin-tag">Track where your pay went.</p>
+        <Demo />
       </div>
 
       <div className="stack">
@@ -166,7 +191,7 @@ export default function SignIn() {
           <label className="lbl" htmlFor="email" style={{ margin: 0 }}>Email</label>
           <input id="email" className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com"
             value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="btn" disabled={busy}>{up ? "Sign up" : "Sign in"} with email</button>
+          <button className="btn primary" disabled={busy}>{up ? "Sign up" : "Sign in"} with email</button>
         </form>
         <p className="error slot" role="alert">{error}</p>
         <p className="muted small" style={{ margin: 0, textAlign: "center" }}>
