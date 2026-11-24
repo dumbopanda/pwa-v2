@@ -525,8 +525,8 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .signin-tag { margin: 0; font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: var(--ls-title); color: var(--text-2); }
 /* The try-it demo: the hero look, tappable. */
 .demo { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; margin-top: var(--sp-5); border: 0; text-align: left; cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent; }
-.demo:active { transform: scale(.985); }
-.demo { transition: transform var(--t-fast) var(--ease); }
+.demo:active { transform: rotate(-2.5deg) scale(.985); }
+.demo { width: 94%; margin-left: auto; margin-right: auto; transform: rotate(-2.5deg); transition: transform var(--t-fast) var(--ease); }
 .demo .hval { display: block; margin-bottom: var(--sp-1); }
 .demo-rows { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-4); min-height: 144px; }
 .demo-row { display: flex; align-items: center; gap: var(--sp-3); animation: pop .35s var(--ease); }
@@ -535,6 +535,9 @@ button.dayhead2:focus-visible { outline: 2px solid var(--green); outline-offset:
 .demo-row b { font-variant-numeric: tabular-nums; }
 .demo-hint { margin-top: var(--sp-3); text-align: center; font-size: var(--fs-xs); font-weight: var(--fw-bold); color: var(--lime); }
 .demo .planbar span { transition: width .5s var(--ease); }
+.signin { justify-content: flex-start; gap: 0; }
+.signin-act { margin-top: auto; padding-top: var(--sp-8); }
+.signin-foot { margin: var(--sp-6) 0 0; text-align: center; }
 .signin.top { justify-content: flex-start; gap: var(--sp-8); }
 .otp { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-2); }
 .otp span { height: 56px; display: grid; place-items: center; border-radius: var(--r-input); border: 1px solid var(--line-strong);

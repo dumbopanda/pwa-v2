@@ -180,25 +180,28 @@ export default function SignIn() {
     <main className="screen signin">
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
         <h1 className="signin-title">{title(APP_NAME)}</h1>
-        <p className="signin-tag">Track where your pay went.</p>
+        <p className="signin-tag">Know where your payroll went?!</p>
         <Demo />
       </div>
 
-      <div className="stack">
+      <div className="stack signin-act">
         <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> {up ? "Sign up" : "Sign in"} with Google</button>
         <div className="divider">or</div>
         <form className="stack" onSubmit={sendCode}>
-          <label className="lbl" htmlFor="email" style={{ margin: 0 }}>Email</label>
-          <input id="email" className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com"
+          <input id="email" className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" aria-label="Email"
             value={email} onChange={(e) => setEmail(e.target.value)} />
           <button className="btn primary" disabled={busy}>{up ? "Sign up" : "Sign in"} with email</button>
         </form>
         <p className="error slot" role="alert">{error}</p>
         <p className="muted small" style={{ margin: 0, textAlign: "center" }}>
-          {up ? "Already have an account?" : "New here?"}{" "}
-          <button type="button" className="linkbtn" onClick={() => { setIntent(up ? "in" : "up"); setError(null); }}>{up ? "Sign in" : "Sign up"}</button>
+          By continuing, I agree to the <a href="/privacy.html" target="_blank" rel="noopener" style={{ color: "inherit" }}>privacy policy and terms</a>
         </p>
       </div>
+
+      <p className="muted small signin-foot">
+        {up ? "Already have an account?" : "New here?"}{" "}
+        <button type="button" className="linkbtn" onClick={() => { setIntent(up ? "in" : "up"); setError(null); }}>{up ? "Sign in" : "Sign up"}</button>
+      </p>
     </main>
   );
 }
