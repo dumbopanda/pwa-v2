@@ -8,6 +8,7 @@ import { formToPatch, type ProfForm, type ProfPatch } from "../lib/profile";
 import { DEFAULT_CATEGORIES, SUGGESTED_ACCOUNTS, openingBalanceRows, validateAccounts, type AccountDraft } from "../lib/onboarding";
 import { supabase } from "../supabase";
 import { useScrollTop } from "../lib/hooks";
+import { logEvent } from "../lib/actions";
 
 const symbol = (cur: string) => {
   try { return new Intl.NumberFormat("en", { style: "currency", currency: cur, currencyDisplay: "narrowSymbol" }).formatToParts(0).find((p) => p.type === "currency")?.value ?? cur; }
@@ -87,6 +88,8 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
   }, [userId]);
   const [slide, setSlide] = useState(0);
   useScrollTop(step, slide);
+  // Where people stop: one event per screen shown (step 0 = intro slides, with the slide number).
+  useEffect(() => logEvent("onb_step", { step, slide: step === 0 ? slide : 0 }), [step, slide]);
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [cats, setCats] = useState<Cat[]>(() => DEFAULT_CATEGORIES.map((c) => ({ uid: newUid(), ...c })));
   const [custom, setCustom] = useState("");
@@ -115,6 +118,7 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
   function next() {
     setTried(true);
     if (!check.form && check.rows.every((r) => !r) && !(hasBalance && bd.needsConfirm)) { setStep(3); setError(null); }
+    else logEvent("onb_blocked", { step: 2 });   // pressed Next but the form said no
   }
 
   function addCustom(e: React.FormEvent) {
@@ -154,8 +158,10 @@ export default function Onboarding({ userId, onDone }: { userId: string; onDone:
       const prof = await supabase.from("profiles")
         .update({ ...(about ?? {}), onboarded_at: now, consent_version: 1, consent_at: now }).eq("user_id", userId);
       if (prof.error) throw prof.error;
+      logEvent("onb_done");
       onDone();
     } catch {
+      logEvent("onb_save_failed");
       setError("Couldn't save. Check your connection and try again — nothing will be added twice.");
       setBusy(false);
     }
