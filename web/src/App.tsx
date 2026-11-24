@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import SignIn, { CONSENT_KEY } from "./screens/SignIn";
+import SignIn, { CONSENT_KEY, NAME_KEY } from "./screens/SignIn";
 import Onboarding from "./screens/Onboarding";
 import Shell from "./screens/Shell";
 import { closeUser } from "./lib/store";
@@ -31,6 +31,15 @@ export default function App() {
     if (!props) return;
     supabase.from("events").insert({ name: "consent_accepted", props })
       .then(({ error }) => { if (!error) try { localStorage.removeItem(CONSENT_KEY); } catch { /* ignore */ } });
+  }, [userId]);
+  // The name typed at sign-up goes onto the profile (only if it has none yet). Kept and retried if the row isn't there yet.
+  useEffect(() => {
+    if (!userId) return;
+    let name: string | null = null;
+    try { name = localStorage.getItem(NAME_KEY); } catch { return; }
+    if (!name) return;
+    supabase.from("profiles").update({ display_name: name }).eq("user_id", userId).is("display_name", null).select("user_id")
+      .then(({ data, error }) => { if (!error && data?.length) try { localStorage.removeItem(NAME_KEY); } catch { /* ignore */ } });
   }, [userId]);
   useEffect(() => {
     if (!userId) { setOnboarded(undefined); return; }

@@ -7,6 +7,8 @@ import { useScrollTop } from "../lib/hooks";
 export const POLICY_VERSION = 1;
 const RESEND_AFTER_S = 120; // a code lives 3 min; "ask again" shows for the last minute (matches otp_issue, 0023)
 export const CONSENT_KEY = "consent_pending";
+/** The name typed at sign-up; App saves it to the profile once signed in. */
+export const NAME_KEY = "signup_name";
 /** Kept until App logs it after sign-in (survives the Google redirect). */
 function markConsent() {
   try { localStorage.setItem(CONSENT_KEY, JSON.stringify({ version: POLICY_VERSION, agreed_at: new Date().toISOString() })); } catch { /* ignore */ }
@@ -81,6 +83,7 @@ export default function SignIn() {
   // Everyone lands on sign up; returning people switch at the bottom.
   const [intent, setIntent] = useState<"up" | "in">("up");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,8 +113,10 @@ export default function SignIn() {
     e?.preventDefault();
     setError(null);
     const addr = email.trim().toLowerCase();
+    if (intent === "up" && !name.trim()) return setError("Add your name.");
     if (!RE_EMAIL.test(addr)) return setError("That email doesn't look right.");
     if (!agreed()) return;
+    try { if (intent === "up") localStorage.setItem(NAME_KEY, name.trim().slice(0, 80)); else localStorage.removeItem(NAME_KEY); } catch { /* ignore */ }
     // Show the code screen at once; the email takes a few seconds to send.
     const was = mode, at = sentAt;
     setMode("code"); setSentAt(Date.now()); setNow(Date.now()); setCode("");
@@ -188,6 +193,8 @@ export default function SignIn() {
         <button className="btn dark" onClick={google} disabled={busy}><GoogleLogo /> {up ? "Sign up" : "Sign in"} with Google</button>
         <div className="divider">or</div>
         <form className="stack" onSubmit={sendCode}>
+          {up && <input id="name" className="field" type="text" autoComplete="name" maxLength={80} placeholder="Your name" aria-label="Name"
+            value={name} onChange={(e) => setName(e.target.value)} />}
           <input id="email" className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" aria-label="Email"
             value={email} onChange={(e) => setEmail(e.target.value)} />
           <button className="btn primary" disabled={busy}>{up ? "Sign up" : "Sign in"} with email</button>
