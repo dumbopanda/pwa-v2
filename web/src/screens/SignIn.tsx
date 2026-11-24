@@ -22,6 +22,7 @@ function otpMessage(r: { error?: string; retry_after_s?: number; attempts_left?:
     case "cooldown": return `A code was sent a moment ago. Check your inbox and spam folder.${wait}`;
     case "too_many": return `Too many codes for now.${wait}`;
     case "email_unavailable": return "Couldn't send the email right now. Try Google, or try again soon.";
+    case "full": return "";
     case "invalid_email": return "That email doesn't look right.";
     case "wrong_code": return r.attempts_left != null ? `Wrong code. ${r.attempts_left} tries left.` : "Wrong code.";
     case "locked": return "Too many wrong tries. Ask for a new code.";
@@ -88,6 +89,11 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentAt, setSentAt] = useState(0);
+  // Invitations full: set by the server ("full") or by Google sending a new person back with an error.
+  const [full, setFull] = useState(() =>
+    /database error saving new user/i.test(new URLSearchParams(location.search + "&" + location.hash.slice(1)).get("error_description") ?? ""));
+  useEffect(() => { if (full && location.search + location.hash) history.replaceState(null, "", location.pathname); }, []);
+  const [joined, setJoined] = useState(false);
   useScrollTop(mode);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -124,6 +130,7 @@ export default function SignIn() {
     const r = await emailOtp({ action: "send", email: addr });
     setBusy(false);
     if (r.ok) return;
+    if (r.error === "full") { setMode("start"); setFull(true); return; }
     setError(otpMessage(r));
     if (r.error === "cooldown") { if (was === "code") setSentAt(at); return; }
     if (was === "start") setMode("start"); else setSentAt(at);
@@ -141,7 +148,44 @@ export default function SignIn() {
     }
     verifying.current = false; setBusy(false);
     setCode("");
+    if (r.error === "full") { setMode("start"); setFull(true); return; }
     setError(otpMessage(r));
+  }
+
+  async function joinWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const addr = email.trim().toLowerCase();
+    if (!RE_EMAIL.test(addr)) return setError("That email doesn't look right.");
+    setBusy(true);
+    const r = await emailOtp({ action: "waitlist", email: addr });
+    setBusy(false);
+    if (r.ok) setJoined(true); else setError(otpMessage(r));
+  }
+
+  if (full) {
+    return (
+      <main className="screen signin top">
+        <div className="stack" style={{ gap: "var(--sp-2)" }}>
+          <h1 className="signin-title">{title(APP_NAME)}</h1>
+          <h2 className="waitlist-h">{joined ? "You're on the list" : "Invitations are full"}</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            {joined
+              ? <>We'll email <b>{email.trim().toLowerCase()}</b> as soon as we open up. You'll be among the first in.</>
+              : "We're welcoming a small founding group first. Leave your email and we'll let you know when more invitations open. You'll be the first to join."}
+          </p>
+        </div>
+        {!joined && (
+          <form className="stack" onSubmit={joinWaitlist}>
+            <input className="field" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" aria-label="Email" autoFocus
+              value={email} onChange={(e) => setEmail(e.target.value)} />
+            <button className="btn primary" disabled={busy}>Notify me</button>
+            <p className="error slot" role="alert">{error}</p>
+          </form>
+        )}
+        <button type="button" className="btn quiet" onClick={() => { setFull(false); setJoined(false); setError(null); }}>Back</button>
+      </main>
+    );
   }
 
   if (mode === "code") {

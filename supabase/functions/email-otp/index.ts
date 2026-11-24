@@ -6,6 +6,7 @@ import nodemailer from "nodemailer";
 // Email sign-in by 6-digit code. Two actions, one endpoint:
 //   POST { action: "send",   email }        -> emails a fresh code
 //   POST { action: "verify", email, code }  -> returns a Supabase session
+//   POST { action: "waitlist", email }      -> adds the address to the waitlist (invitations full)
 //
 // Every limit (3-min expiry, 150s resend cooldown, hourly/daily caps, 5 wrong guesses,
 // consume-on-success) is enforced by otp_issue()/otp_check() in
@@ -62,12 +63,27 @@ async function handle(req: Request): Promise<Response> {
     const email = (body.email ?? "").trim().toLowerCase();
     if (email.length > 254 || !EMAIL_RE.test(email)) return json({ error: "invalid_email" }, 400);
 
+    if (body.action === "waitlist") return waitlist(email);
     if (body.action === "send") return send(email, clientIp(req));
     if (body.action === "verify") return verify(email, (body.code ?? "").trim());
     return json({ error: "bad_request" }, 400);
 }
 
+// Invitations full: a new address gets "full" (the app shows the waitlist); existing accounts are unaffected.
+async function isFull(email: string): Promise<boolean | null> {
+  const { data, error } = await admin.rpc("signup_blocked", { p_email: email });
+  return error ? null : data === true;
+}
+
+async function waitlist(email: string): Promise<Response> {
+  const { error } = await admin.rpc("join_waitlist", { p_email: email });
+  return error ? json({ error: "server_error" }, 500) : json({ ok: true });
+}
+
 async function send(email: string, ip: string | null): Promise<Response> {
+  const full = await isFull(email);
+  if (full === null) return json({ error: "server_error" }, 500);
+  if (full) return json({ error: "full" }, 403);
   const code = randomCode();
   const { data, error } = await admin.rpc("otp_issue", {
     p_email: email,
@@ -97,6 +113,8 @@ async function verify(email: string, code: string): Promise<Response> {
   });
   if (error) return json({ error: "server_error" }, 500);
   if (!data.ok) return json({ error: data.reason, attempts_left: data.attempts_left }, 401);
+
+  if (await isFull(email)) return json({ error: "full" }, 403);
 
   // The code is already consumed at this point. Mint the session: create the
   // user if new (an existing Google user with this address is the same

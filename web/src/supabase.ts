@@ -12,7 +12,7 @@ type OtpReply = {
 };
 
 /** The email-otp Edge Function: { action: "send" | "verify", email, code? }. */
-export async function emailOtp(body: { action: "send" | "verify"; email: string; code?: string }): Promise<OtpReply> {
+export async function emailOtp(body: { action: "send" | "verify" | "waitlist"; email: string; code?: string }): Promise<OtpReply> {
   try {
     const r = await fetch(`${url}/functions/v1/email-otp`, {
       method: "POST",
