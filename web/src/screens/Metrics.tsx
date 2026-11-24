@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
 type M = {
-  users: number; entries_per_user_day: number | null; days_with_entry_per_week: number | null;
+  users: number; installed_users: number; entries_per_user_day: number | null; days_with_entry_per_week: number | null;
   streak: { avg: number | null; max: number | null; users: number }; open_to_save_ms_median: number | null;
   ai_outcomes_30d: Record<string, number>; retention: Record<string, { eligible: number; returned: number }>; review_opened_90d: { times: number; users: number };
 };
@@ -23,6 +23,7 @@ export default function Metrics({ onBack }: { onBack: () => void }) {
       {m && (
         <>
           <section className="card stack"><Row k="Users" v={m.users} />
+            <Row k="Opened as installed app" v={`${m.installed_users} of ${m.users}`} />
             <Row k="Entries per user per active day (30d)" v={m.entries_per_user_day} />
             <Row k="Days with an entry per user per week (8w)" v={m.days_with_entry_per_week} />
             <Row k="Streak, latest per user (avg / max)" v={`${m.streak.avg ?? "–"} / ${m.streak.max ?? "–"}`} />

@@ -54,7 +54,7 @@ export default function Shell({ userId }: { userId: string }) {
   useEffect(() => {
     if (opened.current || !s.ready || s.status === "syncing") return;
     opened.current = true;
-    logEvent("app_open", { open_days: openPastDays(today, L.closed, L.start).length });
+    logEvent("app_open", { open_days: openPastDays(today, L.closed, L.start).length, installed: matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true });
   }, [s.ready, s.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!s.ready) return <main className="screen"><p className="muted" role="status">{s.status === "offline" ? "You're offline and there's nothing saved on this device yet." : "Loading your ledger…"}</p></main>;
