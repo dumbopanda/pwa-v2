@@ -1,6 +1,6 @@
 -- 0025: no new accounts past the cap; waitlist takes emails but cannot be read by the app.
 begin;
-select plan(9);
+select plan(12);
 
 update public.app_config set value = '1'::jsonb where key = 'signup_cap';
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
@@ -14,14 +14,17 @@ select ok(public.signup_blocked('late@pgtap.local'), 'a new address is blocked w
 select ok(not public.signup_blocked('IN@pgtap.local'), 'a person who already has an account is not blocked');
 
 set local role anon;
-select throws_ok($$ select public.join_waitlist('x@pgtap.local') $$, '42501', null, 'the app cannot call join_waitlist directly');
+select throws_ok($$ select public.join_waitlist('x@pgtap.local', null) $$, '42501', null, 'the app cannot call join_waitlist directly');
 select throws_ok($$ select * from public.waitlist $$, '42501', null, 'the app cannot read the waitlist');
 reset role;
 set local role service_role;
-select lives_ok($$ select public.join_waitlist('  Wait@Pgtap.Local ') $$, 'the server can add to the waitlist');
-select throws_ok($$ select public.join_waitlist('not an email') $$, '22023', null, 'a bad address is refused');
+select is(public.join_waitlist('  Wait@Pgtap.Local ', '1.1.1.1') ->> 'ok', 'true', 'the server can add to the waitlist');
+select is(public.join_waitlist('not an email', '1.1.1.1') ->> 'reason', 'invalid_email', 'a bad address is refused');
+select is(public.join_waitlist('wait@pgtap.local', '1.1.1.1') ->> 'ok', 'true', 'joining twice is fine');
+select is((select count(*)::int from (select public.join_waitlist('w' || g || '@pgtap.local', '2.2.2.2') from generate_series(1, 5) g) x), 5, 'five from one IP');
+select is(public.join_waitlist('w6@pgtap.local', '2.2.2.2') ->> 'reason', 'too_many', 'the sixth from that IP in an hour is refused');
 reset role;
-select is((select email from public.waitlist), 'wait@pgtap.local', 'the address is stored lowercase');
+select is((select email from public.waitlist where ip = '1.1.1.1'), 'wait@pgtap.local', 'the address is stored lowercase');
 
 select * from finish();
 rollback;

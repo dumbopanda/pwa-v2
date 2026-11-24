@@ -91,7 +91,7 @@ export default function SignIn() {
   const [sentAt, setSentAt] = useState(0);
   // Invitations full: set by the server ("full") or by Google sending a new person back with an error.
   const [full, setFull] = useState(() =>
-    /database error saving new user/i.test(new URLSearchParams(location.search + "&" + location.hash.slice(1)).get("error_description") ?? ""));
+    /signups_closed|database error saving new user/i.test(new URLSearchParams(location.search + "&" + location.hash.slice(1)).get("error_description") ?? ""));
   useEffect(() => { if (full && location.search + location.hash) history.replaceState(null, "", location.pathname); }, []);
   const [joined, setJoined] = useState(false);
   useScrollTop(mode);
@@ -160,7 +160,8 @@ export default function SignIn() {
     setBusy(true);
     const r = await emailOtp({ action: "waitlist", email: addr });
     setBusy(false);
-    if (r.ok) setJoined(true); else setError(otpMessage(r));
+    if (r.ok) setJoined(true);
+    else setError(r.error === "too_many" ? "Too many sign-ups from this network. Try again in an hour." : otpMessage(r));
   }
 
   if (full) {
@@ -171,7 +172,7 @@ export default function SignIn() {
           <h2 className="waitlist-h">{joined ? "You're on the list" : "Invitations are full"}</h2>
           <p className="muted" style={{ margin: 0 }}>
             {joined
-              ? <>We'll email <b>{email.trim().toLowerCase()}</b> as soon as we open up. You'll be among the first in.</>
+              ? <>We'll email <b style={{ overflowWrap: "anywhere" }}>{email.trim().toLowerCase()}</b> as soon as we open up. You'll be among the first in.</>
               : "We're welcoming a small founding group first. Leave your email and we'll let you know when more invitations open. You'll be the first to join."}
           </p>
         </div>

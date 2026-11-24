@@ -22,7 +22,7 @@ const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@\x00-\x1f]+@[^\s@\x00-\x1f]+\.[^\s@\x00-\x1f]+$/;
 
 // Browser origins allowed to call this (the web app). Comma-separated in the
 // ALLOWED_ORIGINS secret, e.g. "https://app.example.com,http://localhost:5173".
@@ -59,13 +59,14 @@ async function handle(req: Request): Promise<Response> {
     } catch {
       return json({ error: "bad_request" }, 400);
     }
+    if (!body || typeof body !== "object") return json({ error: "bad_request" }, 400);
 
-    const email = (body.email ?? "").trim().toLowerCase();
+    const email = (typeof body.email === "string" ? body.email : "").trim().toLowerCase();
     if (email.length > 254 || !EMAIL_RE.test(email)) return json({ error: "invalid_email" }, 400);
 
-    if (body.action === "waitlist") return waitlist(email);
+    if (body.action === "waitlist") return waitlist(email, clientIp(req));
     if (body.action === "send") return send(email, clientIp(req));
-    if (body.action === "verify") return verify(email, (body.code ?? "").trim());
+    if (body.action === "verify") return verify(email, (typeof body.code === "string" ? body.code : "").trim());
     return json({ error: "bad_request" }, 400);
 }
 
@@ -75,9 +76,10 @@ async function isFull(email: string): Promise<boolean | null> {
   return error ? null : data === true;
 }
 
-async function waitlist(email: string): Promise<Response> {
-  const { error } = await admin.rpc("join_waitlist", { p_email: email });
-  return error ? json({ error: "server_error" }, 500) : json({ ok: true });
+async function waitlist(email: string, ip: string | null): Promise<Response> {
+  const { data, error } = await admin.rpc("join_waitlist", { p_email: email, p_ip: ip });
+  if (error) return json({ error: "server_error" }, 500);
+  return data.ok ? json({ ok: true }) : json({ error: data.reason }, data.reason === "invalid_email" ? 400 : 429);
 }
 
 async function send(email: string, ip: string | null): Promise<Response> {
@@ -122,6 +124,7 @@ async function verify(email: string, code: string): Promise<Response> {
   // admin magic-link token for a session -- never emailed, used within ms.
   const created = await admin.auth.admin.createUser({ email, email_confirm: true });
   if (created.error && created.error.code !== "email_exists") {
+    if (/signups_closed/.test(created.error.message) || await isFull(email)) return json({ error: "full" }, 403);   // filled up since the check above
     console.error("createUser failed", created.error);
     return json({ error: "server_error" }, 500);
   }
