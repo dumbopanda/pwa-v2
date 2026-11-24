@@ -1,10 +1,12 @@
-# Cloudflare Pages response headers. connect-src allows only Supabase and Sentry.
+# Response headers for every page. connect-src: only our two Supabase projects (prod, dev) and Sentry.
+# HSTS: browsers use https only for a year after the first visit.
 /*
+  Strict-Transport-Security: max-age=31536000
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), geolocation=(), microphone=(self)
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://mxodmmsnyzrdklyzhibt.supabase.co https://siarjxgxpbpyxfwrdptn.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 /sw.js
   Cache-Control: no-cache

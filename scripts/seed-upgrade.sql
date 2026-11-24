@@ -1,7 +1,7 @@
 -- Realistic data for upgrade-test.sh: two users with every kind of row the app makes.
 -- Must load on the schema prod has today; update it when a migration needs new columns.
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
-select '00000000-0000-0000-0000-000000000000', u::uuid, 'authenticated', 'authenticated', e, crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}'
+select '00000000-0000-0000-0000-000000000000', u::uuid, 'authenticated', 'authenticated', e, null, now(), now(), now(), '{}', '{}'
 from (values ('11111111-1111-1111-1111-111111111111', 'a@seed.local'), ('22222222-2222-2222-2222-222222222222', 'b@seed.local')) v(u, e);
 insert into public.profiles (user_id) select id from auth.users on conflict do nothing;
 update public.profiles set onboarded_at = now() - interval '10 days';
@@ -31,3 +31,5 @@ insert into public.day_status (user_id, date) select u.id, current_date - g from
 insert into public.events (user_id, name, props) select u.id, 'entry_saved', '{"n":1}' from auth.users u, generate_series(1, 5);
 insert into public.email_otps (email, code_hash, ip, created_at, expires_at)
 select 'a@seed.local', md5(g::text), '1.1.1.1', now() - g * interval '1 minute', now() + interval '3 minutes' from generate_series(1, 3) g;
+insert into public.waitlist (email, ip, created_at)
+select 'wait' || g || '@seed.local', '9.9.9.' || g, now() - g * interval '1 hour' from generate_series(1, 4) g;

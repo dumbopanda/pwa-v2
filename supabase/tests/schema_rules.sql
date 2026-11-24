@@ -8,7 +8,7 @@ select plan(26);
 set constraints all immediate;
 
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'usera@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}');
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'usera@pgtap.local', null, now(), now(), now(), '{}', '{}');
 insert into public.app_config values ('private.admin_emails', '["Usera@Pgtap.Local"]') on conflict (key) do update set value = excluded.value;
 
 set local role authenticated;
@@ -91,8 +91,8 @@ select ok(public.admin_metrics() ? 'retention', 'admin (by confirmed email, any 
 -- A different user is refused; an unconfirmed address never counts; the old id list still works.
 reset role;
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'other@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}'),
-  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444', 'authenticated', 'authenticated', 'usera@pgtap.local', crypt('x', gen_salt('bf')), null, now(), now(), '{}', '{}');
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'other@pgtap.local', null, now(), now(), now(), '{}', '{}'),
+  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444', 'authenticated', 'authenticated', 'usera@pgtap.local', null, null, now(), now(), '{}', '{}');
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"33333333-3333-3333-3333-333333333333"}';
 select throws_ok($$ select public.admin_metrics() $$, '42501', null, 'a user not on the list is refused');
