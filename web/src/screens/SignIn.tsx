@@ -180,7 +180,7 @@ export default function SignIn() {
     <main className="screen signin">
       <div className="stack" style={{ gap: "var(--sp-2)" }}>
         <h1 className="signin-title">{title(APP_NAME)}</h1>
-        <p className="signin-tag">Know where your payroll went?!</p>
+        <p className="signin-tag">Know where your payroll went!</p>
         <Demo />
       </div>
 
