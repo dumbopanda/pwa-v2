@@ -14,7 +14,7 @@ revoke all on table public.waitlist from public, anon, authenticated;
 -- The hard stop, whatever the sign-in route (Google, email code). The lock keeps two
 -- sign-ups at 199 from both getting in.
 create function public.enforce_signup_cap() returns trigger
-language plpgsql security definer set search_path = public, auth as $$
+language plpgsql security definer set search_path = public, auth as $$   -- data-safe: reads a count and may refuse a new sign-up; changes no rows
 declare cap int;
 begin
   select (value #>> '{}')::int into cap from public.app_config where key = 'signup_cap';
@@ -29,14 +29,14 @@ create trigger auth_users_signup_cap before insert on auth.users
 
 -- email-otp asks this before sending a code: closed AND this address has no account.
 create function public.signup_blocked(p_email text) returns boolean
-language sql stable security definer set search_path = public, auth as $$
+language sql stable security definer set search_path = public, auth as $$   -- data-safe: read-only check
   select (select count(*) from auth.users) >= coalesce((select (value #>> '{}')::int from public.app_config where key = 'signup_cap'), 2147483647)
      and not exists (select 1 from auth.users where lower(email) = lower(trim(p_email)));
 $$;
 
 -- The waitlist form posts to the email-otp function, which calls this. The app itself cannot call or read it.
 create function public.join_waitlist(p_email text) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$   -- data-safe: only adds a row to the new waitlist table
 declare v text := lower(trim(p_email));
 begin
   if v is null or length(v) > 254 or v !~ '^[^\s@]+@[^\s@]+\.[^\s@]+$' then
