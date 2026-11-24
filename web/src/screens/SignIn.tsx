@@ -4,7 +4,7 @@ import { emailOtp, supabase } from "../supabase";
 import { useScrollTop } from "../lib/hooks";
 
 /** Version of /privacy.html the person agrees to. Bump when the page changes. */
-export const POLICY_VERSION = 1;
+export const POLICY_VERSION = 2;
 const RESEND_AFTER_S = 120; // a code lives 3 min; "ask again" shows for the last minute (matches otp_issue, 0023)
 export const CONSENT_KEY = "consent_pending";
 /** The name typed at sign-up; App saves it to the profile once signed in. */

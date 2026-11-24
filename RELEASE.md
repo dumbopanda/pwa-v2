@@ -16,7 +16,7 @@ Dev Supabase project: `pwa-v2-dev` (`siarjxgxpbpyxfwrdptn`), `app_config.env = '
 ## Release (in this order)
 
 4. **Fingerprint prod.** Run `scripts/fingerprint.sql` and save the output in the release notes.
-5. **Back up prod.** Run `scripts/backup.sql`. Every row must show `copied = live`.
+5. **Back up prod.** Run `scripts/backup.sql`. Every row must show `copied = live`. It also deletes copies older than 30 days, as the privacy page promises.
 6. **Migrations.** Apply each new migration to prod, one at a time, oldest first.
 7. **Fingerprint again.** No table may have fewer rows or columns than in step 4. If one does, restore it from the backup (see below) and stop. Then run `scripts/schema-hash.sql` on prod. It must now match dev.
 8. **Server functions.** Redeploy only the functions that changed.

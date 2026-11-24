@@ -3,8 +3,8 @@ begin;
 select plan(11);
 
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'usera@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}'),
-  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated', 'userb@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}');
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'usera@pgtap.local', null, now(), now(), now(), '{}', '{}'),
+  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated', 'userb@pgtap.local', null, now(), now(), now(), '{}', '{}');
 
 select is((select member_no from public.profiles where user_id = '22222222-2222-2222-2222-222222222222'),
           (select member_no + 1 from public.profiles where user_id = '11111111-1111-1111-1111-111111111111'), 'sign-ups are numbered in order');
@@ -13,7 +13,7 @@ select is((select plan from public.profiles where user_id = '11111111-1111-1111-
 -- Number 201 is an ordinary free account.
 select setval('public.member_no_seq', 200, true);
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'userc@pgtap.local', crypt('x', gen_salt('bf')), now(), now(), now(), '{}', '{}');
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'userc@pgtap.local', null, now(), now(), now(), '{}', '{}');
 select is((select member_no from public.profiles where user_id = '33333333-3333-3333-3333-333333333333'), 201, 'the next number is 201');
 select is((select plan from public.profiles where user_id = '33333333-3333-3333-3333-333333333333'), 'free', 'member 201 is not free for life');
 
